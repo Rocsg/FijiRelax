@@ -65,6 +65,7 @@ public class Bionano_T1T2M0_Importer extends PlugInFrame{
 		int nbZMov=imgMov.getNSlices();
 		int nbZRef=imgRef.getNSlices();
 
+		
 		ImagePlus imgMov3D=HyperStackConverter.toHyperStack(Concatenator.run(new ImagePlus[] {imgMov,imgMov,imgMov}), nbC, nbZMov,nbT,"xyztc","Grayscale");		;
 		ImagePlus imgRef3D=HyperStackConverter.toHyperStack(Concatenator.run(new ImagePlus[] {imgRef,imgRef,imgRef}), nbC, nbZRef,nbT,"xyztc","Grayscale");		;
 		IJ.saveAsTiff(imgMov3D, "/home/fernandr/Bureau/A_Test/Katie_test_data/Week4/imgMov.tif");
