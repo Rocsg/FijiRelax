@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+		http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.vitimage</groupId>
+  <artifactId>AplimTools</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>AplimTools</name>
+	<scm>
+		<connection>scm:git:git://github.com/Rocsg/AplimTools</connection>
+		<developerConnection>scm:git:git@github.com:Rocsg/AplimTools</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/Rocsg/AplimTools</url>
+	</scm>
+ 	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/Rocsg/vitimage/issues</url>
+	</issueManagement>
+	<ciManagement>
+		<system>None</system>
+	</ciManagement>
+
+	<properties>
+		<package-name>com.vitimage</package-name>
+		<license.licenseName>bsd_2</license.licenseName>
+		<main-class>Bionano_T1T2M0_Importer</main-class>
+		<license.copyrightOwners>vitimage</license.copyrightOwners>
+  	    <maven.compiler.source>1.8</maven.compiler.source>
+	    <maven.compiler.target>1.8</maven.compiler.target>
+	    
+	</properties>
+	<repositories>
+	  <repository>
+	   	  <id>imagej.public</id>
+	      <url>http://maven.imagej.net/content/groups/public</url>
+      </repository>
+	</repositories>
+
+	<developers>
+		<developer>
+			<id>Rocsg</id>
+			<name>Romain Fernandez</name>
+			<url>https://imagej.net/User:Rocsg</url>
+			<roles>
+				<role>lead</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
+			</roles>
+		</developer>
+	</developers>
+	
+	<mailingLists>
+		<mailingList>
+			<name>Image.sc Forum</name>
+			<archive>https://forum.image.sc/</archive>
+		</mailingList>
+	</mailingLists>
+	<organization>
+		<name>Vitimage</name>
+		<url>https://www.plan-deperissement-vigne.fr/travaux-de-recherche/programmes-de-recherche/vitimage</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>Simplified BSD License</name>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+
+  	
+  		
+	<dependencies>
+		<dependency>
+		    <groupId>net.imagej</groupId>
+		    <artifactId>ij</artifactId>
+		    <version>1.52t</version>
+		</dependency>
+		<dependency>
+		    <groupId>sc.fiji</groupId>
+		    <artifactId>VIB-lib</artifactId>
+		    <version>2.2.0</version>
+		</dependency>
+		
+
+		<!-- https://mvnrepository.com/artifact/org.scijava/scijava-java3d -->
+		<dependency>
+		    <groupId>org.scijava</groupId>
+		    <artifactId>scijava-java3d</artifactId>
+		    <version>0.1.0</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.itk.simple/simpleitk -->
+		<dependency>
+		    <groupId>org.itk.simple</groupId>
+		    <artifactId>simpleitk</artifactId>
+		    <version>0.9.0</version>
+		    <type>jar</type>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/sc.fiji/3D_Viewer -->
+		<dependency>
+		    <groupId>sc.fiji</groupId>
+		    <artifactId>3D_Viewer</artifactId>
+		    <version>4.0.3</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-math3</artifactId>
+		    <version>3.6.1</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>lma</groupId>
+		    <artifactId>lma</artifactId>
+		    <version>1.0</version>
+		    <scope>system</scope>
+			<systemPath>${basedir}/lib/lma/lma-jar/1.0/lma-1.0.jar</systemPath>
+		</dependency>
+
+		<dependency>
+		    <groupId>com.vitimage</groupId>
+		    <artifactId>Fijiyama_GUI</artifactId>
+		    <version>4.0.0</version>	    
+		    <scope>system</scope>
+			<systemPath>${basedir}/lib/Fijiyama_GUI/Fijiyama_GUI-jar/4.0.0/Fijiyama_GUI-4.0.0.jar</systemPath>
+		</dependency> 
+	</dependencies>
+  	
+  	
+  	
+  	
+  	
+  	
+  	
+</project>
