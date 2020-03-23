@@ -70,7 +70,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 
 	/** Entry points and startup functions*/
 	public static void main(String[]args) {
-		runExplorer("/home/fernandr/Bureau/DataBamba/Output/hyperImage.tif");
+		runExplorer("/home/fernandr/Bureau/Traitements/Sorgho/Test SSM1/Out_input_Fijiyama/Output/Exported_data/Data_combined.tif");
 	}
 
 	private ImagePlus M0map;
@@ -88,11 +88,6 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	public static void runExplorer(String imgPath) {
-		System.out.println("HERE ds sd s ? ");
-		IJ.log("HEREL ? ");
-		VitimageUtils.waitFor(10000000);
-		//        removeKeyListener(ij);
- //       removeMouseListener(ij);
 		ImagePlus fullHyp=null;
 		if (imgPath!=null)fullHyp=IJ.openImage(imgPath);
 		else fullHyp=VitiDialogs.chooseOneImageUI("Open hyperimage", "Open a hyperimage built using T1T2MapImporter");

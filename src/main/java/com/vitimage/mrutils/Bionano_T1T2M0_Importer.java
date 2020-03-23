@@ -20,7 +20,8 @@ import ij.plugin.frame.PlugInFrame;
 import math3d.Point3d;
 
 public class Bionano_T1T2M0_Importer extends PlugInFrame{
-	boolean debug=true;
+	boolean debug=false;
+	
 	boolean debugCompute=false;
 	private final int maxDisplayedT2=125;
 	private final int maxDisplayedT1=3000;
@@ -46,32 +47,12 @@ public class Bionano_T1T2M0_Importer extends PlugInFrame{
 	
 	public Bionano_T1T2M0_Importer() {
 		super("");
-		System.out.println("Everything is ok now Cons");
 	}
 
 	public static void main(String[] args) {
-		System.out.println("Everything is ok now nowd ds dddd  ddd ");
-		VitimageUtils.waitFor(100000);
-		VitimageUtils.test();
 		@SuppressWarnings("unused")
 		ImageJ ij=new ImageJ();
-		IJ.log("And there ?");
-	//	HyperStackConverter.toHyperStack(con.concatenate(imgTabMov,false), nbC, nbZ,nbT,"xyztc","Grayscale");		
-		ImagePlus imgMov=IJ.openImage("/home/fernandr/Bureau/A_Test/Katie_test_data/Week3/test/C3-R2 region1 branchC.1 moving.tif");
-		ImagePlus imgRef=IJ.openImage("/home/fernandr/Bureau/A_Test/Katie_test_data/Week3/test/C3-R3 region1 branchC.1 fixed.tif");
-
-		int nbC=3;
-		int nbT=1;
-		int nbZMov=imgMov.getNSlices();
-		int nbZRef=imgRef.getNSlices();
-
-		
-		ImagePlus imgMov3D=HyperStackConverter.toHyperStack(Concatenator.run(new ImagePlus[] {imgMov,imgMov,imgMov}), nbC, nbZMov,nbT,"xyztc","Grayscale");		;
-		ImagePlus imgRef3D=HyperStackConverter.toHyperStack(Concatenator.run(new ImagePlus[] {imgRef,imgRef,imgRef}), nbC, nbZRef,nbT,"xyztc","Grayscale");		;
-		IJ.saveAsTiff(imgMov3D, "/home/fernandr/Bureau/A_Test/Katie_test_data/Week4/imgMov.tif");
-		IJ.saveAsTiff(imgRef3D, "/home/fernandr/Bureau/A_Test/Katie_test_data/Week4/imgRef.tif");
-		VitimageUtils.waitFor(1000000000);
-		
+		ItkTransform tr=new ItkTransform();
 		IJ.log("Running T1-T2-M0 import");
 		Bionano_T1T2M0_Importer bn=new Bionano_T1T2M0_Importer();
 		bn.debugCompute=false;

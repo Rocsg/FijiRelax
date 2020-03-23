@@ -306,7 +306,6 @@ public class MRUtils  {
 	}
 	
 	public static double readValueOfSigmaTrTeInSliceLabel(ImagePlus img,int prm0Sigma_1Tr_2Te,int c,int z,int f) {
-		VitimageUtils.printImageResume(img);
 		String tit=img.getStack().getSliceLabel(VitimageUtils.getCorrespondingSliceInHyperImage(img,c,z,f) );
 		String[]datas=tit.replace("__","_").split("_");
 		for(int i=0;i<datas.length;i++) {
