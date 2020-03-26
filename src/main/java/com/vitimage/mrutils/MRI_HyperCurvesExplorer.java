@@ -842,7 +842,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		plotCan2.setPlot(plotT2);
 
 		plotT21 = new Plot("T1 timelapse tracker","Estimated T1 (red) and T2 (green)","Observation time",Plot.DEFAULT_FLAGS-Plot.X_GRID-Plot.Y_GRID+Plot.X_LOG_TICKS+Plot.X_LOG_NUMBERS);
-		plotT22 = new Plot("T2 timelapse tracker","T1 and T2 spectrum over area (M0-weighted)","Observation time",Plot.DEFAULT_FLAGS-Plot.X_GRID-Plot.Y_GRID+Plot.X_LOG_TICKS+Plot.X_LOG_NUMBERS);
+		plotT22 = new Plot("T2 timelapse tracker","T1 and T2 distribution over area (M0-weighted)","Observation time",Plot.DEFAULT_FLAGS-Plot.X_GRID-Plot.Y_GRID+Plot.X_LOG_TICKS+Plot.X_LOG_NUMBERS);
 		plotT21.changeFont(new Font("Helvetica", 0, 14));
 		plotT22.changeFont(new Font("Helvetica", 0, 14));
 		plotT21.setBackgroundColor(new Color(0,0,0));
@@ -952,6 +952,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 			tmp=estimatedSigmas[1];estimatedSigmas[1]=estimatedSigmas[3];estimatedSigmas[3]=tmp;
 			tmp=estimatedSigmas[0];estimatedSigmas[0]=estimatedSigmas[2];estimatedSigmas[2]=tmp;
 		}		
+		
+		//TODO : t1Times depends on the time. Warning : if not the same number of T1 Fijiyama will break. Handle tthis.
+		
 		double jitter=0;
 		double[]statsRice=RiceEstimator.computeSigmaAndMeanBgFromRiceSigmaStatic(sigmaRice);
 		if( tabData[0]<(statsRice[0]+3*statsRice[1]) ) {jitter=99;accs[1]=100;}
@@ -1035,7 +1038,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 
 	public double[][] getDisplayableSpectrumCurveMultiThread(int time) {
-		int numberBins=150 /(1+gaussianSpectrum) ;//over 3 decades it makes every 5% or every 10 %
+		int numberBins=150 /(1) ;//over 3 decades it makes every 1.2% or every 10 %
 		final double[]binInf=new double[numberBins];
 		final double[]binSup=new double[numberBins];
 		final double[]binMed=new double[numberBins];
@@ -1117,10 +1120,10 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 				
 		//Smooth this histogram with a factor to be defined, maybe depending on the estimation error on parameters
-//		output[0]=smoothHisto(histoM0T1);
-//		output[1]=smoothHisto(histoM0T2);
-		output[0]=histoM0T1;
-		output[1]=histoM0T2;
+		output[0]=smoothHisto(histoM0T1,gaussianSpectrum);
+		output[1]=smoothHisto(histoM0T2,gaussianSpectrum);
+//		output[0]=histoM0T1;
+//		output[1]=histoM0T2;
 		output[2]=binMed;
 
 		
@@ -1132,12 +1135,33 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		return output;
 	}
 		
-	public double[]smoothHisto(double[]histo){
-		//Test avec sigma=3 bins;
-		int sig=7;
+	public double[]smoothHisto(double[]histo,int sig){
+		if(sig<=0)return histo;
 		int nbBins=histo.length;
 		double[]histSmooth=new double[nbBins];
-		for(int i=sig;i<nbBins-sig;i++)histSmooth[i]=0.3*histo[i]+0.26*histo[i-1]+0.26*histo[i+1]+0.23*histo[i-2]+0.23*histo[i+2]+0.15*histo[i+3]+0.15*histo[i-3]+0.08*histo[i+4]+0.08*histo[i-4]+0.04*histo[i+5]+0.04*histo[i-5]+0.02*histo[i+6]+0.02*histo[i-6]+0.01*histo[i+7]+0.01*histo[i-7];
+
+		//build gaussian kernel
+		double[]kernel=new double[4*sig+1];
+		double sum=0,sumWeight=0;
+		for(int i=0;i<kernel.length;i++)kernel[i]=Math.abs(2*sig-i);
+		for(int i=0;i<kernel.length;i++)kernel[i]=(kernel[i]*kernel[i])/(2*sig*sig);
+		for(int i=0;i<kernel.length;i++) {kernel[i]=Math.exp(-kernel[i]*kernel[i])/(sig*Math.sqrt(2*Math.PI));sum+=kernel[i];}
+		for(int i=0;i<kernel.length;i++)kernel[i]/=sum;
+		sum=0;
+		for(int i=0;i<kernel.length;i++)sum+=kernel[i];
+
+		for(int i=0;i<nbBins;i++) {
+			sum=0;
+			sumWeight=0;
+			for(int j=0;j<kernel.length;j++) {
+				int index=i+j-2*sig;
+				if(index>=0 && index<nbBins) {
+					sumWeight+=kernel[j];
+					sum+=kernel[j]*histo[index];
+				}
+			}
+			histSmooth[i]=(sum/sumWeight);
+		}
 		return histSmooth;  
 	}
 	
@@ -1241,8 +1265,8 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		
 	
 		//HANDLE T2 CURVE
-		Color t2Moy=new Color (255,50,50);
-		Color t2Bi=new Color (0,175,0);
+		Color t2Moy=new Color (0,125,0);
+		Color t2Bi=new Color (10,185,10);
 		String[] tabNamesT2=new String[]{"One T2","Two T2","Three T2"};
 		int incrT2=0;
 
