@@ -932,7 +932,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 					this.dataTimelapseT2SigmasMono[tim-1][ec]=VitimageUtils.statistics1D(this.dataTimelapseT2Full[tim-1][ec])[1];
 					this.dataTimelapseT2SigmasBicomp[tim-1][ec]=VitimageUtils.statistics1D(this.dataTimelapseT2Full[tim-1][ec])[1];
 				}
-			}
+			} 
 		}
 	}
 		
