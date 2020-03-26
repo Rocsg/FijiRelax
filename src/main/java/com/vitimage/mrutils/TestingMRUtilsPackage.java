@@ -13,12 +13,6 @@ import ij.plugin.HyperStackConverter;
 
 public class TestingMRUtilsPackage {
 
-	//ajout
-	//ajout2
-	//Ajout test branche
-	//ajout4s
-	//ajout5
-	//Test hotfix
 	public static void main(String[]args) {
 		ImageJ ij=new ImageJ();
 		String path="/home/fernandr/Bureau/Test/Ghetto/fdfddfd/";
