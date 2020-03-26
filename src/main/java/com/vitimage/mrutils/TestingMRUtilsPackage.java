@@ -15,6 +15,7 @@ public class TestingMRUtilsPackage {
 
 	//ajout
 	//ajout2
+	//Ajout test branche
 	public static void main(String[]args) {
 		ImageJ ij=new ImageJ();
 		String path="/home/fernandr/Bureau/Test/Ghetto/fdfddfd/";
