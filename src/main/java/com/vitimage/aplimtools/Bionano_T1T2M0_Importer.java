@@ -1,10 +1,11 @@
-package com.vitimage.mrutils;
+package com.vitimage.aplimtools;
 
 import java.io.File;
 import com.vitimage.common.VitiDialogs;
 import com.vitimage.common.VitimageUtils;
 import com.vitimage.fijiyama.RegistrationAction;
 import com.vitimage.fijiyama.RegistrationManager;
+import com.vitimage.mrutils.MRUtils;
 import com.vitimage.registration.BlockMatchingRegistration;
 import com.vitimage.registration.ItkTransform;
 import com.vitimage.registration.MetricType;

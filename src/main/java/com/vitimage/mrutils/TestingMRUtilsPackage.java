@@ -2,6 +2,7 @@ package com.vitimage.mrutils;
 
 import java.io.File;
 
+import com.vitimage.aplimtools.MRI_HyperCurvesExplorer;
 import com.vitimage.common.VitimageUtils;
 
 import ij.IJ;

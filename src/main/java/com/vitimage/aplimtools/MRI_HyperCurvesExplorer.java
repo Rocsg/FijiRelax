@@ -1,4 +1,4 @@
-package com.vitimage.mrutils;
+package com.vitimage.aplimtools;
 
 
 import java.awt.Color;
@@ -24,6 +24,9 @@ import javax.swing.JPanel;
 import com.vitimage.common.TransformUtils;
 import com.vitimage.common.VitiDialogs;
 import com.vitimage.common.VitimageUtils;
+import com.vitimage.mrutils.MRDataType;
+import com.vitimage.mrutils.MRUtils;
+import com.vitimage.mrutils.RiceEstimator;
 
 import ij.IJ;
 import ij.ImageJ;
