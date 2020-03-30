@@ -24,9 +24,10 @@ public class Bionano_T1T2M0_Importer extends PlugInFrame{
 	boolean debug=false;
 	
 	boolean debugCompute=false;
-	private final int maxDisplayedT2=125;
-	private final int maxDisplayedT1=3000;
-	private final int maxDisplayedM0=7000;
+	public static final int maxDisplayedT2=125;
+	public static final int maxDisplayedT1=3000;
+	public static final int maxDisplayedM0=7000;
+	public static final int maxM0ForNormalization=6000;
 	private static final long serialVersionUID = 1L;
 	private String inputDir="";
 	private String outputDir="";
@@ -317,11 +318,11 @@ public class Bionano_T1T2M0_Importer extends PlugInFrame{
 				else trs[iMov]=new ItkTransform();
 				trs[iMov].addTransform(tr);
 				IJ.log("Registration of T1 times finished !");
-				String []labels=new String[imgT1Seq[iMov].getStackSize()];
-				for(int i=0;i<imgT1Seq[iMov].getStackSize();i++)labels[i]=imgT1Seq[iMov].getStack().getSliceLabel(i+1);
+	//			String []labels=new String[imgT1Seq[iMov].getStackSize()];
+//				for(int i=0;i<imgT1Seq[iMov].getStackSize();i++)labels[i]=imgT1Seq[iMov].getStack().getSliceLabel(i+1);
 				imgT1Seq[iMov]=trs[iMov].transformImage(imgT2Seq[0],imgT1Seq[iMov],false);
 				imgT1Seq[iMov]=VitimageUtils.convertFloatToShortWithoutDynamicChanges(imgT1Seq[iMov]);
-				for(int i=0;i<imgT1Seq[iMov].getStackSize();i++)imgT1Seq[iMov].getStack().setSliceLabel(labels[i],i+1);
+//				for(int i=0;i<imgT1Seq[iMov].getStackSize();i++)imgT1Seq[iMov].getStack().setSliceLabel(labels[i],i+1);
 			}
 		}
 		if(comp.isVisible())comp.close();

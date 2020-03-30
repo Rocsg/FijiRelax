@@ -200,7 +200,7 @@ public class MRUtils  {
 					imgP=img.getStack().getProcessor(sli);
 					double[]stats=getBackgroundStatsFromProcessor(imgP,3);
 					double sigmaRice=RiceEstimator.computeRiceSigmaFromBackgroundValuesStatic(stats[0],stats[1]);
-					img.getStack().setSliceLabel((keepOldString ? img.getStack().getSliceLabel(sli) : "") + "_SIGMARICE="+VitimageUtils.dou(sigmaRice)+"_"+optionalAdditionalString, sli);
+					img.getStack().setSliceLabel((keepOldString ? img.getStack().getSliceLabel(sli) : "") + "_"+optionalAdditionalString+"_SIGMARICE="+VitimageUtils.dou(sigmaRice), sli);
 				}
 			}
 		}
@@ -296,12 +296,13 @@ public class MRUtils  {
 		MRDataType dataT=null;
 		if(label.contains("T1SEQ")) {dataT=MRDataType.T1SEQ;nbCat++;}
 		if(label.contains("T2SEQ")) {dataT=MRDataType.T2SEQ;nbCat++;}
-		if(label.contains("T1VALUE")) {dataT=MRDataType.T1MAP;nbCat++;}
-		if(label.contains("T2VALUE")) {dataT=MRDataType.T2MAP;nbCat++;}
-		if(label.contains("M0VALUE")) {dataT=MRDataType.M0MAP;nbCat++;}
-		if(nbCat!=1) {
+		if(label.contains("T1MAP")) {dataT=MRDataType.T1MAP;nbCat++;}
+		if(label.contains("T2MAP")) {dataT=MRDataType.T2MAP;nbCat++;}
+		if(label.contains("M0MAP")) {dataT=MRDataType.M0MAP;nbCat++;}
+		if(nbCat>1) {
 			IJ.showMessage("Critical fail in MRUtils : get "+nbCat+" categories instead of 1 \nwhen calling getDataTypeOfThisMagneticResonanceSlice(ImagePlus img,"+c+","+z+","+f);
 		}
+		if(nbCat<1)return null;
 		return dataT;
 	}
 	
@@ -319,7 +320,18 @@ public class MRUtils  {
 		return 0;
 	}
 
-
+	public static void modifySigma(ImagePlus hyperImg,int c,int z,int t,double newSigma) {
+		String label=hyperImg.getStack().getSliceLabel(VitimageUtils.getCorrespondingSliceInHyperImage(hyperImg, c, z, t));
+		String[]strTab=label.split("_");
+		String newLab="";
+		for(int i=0;i<strTab.length;i++) {
+			String str=strTab[i];
+			if(str.contains("SIGMARICE"))newLab+=("SIGMARICE="+VitimageUtils.dou(newSigma));
+			else newLab+=str;
+			if(i<strTab.length-1)newLab+="_";
+		}
+		hyperImg.getStack().setSliceLabel(newLab, VitimageUtils.getCorrespondingSliceInHyperImage(hyperImg, c, z, t));
+	}
 	
 
 	/** Extract Tr, Te or Sigma values from the relaxation images */
@@ -670,7 +682,7 @@ public class MRUtils  {
 		}
 		return tab;
 	}
-
+/*
 	public static double fittingAccuracy(double[] tabData,double[] tabTimes,double sigma,double[] estimatedParams,int fitType,boolean debug){		
 		double []realP=fittenRelaxationCurve(tabTimes,estimatedParams,sigma,fitType);
 		double cumulator=0;
@@ -685,7 +697,7 @@ public class MRUtils  {
 		if(cumulator>99)cumulator=99;
 		return cumulator;
 	}	
-
+*/
 	public static double[] fittingAccuracies(double[] tabData,double[] tabTimes,double sigma,double[] estimatedParams,int fitType,boolean debug,RiceEstimator riceEstimator,int nbPoints){		
 		double []realP=fittenRelaxationCurve(tabTimes,estimatedParams,sigma,fitType);
 		double khi2=0;
