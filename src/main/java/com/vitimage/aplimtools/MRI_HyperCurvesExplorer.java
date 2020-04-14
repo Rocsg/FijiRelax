@@ -597,7 +597,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				for(int pt=0;pt<nPts;pt++) {
 					tabRet[t][z][0][0][pt]=pt*xStepCuteT1;
 					tabRet[t][z][0][1][pt]=0;
-				}
+				} 
 			
 				//Add the other curves : the transversal relaxations, constituted of successive growing Tr curves, with for each Te going from 0 to the max Te at this level
 				for(int cu=0;cu<valuesTrTe.length;cu++) {
