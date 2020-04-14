@@ -14,8 +14,98 @@ import ij.plugin.HyperStackConverter;
 
 public class TestingMRUtilsPackage {
 
+
+	public static void testDims() {
+		ImagePlus img1=IJ.openImage("/home/fernandr/Bureau/p1.tif");
+		ImagePlus img2=IJ.openImage("/home/fernandr/Bureau/p2.tif");
+		ImagePlus[]tab1=VitimageUtils.stacksFromHyperstackFastBis(img1);
+		ImagePlus[]tab2=VitimageUtils.stacksFromHyperstackFastBis(img2);
+		ImagePlus[]tab3=new ImagePlus[tab1.length+tab2.length];
+		for(int i=0;i<tab1.length;i++)tab3[i]=tab1[i];
+		for(int i=0;i<tab2.length;i++)tab3[i+tab1.length]=tab2[i];
+		ImagePlus res=new Concatenator().run(tab3);
+		String codeStacking="xyztc";
+		ImagePlus hyperImage=HyperStackConverter.toHyperStack(res, tab1.length+tab2.length, 4,1,codeStacking,"Grayscale");
+		res.show();
+		VitimageUtils.waitFor(1000000);
+
+		String pathSource="/home/fernandr/Bureau/Traitements/Sorgho/Donnees_brutes_export_Romain";
+		String tempStr=pathSource;
+		for (String str1 : VitimageUtils.stringArraySort( new File(tempStr).list())) {
+			tempStr=pathSource+"/"+str1;
+			for (String str2 : VitimageUtils.stringArraySort( new File(tempStr).list())) {
+				tempStr=pathSource+"/"+str1+"/"+str2;
+				for (String str3 : VitimageUtils.stringArraySort( new File(tempStr).list())) {
+					tempStr=pathSource+"/"+str1+"/"+str2+"/"+str3;
+					String str4 = VitimageUtils.stringArraySort( new File(tempStr).list())[0];
+					tempStr=pathSource+"/"+str1+"/"+str2+"/"+str3+"/"+str4;
+					String str5 = VitimageUtils.stringArraySort( new File(tempStr).list())[0];
+					tempStr=pathSource+"/"+str1+"/"+str2+"/"+str3+"/"+str4+"/"+str5;
+					System.out.println(tempStr);
+					VitimageUtils.printImageResume(IJ.openImage(tempStr));
+				}	
+			}			
+		}
+	}
+	
+	
+	public static void testNorm() {
+		
+		ImagePlus[]tab=new ImagePlus[4];
+		tab[0]=IJ.openImage("/home/fernandr/Bureau/Temp/m0.tif");
+		HyperMRIT1T2.measureMeanCapillaryValueAlongZ(tab[0]);
+		VitimageUtils.waitFor(1000000);
+		tab[1]=IJ.openImage("/home/fernandr/Bureau/Temp/img22.tif");
+		tab[2]=IJ.openImage("/home/fernandr/Bureau/Temp/img33.tif");
+		tab[3]=IJ.openImage("/home/fernandr/Bureau/Temp/img44.tif");
+		VitimageUtils.waitFor(10000000);
+	}
+	
+	public static void chiasse() {
+		String dirIn="/home/fernandr/Bureau/Traitements/Sorgho/Cartes_calculees_methode_Romain";
+		String dirOut="/home/fernandr/Bureau/Traitements/Sorgho/Cartes_rangees_par_specimen";
+		String[]specs=new File(dirIn).list();
+		for(String sp : specs) {
+			System.out.println("Processing "+sp);
+			String[]infoTab=sp.split("_");
+			String strNew=infoTab[0]+"_"+infoTab[2]+"_"+infoTab[1]+".tif";
+			ImagePlus img=IJ.openImage(new File(dirIn,sp).getAbsolutePath());
+			img.setC(1);img.setDisplayRange(0, MRUtils.maxDisplayedM0);
+			img.setC(2);img.setDisplayRange(0, MRUtils.maxDisplayedT1);
+			img.setC(3);img.setDisplayRange(0, MRUtils.maxDisplayedT2);
+			for(int c=4;c<=img.getNChannels();c++) {img.setC(c);img.setDisplayRange(0, MRUtils.maxDisplayedM0);}
+			
+			String fileOut=new File(dirOut,infoTab[0]).getAbsolutePath();
+			fileOut=new File(fileOut,strNew).getAbsolutePath();
+			System.out.println("Sauvegarde in "+fileOut);
+			IJ.saveAsTiff(img,fileOut);			
+		}
+		System.exit(0);
+	}
+	
+	
+	public static void testKhi2() {
+		int[][]vals=new int[][] {
+			{5,10 },
+			{6,12 },
+			{10,20 },
+			{10,10 },
+			{20,10 },
+			{50,10 },
+			{100,10 },
+			{500,10 }
+		};
+		for(int i=0;i<vals.length;i++) {		System.out.println(" Khi="+vals[i][0] + " Nprms="+vals[i][1]+"  pval="+MRUtils.getPvalue(vals[i][0],vals[i][1]) );}
+	}
+
+	
 	public static void main(String[]args) {
 		ImageJ ij=new ImageJ();
+		testDims();
+		System.exit(0);
+		//testKhi2();
+		//testNorm();
+		chiasse();
 		String path="/home/fernandr/Bureau/Test/Ghetto/fdfddfd/";
 		ImagePlus imgT1=IJ.openImage(path+"T1short.tif");
 		ImagePlus imgT2=IJ.openImage(path+"T2short.tif");

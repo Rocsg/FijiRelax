@@ -1,11 +1,15 @@
 package com.vitimage.mrutils;
 
+import java.util.ArrayList;
+
+import com.vitimage.common.TransformUtils;
+import com.vitimage.common.VitimageUtils;
+
 import ij.macro.Interpreter;
 import ij.macro.Program;
 import ij.macro.Tokenizer;
 
-public class SimplexCurveFitterNoBias{
-	private static final int CUSTOM = 21;
+public class SimplexDualCurveFitter{
 	
 	public static  int IterFactor = 500;
 	protected double sigma;   
@@ -15,7 +19,7 @@ public class SimplexCurveFitterNoBias{
 	private static final double root2 = 1.414214; // square root of 2
 	
 	protected int fit;                // Number of curve type to fit
-	protected double[] xData, yData;  // x,y data to fit
+	protected double[] trData,teData, magData;  // x,y data to fit
 	protected int numPoints;          // number of data points
 	protected int numParams;          // number of parametres
 	protected int numVertices;        // numParams+1 (includes sumLocalResiduaalsSqrd)
@@ -36,8 +40,18 @@ public class SimplexCurveFitterNoBias{
 	private static int customParamCount;
 	private double[] initialValues;
 	private Interpreter macro;
-	private int providedM0;
-
+	private double[] bionanoParams;
+	private double[][]magData2D;
+	private double[]tabTrVals;
+	private double[]tabTeVals;
+	private int []tabTrSeriesLength;
+	private double t2;
+	private double m0t2;
+	private double r2;
+	private double bionanoFactor=1+Math.exp(-0.25)+Math.exp(-0.5)+Math.exp(-0.75);
+	private double t1;
+	private double m0t1;
+	
 	public static double sigmaWay(double valFunk,double sigma){
 		return valFunk*valFunk-2*sigma*sigma;
 	}
@@ -82,25 +96,223 @@ public class SimplexCurveFitterNoBias{
 	}
 
     /** Construct a new SimplexCurveFitter. */
-    public SimplexCurveFitterNoBias (double[] xData, double[] yData, int fitType,double sigma) {
+    public SimplexDualCurveFitter (double[] trData, double[]teData,double[] magData, int fitType,double sigma) {
 		this.sigma=sigma;
-        this.xData = xData;
-        this.yData = yData;
-        numPoints = xData.length;
+        this.trData = trData;
+        this.teData = teData;
+        this.magData = magData;
+        numPoints = trData.length;
         this.fit=fitType;
-               initialize(fit);
+        initialize(fit);
     }
     
+    
+    public void computeBioNano(){
+    	initialize2DTab();
+    	inspect2DTab();
+    	computeT2Bionano();
+    	inspectT2EstimatedValues(); 
+    	computeT1Bionano();
+    }
+    
+	public void initialize2DTab(){
+    	ArrayList<Double>listTr=new ArrayList<Double>();
+    	ArrayList<Double>listTe=new ArrayList<Double>();
+    	//Build a user-friendly structure to host the data
+ 		int nt1=0;
+		double memTr=-1;double memTe=-1;
+		boolean isUp=false;
+		//Identify different Tr, and the number of echoes for each
+		for(int c=0;c<trData.length;c++) {
+			if(trData[c]>9000) {listTe.add(teData[c]);}
+			if(trData[c]!=memTr) {
+				memTr=trData[c];
+				listTr.add(new Double(memTr));
+				nt1++;
+			}
+		}
+		tabTrVals=new double[listTr.size()]; tabTeVals=new double[listTe.size()];tabTrSeriesLength=new int[listTr.size()];
+		for(int i=0;i<listTr.size();i++) {tabTrVals[i]=listTr.get(i);}
+		for(int i=0;i<listTe.size();i++) {tabTeVals[i]=listTe.get(i);}
+		magData2D=new double[listTr.size()][listTe.size()];for(int i=0;i<magData2D.length;i++)for(int j=0;j<magData2D[i].length;j++)magData2D[i][j]=-1;
+		for(int c=0;c<trData.length;c++) {
+			for(int tr=0;tr<tabTrVals.length;tr++) {
+				if(trData[c]==tabTrVals[tr]) {
+					for(int te=0;te<tabTeVals.length;te++) {
+						if(teData[c]==tabTeVals[te]) {
+							magData2D[tr][te]=magData[c];
+							tabTrSeriesLength[tr]=te+1;
+							System.out.println(magData2D[tr][te]);
+						}
+					}				
+				}
+			}
+		}
+		System.out.println("Nul ?"+(magData2D==null));
+	}	
+	
+	public void inspect2DTab() {
+		System.out.println("Nul ?"+(magData2D==null));
+		for(int i=0;i<magData2D.length;i++) {
+			System.out.println("\nInspecting new serie for Tr="+tabTrVals[i]+" of length "+tabTrSeriesLength[i]);
+			for(int j=0;j<magData2D[i].length;j++) {
+				System.out.print("  Te "+tabTeVals[j]+" : "+magData2D[i][j]);
+			}
+		}		
+		System.out.println();
+	}
+
+	public void inspectT2EstimatedValues() {
+		System.out.println("T2 vas computed. Values : T2="+this.t2+"  , R2="+this.r2+"  , M0="+this.m0t2);
+	}
+	
+	public void computeT2Bionano() {
+		int indexTr10000=magData2D.length-1;
+		t2=0;
+		m0t2=0;
+		r2=Math.log(magData2D[indexTr10000][0]/magData2D[indexTr10000][2])/(tabTeVals[2]-tabTeVals[0]);
+		System.out.println("Computed r2="+r2);
+		if(r2>0.1)r2=Double.NaN;
+		else if(r2<0.0006666)r2=Double.NaN;
+		else {
+			t2=1/r2;
+			m0t2=magData2D[indexTr10000][0]*Math.exp(tabTeVals[0]*r2);
+			System.out.println("Computed m0="+m0t2);
+			System.out.println("Computed t2="+t2);
+		}
+	}	
+	
+	
+	public void computeT1Bionano() {
+		System.out.println("\n\nT1 COMPUTATION");
+		//T1 COMPUTATION
+    	//Sum all echoes for each Tr
+		double[]magSum=new double[magData2D.length-1];
+		int nForSums=200;
+        for(int i=0;i<magSum.length;i++)if(tabTrSeriesLength[i]<nForSums)nForSums=tabTrSeriesLength[i];
+        for(int i=0;i<magSum.length;i++)for(int j=0;(j<nForSums && j<tabTrSeriesLength[j]);j++)magSum[i]+=magData2D[i][j];
+		
+        double factorT2=0;
+        for(int i=0;i<nForSums;i++) {
+        	factorT2+=Math.exp(-tabTeVals[i]/t2);
+        	System.out.println("Constitution factorT2="+factorT2+" apres iteration "+i);
+        }
+        
+    	//Build an ArrayList of cases to compute
+        ArrayList<double[]>cases=new ArrayList<double[]>();
+        for(int i=0;i<magSum.length;i++) for(int j=i+1;j<magSum.length;j++) {
+        	System.out.println("Checking couple "+tabTrVals[j]+" / "+tabTrVals[i]);
+    		boolean newCase=false;
+        	if((tabTrVals[j]/tabTrVals[i])==1.5) {cases.add(new double[] {i,j,15,0,0,0});newCase=true;}
+        	if((tabTrVals[j]/tabTrVals[i])==2) {cases.add(new double[] {i,j,20,0,0,0});newCase=true;}//      0       1         2      3    4
+        	if((tabTrVals[j]/tabTrVals[i])==3) {cases.add(new double[] {i,j,30,0,0,0});newCase=true;}// Indice a , indice b,   Cas,   M0 , T1,
+        	if(newCase)System.out.println("i="+i+" Tr="+tabTrVals[i]+"  j="+j+" Tr="+tabTrVals[j]+"  constitued case"+TransformUtils.stringVectorN(cases.get(cases.size()-1),""));
+        }
+        
+        //Process the cases
+        for(int i=0;i<cases.size();i++) {
+        	double[]tab=cases.get(i);
+        	System.out.println("\nProcessing case "+i+" : "+TransformUtils.stringVectorN(cases.get(i),""));
+        	double Ma=magSum[(int) tab[0]];
+    		double Mb=magSum[(int) tab[1]];
+    		double Ta=tabTrVals[(int) tab[0]];
+    		double Tb=tabTrVals[(int) tab[1]];
+    		System.out.println("Ma="+Ma+" Ta="+Ta+"  Mb="+Mb+"  Tb="+Tb);
+    		try {
+	    		if(tab[2]==15) {//TODO : gerer les exceptions, et envoyer une valeur négative
+	        		tab[3]=-(2*Ma*Ma*Ma)/(Mb*Mb-3*Ma*Ma+Math.sqrt((-(Ma-Mb)*(Ma-Mb)*(Ma-Mb)*(3*Ma+Mb))));
+	        	}
+	        	if(tab[2]==20) {
+	        		tab[3]=Ma*Ma/(2*Ma-Mb);
+	        	}
+	        	if(tab[2]==30) {
+	        		tab[3]=-(2*Ma*Ma*Ma)/(Math.sqrt(-Ma*Ma*Ma*(3*Ma-4*Mb))-3*Ma*Ma);
+	        	}
+    		}
+    		catch(Exception e) {System.out.println("Got an exception in polynom!");tab[3]=Double.NaN;}
+    		try {
+    			tab[4]=-Tb/(Math.log(1-Mb/tab[3]));        	
+    		}
+    		catch(Exception e) {System.out.println("Got an exception in log!");tab[4]=Double.NaN;}
+        	//Remove all values according to conditions
+            if(tab[3]<=0)tab[3]=Double.NaN;
+            if(tab[4]<=0)tab[4]=Double.NaN;
+            if(tab[4]>3000)tab[4]=Double.NaN;
+            System.out.println("Finally, values="+tab[3]+" , "+tab[4]);
+        }
+        
+        
+        
+    	//Remove all values out from three sigma from mean
+        int nM0=0;int nT1=0;
+        for(int i=0;i<cases.size();i++) {
+        	if(cases.get(i)[3]>0)nM0++;
+        	if(cases.get(i)[4]>0)nT1++;
+        }
+        double[]tabM0=new double[nM0];
+        double[]tabT1=new double[nT1];
+        nM0=0;nT1=0;
+        for(int i=0;i<cases.size();i++) {
+        	if(cases.get(i)[3]>0)tabM0[nM0++]=cases.get(i)[3];
+        	if(cases.get(i)[4]>0)tabT1[nT1++]=cases.get(i)[4];
+        }
+ 
+        t1=meanHampel(tabT1);
+        double m0t1Temp=meanHampel(tabM0);
+
+        m0t1=m0t1Temp/factorT2;
+        System.out.println("Finally, got : t1="+t1+"  m0t1"+m0t1);
+        bionanoParams=new double[] {m0t1,t1,m0t2,t2};
+    }
+    
+	
+	public double meanHampel(double[]tab) {
+		if(tab.length==1)return tab[0];
+		//copy in tab with no nan
+		int nGood=0;
+		System.out.println("Hampel");
+		System.out.println(TransformUtils.stringVectorN(tab, "tabInit"));
+		for(int i=0;i<tab.length;i++)if(!Double.isNaN(tab[i]))nGood++;
+		System.out.println("Ngood="+nGood);
+		double[]tab2=new double[nGood];nGood=0;
+		for(int i=0;i<tab.length;i++)if(!Double.isNaN(tab[i]))tab2[nGood++]=tab[i];
+		System.out.println(TransformUtils.stringVectorN(tab, "tab2"));
+		
+		//compute mean and std
+		double[]stats=VitimageUtils.statistics1D(tab2);
+		System.out.println(TransformUtils.stringVectorN(stats, "Stats tab2"));
+
+		//copy in tab with no outliers
+		nGood=0;
+		for(int i=0;i<tab2.length;i++)if( (tab2[i]<(stats[0]+3*stats[1])) && (tab2[i]>(stats[0]-3*stats[1])) ) nGood++;
+		double[]tabFinal=new double[nGood];nGood=0;
+		System.out.println("Ngood="+nGood);
+		for(int i=0;i<tab2.length;i++)if( (tab2[i]<(stats[0]+3*stats[1])) && (tab2[i]>(stats[0]-3*stats[1])) ) tabFinal[nGood++]=tab2[i];
+		System.out.println(TransformUtils.stringVectorN(tabFinal, "tabFinal"));
+			
+		//compute mean and std
+		double mean=VitimageUtils.statistics1D(tabFinal)[0];
+		System.out.println("Mean ="+mean+" . Return.");
+		return mean;
+	}
+	
+	
+	
     public void config(int maxIterations) {
     	IterFactor=maxIterations;
     }
     
     public void doFit() {
-    	doFit(fit, false);
+    	doFit(fit);
     }
     
     public void doFit(int fitType) {
-      doFit(fitType, false);
+    	System.out.println("Start FIT !"+fitType);
+    	if(fitType==MRUtils.T1T2_BIONANO) {computeBioNano();return;}
+    	System.out.println("Start FITTT !"+fitType);
+    	
+    	doFit(fitType, false);
+    	System.out.println("Start FITTTTTT !"+fitType);
     }
     
     public void doFit(int fitType, boolean showSettings) {
@@ -113,8 +325,7 @@ public class SimplexCurveFitterNoBias{
 				simp[0][i] = initialParams[i];
 			initialParams = null;
 		}
- 		long startTime = System.currentTimeMillis();
-        restart(0);
+         restart(0);
         
         numIter = 0;
         boolean done = false;
@@ -186,32 +397,6 @@ public class SimplexCurveFitterNoBias{
         fitType = saveFitType;
     }
         
-	public int doCustomFit(String equation, double[] initialValues, boolean showSettings) {
-		customFormula = null;
-		customParamCount = 0;
-		Program pgm = (new Tokenizer()).tokenize(equation);
-		if (!pgm.hasWord("y")) return 0;
-		if (!pgm.hasWord("x")) return 0;
-		String[] params = {"a","b","c","d","e"};
-		for (int i=0; i<params.length; i++) {
-		if (pgm.hasWord(params[i]))
-			customParamCount++;
-		}
-		if (customParamCount==0)
-			return 0;
-		customFormula = equation;
-		String code =
-			"var x, a, b, c, d, e;\n"+
-			"function dummy() {}\n"+
-			equation+";\n"; // starts at program counter location 19
-	   macro = new Interpreter();
-		macro.run(code, null);
-		if (macro.wasError())
-			return 0;
-		this.initialValues = initialValues;
-		doFit(CUSTOM, showSettings);
-		return customParamCount;
-	}
 
 
     /** Initialise the simplex */
@@ -220,47 +405,32 @@ public class SimplexCurveFitterNoBias{
         numParams = getNumParams(fitType);
         numVertices = numParams + 1;      // need 1 more vertice than parametres,
         simp = new double[numVertices][numVertices];
-        next = new double[numVertices];
-        
-        double firstx = xData[0];
-        double firsty = yData[0];
-       
-        double lastx = xData[numPoints-1];
-        double lasty = yData[numPoints-1];
-        double xmean = (firstx+lastx)/2.0;
-        double ymean = (firsty+lasty)/2.0;
-        double miny=firsty, maxy=firsty;
-        double slope;
-        if ((lastx - firstx) != 0.0)
-            slope = (lasty - firsty)/(lastx - firstx);
-        else
-            slope = 1.0;
-        double yintercept = firsty - slope * firstx;
+        next = new double[numVertices];        
         maxIter = IterFactor * numParams * numParams;  // Where does this estimate come from?
         restarts = defaultRestarts;
         nRestarts = 0;
         switch (fit) {
-           case MRUtils.T1_RECOVERY_RICE:
-               simp[0][0] = lasty;
-               simp[0][1] = 1000.0;
+           case MRUtils.T1T2_MONO_RICE:
+        	   simp[0][0] = VitimageUtils.max(magData);
+        	   simp[0][1] = 2000;//T1
+        	   simp[0][2] = 50;//T2
                break;
-           case MRUtils.T1_MULTICOMP_RICE:
-               simp[0][0] = lasty/2;
-               simp[0][1] = 2000.0;
-               simp[0][0] = lasty/2;
-               simp[0][1] = 500.0;
+           case MRUtils.T1T2_MULTI_RICE:
+        	   simp[0][0] = VitimageUtils.max(magData)/2;
+        	   simp[0][1] = VitimageUtils.max(magData)/2;
+        	   simp[0][2] = 1000;//T1
+        	   simp[0][3] = 20;//T2
+        	   simp[0][4] = 100;//T2
                break;
-           case MRUtils.T2_RELAX_RICE:
-               simp[0][0] = firsty;
-               simp[0][1] = 50.0;
+           case MRUtils.T1T2_MULTIMULTI_RICE:
+        	   simp[0][0] = VitimageUtils.max(magData)/2;
+        	   simp[0][1] = VitimageUtils.max(magData)/2;
+        	   simp[0][2] = 500;//T1
+        	   simp[0][3] = 3000;//T1
+        	   simp[0][4] = 20;//T2
+        	   simp[0][5] = 100;//T2
                break;
-           case MRUtils.T2_MULTICOMP_RICE:
-        	   simp[0][0] = firsty/2;
-        	   simp[0][1] = 20;
-        	   simp[0][2] = firsty/2;
-        	   simp[0][3] = 60;
-               break;
-           default:break;
+               default:break;
         }
     }
         
@@ -314,39 +484,37 @@ public class SimplexCurveFitterNoBias{
     /** Get number of parameters for current fit formula */
     public int getNumParams(int fitType) {
         switch (fitType) {
-			case MRUtils.T1_RECOVERY_RICE: return 2;
-			case MRUtils.T1_MULTICOMP_RICE: return 4;
-			case MRUtils.T2_RELAX_RICE:  return 2;
-			case MRUtils.T2_MULTICOMP_RICE:  return 4;
+			case MRUtils.T1T2_MONO_RICE: return 3;
+			case MRUtils.T1T2_MULTI_RICE: return 5;
+			case MRUtils.T1T2_MULTIMULTI_RICE: return 6;
         }
         return 0;
     }
         
 	/** Returns formula value for parameters 'p' at 'x' */
-	public double f(double[] p, double x) {
-		return f(fit, p, x);
+	public double f(double[] p, double tr,double te) {
+		return f(fit, p, tr,te);
 	}
 
    /** Returns 'fit' formula value for parameters "p" at "x" */
-    public double f(int fit, double[] p, double x) {
+    public double f(int fit, double[] p, double tr,double te) {
     	double y;
         switch (fit) {
-        	case MRUtils.T1_RECOVERY_RICE:
-        		return besFunkCost(p[0]*(1 - Math.exp(-(x / p[1]))),sigma);
-        	case MRUtils.T1_MULTICOMP_RICE:
-        		return besFunkCost(p[0]*(1 - Math.exp(-(x / p[1])))+p[2]*(1 - Math.exp(-(x / p[3]))),sigma);
-			case MRUtils.T2_RELAX_RICE:
-                return besFunkCost(p[0]*Math.exp(-(x / p[1]) ),sigma); // p[1] - echo times
-            case MRUtils.T2_MULTICOMP_RICE:
-            	return  besFunkCost(p[0]* Math.exp(-(x / p[1])) + p[2]* Math.exp(-(x / p[3])),sigma); // a[1] - echo times
-            default:
+        	case MRUtils.T1T2_MONO_RICE:return besFunkCost(p[0]*(1 - Math.exp(-(tr / p[1])))*Math.exp(-(te / p[2]) ) ,sigma);
+        	case MRUtils.T1T2_MULTI_RICE:return besFunkCost(  
+        			(        ( (1 - Math.exp(-(tr / p[2]))) * (  ( p[0] * Math.exp(-(te / p[3]) ) )   +  ( p[1] * Math.exp(-(te / p[4]) ) ) )    )  )  ,sigma);
+        	case MRUtils.T1T2_MULTIMULTI_RICE:return besFunkCost(  
+        			(        ( (1 - Math.exp(-(tr / p[2]))) * ( p[0] * Math.exp(-(te / p[4]) ) ) )  +
+        					 ( (1 - Math.exp(-(tr / p[3])))*  ( p[1] * Math.exp(-(te / p[5]) ) ) )      )  ,sigma);
+             default:
                 return 0.0;
         }
     }
     
     /** Get the set of parameter values from the best corner of the simplex */
     public double[] getParams() {
-        order();
+        if(fit==MRUtils.T1T2_BIONANO)return bionanoParams;
+    	order();
         return simp[best];
     }
     
@@ -355,13 +523,8 @@ public class SimplexCurveFitterNoBias{
 		int saveFit = fit;
 		double[] params = getParams();
 		double[] residuals = new double[numPoints];
-		if (fit==CUSTOM) {
-			for (int i=0; i<numPoints; i++)
-				residuals[i] = yData[i] - f(params, xData[i]);
-		} else {
-			for (int i=0; i<numPoints; i++)
-				residuals[i] = yData[i] - f(fit, params, xData[i]);
-		}
+		for (int i=0; i<numPoints; i++)
+			residuals[i] = magData[i] - f(fit, params, trData[i],teData[i]);
 		fit = saveFit;
 		return residuals;
 	}
@@ -397,11 +560,11 @@ public class SimplexCurveFitterNoBias{
     */
     public double getRSquared() {
         double sumY = 0.0;
-        for (int i=0; i<numPoints; i++) sumY += yData[i];
+        for (int i=0; i<numPoints; i++) sumY += magData[i];
         double mean = sumY/numPoints;
         double sumMeanDiffSqr = 0.0;
         for (int i=0; i<numPoints; i++)
-            sumMeanDiffSqr += sqr(yData[i]-mean);
+            sumMeanDiffSqr += sqr(magData[i]-mean);
         double rSquared = 0.0;
         if (sumMeanDiffSqr>0.0)
             rSquared = 1.0 - getSumResidualsSqr()/sumMeanDiffSqr;
@@ -411,13 +574,13 @@ public class SimplexCurveFitterNoBias{
     /**  Get a measure of "goodness of fit" where 1.0 is best. */
     public double getFitGoodness() {
         double sumY = 0.0;
-        for (int i = 0; i < numPoints; i++) sumY += yData[i];
+        for (int i = 0; i < numPoints; i++) sumY += magData[i];
         double mean = sumY / numPoints;
         double sumMeanDiffSqr = 0.0;
         int degreesOfFreedom = numPoints - getNumParams(fit);
         double fitGoodness = 0.0;
         for (int i = 0; i < numPoints; i++) {
-            sumMeanDiffSqr += sqr(yData[i] - mean);
+            sumMeanDiffSqr += sqr(magData[i] - mean);
         }
         if (sumMeanDiffSqr > 0.0 && degreesOfFreedom != 0)
             fitGoodness = 1.0 - (getSumResidualsSqr() / degreesOfFreedom) * ((numPoints) / sumMeanDiffSqr);
@@ -434,12 +597,8 @@ public class SimplexCurveFitterNoBias{
 	/** Adds sum of square of residuals to end of array of parameters */
 	void sumResiduals (double[] x) {
 		x[numParams] = 0.0;
-		if (fit==CUSTOM) {
-			for (int i=0; i<numPoints; i++)
-			x[numParams] = x[numParams] + sqr(f(x,xData[i])-yData[i]);
-		} else {
-			for (int i=0; i<numPoints; i++)
-			x[numParams] = x[numParams] + sqr(f(fit,x,xData[i])-yData[i]);
+		for (int i=0; i<numPoints; i++) {
+			x[numParams] = x[numParams] + sqr(f(fit,x,trData[i],teData[i])-magData[i]);
 		}
 	}
 
@@ -512,12 +671,16 @@ public class SimplexCurveFitterNoBias{
         return index;
     }
     
-	public double[] getXPoints() {
-		return xData;
+	public double[] getTePoints() {
+		return teData;
 	}
 	
-	public double[] getYPoints() {
-		return yData;
+	public double[] getTrPoints() {
+		return trData;
+	}
+
+	public double[] getMagPoints() {
+		return magData;
 	}
 	
 	public int getFit() {

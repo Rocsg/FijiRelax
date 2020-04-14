@@ -88,8 +88,6 @@ public class LMCurveFitterNoBias {
 	public LMCurveFitterNoBias (double[] xData, double[] yData, int fitType,double sigma,boolean debugLM) {
 		this.fit=fitType;
 		this.debugLM=debugLM;
-		if (fit<MRUtils.STRAIGHT_LINE)
-			throw new IllegalArgumentException("Invalid fit type");
 		int xlength=xData.length;
 		int ylength=yData.length;
 		if (xlength!= ylength)
@@ -123,18 +121,6 @@ public class LMCurveFitterNoBias {
 		double yintercept = firsty - slope * firstx;
 
 		switch (fit) {
-		case MRUtils.STRAIGHT_LINE:
-			inparameters[0] = slope;
-			inparameters[1] = yintercept;
-			lma = new LMA(new Line(),inparameters,data);
-			break;
-		case MRUtils.T1_RECOVERY:
-			inparameters[0] = lasty;
-			inparameters[1] = 1000.0;
-			T1Recovery t1r=new T1Recovery();
-			t1r.setSigma(sigma);
-			lma = new LMA(t1r,inparameters,data);
-			break;
 		case MRUtils.T1_RECOVERY_RICE:
 			inparameters[0] = lasty;
 			inparameters[1] = 1000.0;
@@ -142,6 +128,16 @@ public class LMCurveFitterNoBias {
 			t1rr.setSigma(sigma);
 			t1rr.setLM(this);
 			lma = new LMA(t1rr,inparameters,data);
+			break;
+		case MRUtils.T1_MULTICOMP_RICE:
+			inparameters[0] = lasty/2;
+			inparameters[1] = 500.0;
+			inparameters[2] = lasty/2;
+			inparameters[3] = 2000.0;
+			T1MulticompRice t1mr=new T1MulticompRice();
+			t1mr.setSigma(sigma);
+			t1mr.setLM(this);
+			lma = new LMA(t1mr,inparameters,data);
 			break;
 
 		case MRUtils.T2_RELAX_RICE:
@@ -153,38 +149,16 @@ public class LMCurveFitterNoBias {
 			lma = new LMA(t2rr,inparameters,data);
 			break;
 
-		case MRUtils.MULTICOMP:
-			inparameters[0] = val/2;
-			inparameters[1] = 30;//tHope;
-			inparameters[2] = val/2;
-			inparameters[3] = 60;//tHope2;
-			lma = new LMA(
-					new TMulticomp(),inparameters,
-					data);
-			break;
-		case MRUtils.MULTICOMP_RICE:
+		case MRUtils.T2_MULTICOMP_RICE:
 			inparameters[0] = val/2;
 			inparameters[1] = 20;//tHope;
 			inparameters[2] = val/3;
 			inparameters[3] = 100;//tHope2;
-			TMulticompRice t2mcr=new TMulticompRice();
+			T2MulticompRice t2mcr=new T2MulticompRice();
 			t2mcr.setSigma(sigma);
 			t2mcr.setLM(this);
 			lma = new LMA(t2mcr,inparameters,data);
-			break;
-		case MRUtils.TRICOMP_RICE:
-			inparameters[0] = val/3;
-			inparameters[1] = 15;//tHope;
-			inparameters[2] = val/4;
-			inparameters[3] = 40;//tHope2;
-			inparameters[2] = val/5;
-			inparameters[3] = 80;//tHope2;
-			TTricompRice t3mcr=new TTricompRice();
-			t3mcr.setLM(this);
-			t3mcr.setSigma(sigma);
-			lma = new LMA(t3mcr,inparameters,data);
-			break;
-		
+			break;		
 		}
 	}
 
@@ -227,50 +201,16 @@ public class LMCurveFitterNoBias {
 	/** Get number of parameters for current fit formula */
 	public static int getNumParams(int fitType) {
 		switch (fitType) {
-		case MRUtils.STRAIGHT_LINE: return Line.Nparams  ;
-		case MRUtils.T1_RECOVERY: return T1Recovery.Nparams ;  
 		case MRUtils.T1_RECOVERY_RICE: return T1RecoveryRice.Nparams ;  
+		case MRUtils.T1_MULTICOMP_RICE: return T1MulticompRice.Nparams ;  
 		case MRUtils.T2_RELAX_RICE:  return  T2RelaxRice.Nparams  ;
-		case MRUtils.MULTICOMP:  return  TMulticomp.Nparams  ;
-		case MRUtils.MULTICOMP_RICE:  return  TMulticompRice.Nparams  ;
-		case MRUtils.TRICOMP_RICE:  return  TTricompRice.Nparams  ;
+		case MRUtils.T2_MULTICOMP_RICE:  return  T2MulticompRice.Nparams  ;
 		}
 		return 0;
 	}
 
 
 
-	/*    	p[0]*(1 - Math.exp(-(x / p[1]))); // p[1] - repetition times
-	 */
-	public static class T1Recovery extends LMAFunction {
-		public double sigma=0;
-		public LMCurveFitterNoBias lm;
-		public void setLM(LMCurveFitterNoBias lm) {this.lm=lm;}
-		public void setSigma(double sig){
-			sigma=sig;
-		}
-
-		public static final int Nparams=2;
-		 
-		public double getY(double x, double[] a) {
-			if(lm.debugLM)System.out.println("T1Recov x="+x+"  a[0]="+a[0]+"  a[1]="+a[1]+"   res="+a[0]*(1 - Math.exp(-(x / a[1]))));
-			if(lm.debugLM)VitimageUtils.waitFor(10);
-			return  a[0]*(1 - Math.exp(-(x / a[1]))); // a[1] - repetition times
-		}
-
-		
-		public double getPartialDerivate(double x, double[] a, int parameterIndex) {
-			switch (parameterIndex) {
-			case 0: return  1.0-Math.exp(-x/a[1]);
-			case 1: return  -(a[0]*x*Math.exp(-x/a[1]))/(a[1]*a[1]);
-
-			} throw new RuntimeException("No such parameter index: " + parameterIndex);
-		}
-
-		public String toString() {
-			return "y=a[0]*(1 - Math.exp(-(x / a[1])))";
-		}
-	} // end class
 
 	/*    	p[0]*(1 - Math.exp(-(x / p[1]))); // p[1] - repetition times
 	 */
@@ -294,6 +234,37 @@ public class LMCurveFitterNoBias {
 			switch (parameterIndex) {
 			case 0: return  besFunkDeriv( a[0]*(1 - Math.exp(-(x / a[1]))), sigma )*(1.0-Math.exp(-x/a[1]));
 			case 1: return  besFunkDeriv( a[0]*(1 - Math.exp(-(x / a[1]))), sigma )*(-(a[0]*x*Math.exp(-x/a[1]))/(a[1]*a[1]));
+
+			} throw new RuntimeException("No such parameter index: " + parameterIndex);
+		}
+
+		public String toString() {
+			return "y=a[0]*(1 - Math.exp(-(x / a[1])))";
+		}
+	} // end class
+
+
+
+	public static class T1MulticompRice extends LMAFunction {
+		public double sigma=0;
+		public LMCurveFitterNoBias lm;
+		public void setLM(LMCurveFitterNoBias lm) {this.lm=lm;}
+		public void setSigma(double sig){
+			sigma=sig;
+		}
+		public static final int Nparams=2;
+		 
+		public double getY(double x, double[] a) {
+			return  besFunkCost(a[0]*(1 - Math.exp(-(x / a[1])))+a[2]*(1 - Math.exp(-(x / a[3]))),sigma); // a[1] - repetition times
+		}
+
+		@Override
+		public double getPartialDerivate(double x, double[] a, int parameterIndex) {
+			switch (parameterIndex) {
+			case 0: return  besFunkDeriv( a[0]*(1 - Math.exp(-(x / a[1]))), sigma )*(1.0-Math.exp(-x/a[1]));
+			case 1: return  besFunkDeriv( a[0]*(1 - Math.exp(-(x / a[1]))), sigma )*(-(a[0]*x*Math.exp(-x/a[1]))/(a[1]*a[1]));
+			case 2: return  besFunkDeriv( a[2]*(1 - Math.exp(-(x / a[3]))), sigma )*(1.0-Math.exp(-x/a[3]));
+			case 3: return  besFunkDeriv( a[2]*(1 - Math.exp(-(x / a[3]))), sigma )*(-(a[2]*x*Math.exp(-x/a[3]))/(a[3]*a[3]));
 
 			} throw new RuntimeException("No such parameter index: " + parameterIndex);
 		}
@@ -344,80 +315,12 @@ public class LMCurveFitterNoBias {
 
 
 
-	public static class TMulticomp extends LMAFunction {
-		public static final int Nparams=4;
-
-		@Override
-		public double getY(double x, double[] a) {
-			//return  a[0]* Math.exp(-(x / a[1])) +a[2]; // a[1] - echo times
-			return  a[0]* Math.exp(-(x / a[1])) + a[2]* Math.exp(-(x / a[3])); // a[1] - echo times
-		}
-
-		@Override
-		public double getPartialDerivate(double x, double[] a, int parameterIndex) {
-			switch (parameterIndex) {
-			case 0: return  Math.exp(-x/a[1]);  
-			case 1: return  a[0]*x*Math.exp(-x/a[1])/(a[1]*a[1]);
-			case 2: return  Math.exp(-x/a[3]);  
-			case 3: return  a[2]*x*Math.exp(-x/a[3])/(a[3]*a[3]);
-			} 
-
-			throw new RuntimeException("No such parameter index: " + parameterIndex);
-		}
-
-		public String toString() {
-			return "y=a[0]* Math.exp(-(x / a[1])) + a[2]* Math.exp(-(x / a[3]))";
-		}
-	} // end class
-
-
 	/*
-	 * T2TRICOMP_RICE
-	                return p[0]*Math.exp(-(x / p[1]) )+ p[2]; // p[1] - echo times
-	 */
-
-	public static class TTricompRice extends LMAFunction {
-		public static final int Nparams=6;
-		public double sigma=0;
-		public LMCurveFitterNoBias lm;
-		public void setLM(LMCurveFitterNoBias lm) {this.lm=lm;}
-		public void setSigma(double sig){
-			sigma=sig;
-		}
-
-		@Override
-		public double getY(double x, double[] a) {
-			if(lm.debugLM)System.out.println("T2TRIRice sigma="+sigma+"  x="+x+"  a[0]="+a[0]+"  a[1]="+a[1]+"  a[2]="+a[2]+"  a[3]="+a[3]+"  a[4]="+a[4]+"  a[5]="+a[5]+"   res="+ besFunkCost( a[0]* Math.exp(-(x / a[1])) + a[2]* Math.exp(-(x / a[3])) + a[4]* Math.exp(-(x / a[5])), sigma));
-			if(lm.debugLM)VitimageUtils.waitFor(10);
-			//return  a[0]* Math.exp(-(x / a[1])) +a[2]; // a[1] - echo times
-			return  besFunkCost( a[0]* Math.exp(-(x / a[1])) + a[2]* Math.exp(-(x / a[3])) + a[4]* Math.exp(-(x / a[5])), sigma); // a[1] - echo times
-		}
-
-		@Override
-		public double getPartialDerivate(double x, double[] a, int parameterIndex) {
-			switch (parameterIndex) {
-			case 0: return  besFunkDeriv( a[0]* Math.exp(-(x / a[1])) + a[2]* Math.exp(-(x / a[3])) + a[4]* Math.exp(-(x / a[5])), sigma)*Math.exp(-x/a[1]);  
-			case 1: return  besFunkDeriv( a[0]* Math.exp(-(x / a[1])) + a[2]* Math.exp(-(x / a[3])) + a[4]* Math.exp(-(x / a[5])), sigma)*a[0]*x*Math.exp(-x/a[1])/(a[1]*a[1]);
-			case 2: return  besFunkDeriv( a[0]* Math.exp(-(x / a[1])) + a[2]* Math.exp(-(x / a[3])) + a[4]* Math.exp(-(x / a[5])), sigma)*Math.exp(-x/a[3]);  
-			case 3: return  besFunkDeriv( a[0]* Math.exp(-(x / a[1])) + a[2]* Math.exp(-(x / a[3])) + a[4]* Math.exp(-(x / a[5])), sigma)*a[2]*x*Math.exp(-x/a[3])/(a[3]*a[3]);
-			case 4: return  besFunkDeriv( a[0]* Math.exp(-(x / a[1])) + a[2]* Math.exp(-(x / a[3])) + a[4]* Math.exp(-(x / a[5])), sigma)*Math.exp(-x/a[5]);  
-			case 5: return  besFunkDeriv( a[0]* Math.exp(-(x / a[1])) + a[2]* Math.exp(-(x / a[3])) + a[4]* Math.exp(-(x / a[5])), sigma)*a[4]*x*Math.exp(-x/a[5])/(a[5]*a[5]);
-			} 
-
-			throw new RuntimeException("No such parameter index: " + parameterIndex);
-		}
-
-		public String toString() {
-			return "y=a[0]* Math.exp(-(x / a[1])) + a[2]* Math.exp(-(x / a[3])) + Rice noise estimation";
-		}
-	} // end class
-
-	/*s
 	 * T2MULTICOMP_RICE
 	                return p[0]*Math.exp(-(x / p[1]) )+ p[2]; // p[1] - echo times
 	 */
 
-	public static class TMulticompRice extends LMAFunction {
+	public static class T2MulticompRice extends LMAFunction {
 		public static final int Nparams=4;
 		public double sigma=0;
 		public LMCurveFitterNoBias lm;
@@ -429,8 +332,6 @@ public class LMCurveFitterNoBias {
 		
 		@Override
 		public double getY(double x, double[] a) {
-			if(lm.debugLM)System.out.println("T2MULTIRice sigma="+sigma+"  x="+x+"  a[0]="+a[0]+"  a[1]="+a[1]+"  a[2]="+a[2]+"  a[3]="+a[3]+"   res="+besFunkCost( a[0]* Math.exp(-(x / a[1])) + a[2]* Math.exp(-(x / a[3])), sigma));
-			if(lm.debugLM)VitimageUtils.waitFor(10);
 			//return  a[0]* Math.exp(-(x / a[1])) +a[2]; // a[1] - echo times
 			return  besFunkCost( a[0]* Math.exp(-(x / a[1])) + a[2]* Math.exp(-(x / a[3])), sigma); // a[1] - echo times
 		}
@@ -454,25 +355,4 @@ public class LMCurveFitterNoBias {
 
 
 
-	/** Linear function with a form of y = a0 * x + a1 */
-	public static class Line extends LMAFunction {
-		public static final int Nparams=2;
-
-		@Override
-		public double getY(double x, double[] a) {
-			return a[0] * x + a[1];
-		}
-		@Override
-		public double getPartialDerivate(double x, double[] a, int parameterIndex) {
-			switch (parameterIndex) {
-			case 0: return x;
-			case 1: return 1;
-			}
-			throw new RuntimeException("No such parameter index: " + parameterIndex);
-		}
-
-		public String toString() {
-			return "y=a[0] * x + a[1]";
-		}
-	} // end class
 }
