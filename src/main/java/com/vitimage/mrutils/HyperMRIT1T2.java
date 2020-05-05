@@ -1,6 +1,7 @@
 package com.vitimage.mrutils;
 
-import com.vitimage.aplimtools.Bionano_T1T2M0_Importer;
+import java.util.ArrayList;
+import com.vitimage.aplimtools.T1T2Seq_Importer;
 import com.vitimage.common.TransformUtils;
 import com.vitimage.common.VitiDialogs;
 import com.vitimage.common.VitimageUtils;
@@ -8,12 +9,15 @@ import com.vitimage.common.VitimageUtils;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
+import ij.plugin.Concatenator;
 import ij.plugin.Duplicator;
+import ij.plugin.HyperStackConverter;
 import ij.plugin.filter.Convolver;
 import ij.process.ImageProcessor;
 
 
 public class HyperMRIT1T2 {
+	private double sigmaInUse=0.75;
 	final static double bionanoCapillaryRadius=1.15/2;//size in mm in the bionanoNMRI lab
 	ImagePlus hyperImg;
 	public int nTimepoints;
@@ -44,14 +48,6 @@ public class HyperMRIT1T2 {
 		hyp.normalizeMRSignal();
 		hyp.showCopy("Normalized Hyper MRI");
 	}
-
-	
-	public void showCopy(String text) {
-		ImagePlus temp=hyperImg.duplicate();
-		temp.show();
-		temp.setTitle(text);
-	}
-	
 	
 	public HyperMRIT1T2(ImagePlus hyperImg) {
 		this.hyperImg=hyperImg;
@@ -59,7 +55,7 @@ public class HyperMRIT1T2 {
 		fillInInformationFields();
 		computeSigmaTabs();
 	}
-
+		
 	public void setupStructures() {
 		this.nTimepoints=hyperImg.getNFrames();
 		this.actualDay=new String[this.nTimepoints];
@@ -104,15 +100,14 @@ public class HyperMRIT1T2 {
 		}
 	}
 
-	
 	public void computeSigmaTabs() {
 		if(hasT1T2sequence) {
 			this.tabSigmasT1T2Seq=new double[this.nTimepoints][dims[2]];			
 			for(int t=0;t<this.nTimepoints;t++) {
 				for(int z=0;z<dims[2];z++) {
 					double average=0;
-					for(int ind=3;ind<nChannels;ind++)average+=MRUtils.readSigmaInSliceLabel(hyperImg, ind, z, t);
-					this.tabSigmasT1T2Seq[t][z]=average/(nChannels-3);
+					for(int ind=getNumberOfMaps();ind<nChannels;ind++)average+=MRUtils.readSigmaInSliceLabel(hyperImg, ind, z, t);
+					this.tabSigmasT1T2Seq[t][z]=average/(nChannels-getNumberOfMaps());
 				}
 			}
 			IJ.log(TransformUtils.stringMatrixMN("Tab sigmas T1T2 seq", tabSigmasT1T2Seq));
@@ -140,7 +135,7 @@ public class HyperMRIT1T2 {
 	}
 	
 	
-	/** This function normalize MR signal along Z and T axis, using the capillary values*/
+	/** Capillary utilities. The first normalize MR signal along Z and T axis, using the capillary values*/
 	public void normalizeMRSignal() {
 		double[][]capillaryValuesInM0Map=new double[nTimepoints][dims[2]];
 		double factor=1;
@@ -163,8 +158,7 @@ public class HyperMRIT1T2 {
 			}
 		}		
 	}
-	
-	
+		
 	public static double measureMeanCapillaryValueAlongZ(ImagePlus imgM0) {
 		//Find capillary in the central slice
 		ImagePlus img=new Duplicator().run(imgM0,1,1,imgM0.getNSlices()/2+1,imgM0.getNSlices()/2+1,1,1);
@@ -176,6 +170,38 @@ public class HyperMRIT1T2 {
 		return VitimageUtils.statistics1D(vals)[0];
 	}
 
+	public static ImagePlus getAntiCapillaryMask(ImagePlus img) {
+		//Find capillary in the central slice
+		ImagePlus imgSlice=new Duplicator().run(img,1,1,img.getNSlices()/2+1,img.getNSlices()/2+1,1,1);
+		int []coordsCentral=findCapillaryCenterInSlice(imgSlice,bionanoCapillaryRadius);
+		int[][]capillaryCenters=capillaryCoordinatesAlongZ(img,coordsCentral,bionanoCapillaryRadius);
+
+		ImagePlus ret=new Duplicator().run(img,1,1,1,img.getNSlices(),1,1);
+		IJ.run(ret,"32-bit","");
+		ret=VitimageUtils.makeOperationOnOneImage(ret, 2, 0, true);
+		int radiusCapLarge=(int)Math.round(bionanoCapillaryRadius*2.0/VitimageUtils.getVoxelSizes(img)[0]);
+		int radiusSquare=radiusCapLarge*radiusCapLarge;
+		int radiusCapShort=(int)Math.round(bionanoCapillaryRadius*0.7/VitimageUtils.getVoxelSizes(img)[0]);
+		int radiusSquareShort=radiusCapShort*radiusCapShort;
+		
+		int dimX=ret.getWidth();
+		int dimY=ret.getHeight();
+		for(int z=0;z<img.getNSlices();z++) {
+			System.out.println("Pour z="+z+" found "+capillaryCenters[z][0]+" , "+capillaryCenters[z][1]);
+			float[]retVal=(float[])ret.getStack().getProcessor(z+1).getPixels();
+			int xm=Math.max(0,capillaryCenters[z][0]-radiusCapLarge);
+			int ym=Math.max(0,capillaryCenters[z][1]-radiusCapLarge);
+			int xM=Math.min(dimX-1,capillaryCenters[z][0]+radiusCapLarge);
+			int yM=Math.min(dimY-1,capillaryCenters[z][1]+radiusCapLarge);
+			for(int x=xm;x<=xM;x++)			for(int y=ym;y<=yM;y++) {
+				if( (x-capillaryCenters[z][0])*(x-capillaryCenters[z][0]) + (y-capillaryCenters[z][1]) * (y-capillaryCenters[z][1]) < radiusSquareShort )retVal[dimX*y+x]=4;
+				else if( (x-capillaryCenters[z][0])*(x-capillaryCenters[z][0]) + (y-capillaryCenters[z][1]) * (y-capillaryCenters[z][1]) < radiusSquare )retVal[dimX*y+x]=2;
+				else retVal[dimX*y+x]=0;
+			}
+		}
+		return ret;
+	}
+		
 	public double[]measureCapillaryValuesInM0Map(int time){
 
 		//Find capillary in the central slice
@@ -186,7 +212,6 @@ public class HyperMRIT1T2 {
 		return capillaryValuesAlongZ(time,coordsCentral,bionanoCapillaryRadius);
 	}
 
-	
 	public double[]capillaryValuesAlongZ(int time,int[]coords,double capillaryRadius){
 		IJ.log("\nCapillary detection at time="+time+".\nStarting from coordinates :"+coords[0]+", "+coords[1]);
 		Duplicator dup=new Duplicator();
@@ -237,6 +262,53 @@ public class HyperMRIT1T2 {
 		return capVals;
 	}
 
+	public static int[][]capillaryCoordinatesAlongZ(ImagePlus img3D,int[]coords,double capillaryRadius){
+		int[][]ret=new int[img3D.getNSlices()][2];
+		int[]dims=VitimageUtils.getDimensions(img3D);
+		double[]voxs=VitimageUtils.getVoxelSizes(img3D);
+		
+		Duplicator dup=new Duplicator();
+		int rayPix=(int)Math.round(capillaryRadius/(voxs[0]));
+		int semiRayPix=rayPix/2;
+		int lookupRadius=(int)Math.round(1.5*rayPix);
+
+		int xMed=coords[0];int yMed=coords[1];int zMed=dims[2]/2;
+		double[]capVals=new double[dims[2]];
+		ImagePlus imgTemp;
+		int xLast=xMed,yLast=yMed;
+		long t0= System.currentTimeMillis();
+
+		for(int z=zMed;z>=0;z--) {
+			//Extract a patch around the finding of upside
+			imgTemp=VitimageUtils.cropImageFloat(img3D,xLast-lookupRadius,yLast-lookupRadius,z, lookupRadius*2,lookupRadius*2,1);
+			//Find cap center in it
+			int[]coordsNew=findCapillaryCenterInSlice(imgTemp,bionanoCapillaryRadius);
+			
+			//Update coordinates of last
+			xLast=xLast-lookupRadius+coordsNew[0];
+			yLast=yLast-lookupRadius+coordsNew[1];
+
+			ret[z][0]=xLast;
+			ret[z][1]=yLast;
+		}
+		xLast=xMed;
+		yLast=yMed;
+		for(int z=zMed;z<dims[2];z++) {
+			//Extract a patch around the finding of upside
+			imgTemp=VitimageUtils.cropImageFloat(img3D,xLast-lookupRadius,yLast-lookupRadius, z, lookupRadius*2,lookupRadius*2,1);
+			
+			//Find cap center in it
+			int[]coordsNew=findCapillaryCenterInSlice(imgTemp,bionanoCapillaryRadius);
+			
+			//Update coordinates of last
+			xLast=xLast-lookupRadius+coordsNew[0];
+			yLast=yLast-lookupRadius+coordsNew[1];
+			
+			ret[z][0]=xLast;
+			ret[z][1]=yLast;
+		}
+		return ret;
+	}
 	
 	public static double[]capillaryValuesAlongZStatic(ImagePlus img3D,int[]coords,double capillaryRadius){
 		double[]voxs=VitimageUtils.getVoxelSizes(img3D);
@@ -285,7 +357,6 @@ public class HyperMRIT1T2 {
 		}
 		return capVals;
 	}
-
 	
 	public static int[] findCapillaryCenterInSlice(ImagePlus imgTemp,double capillaryRadius) {
 		ImagePlus img=imgTemp.duplicate();
@@ -307,12 +378,18 @@ public class HyperMRIT1T2 {
 		return coordsOfMax;
 	}
 
+
 	
+	
+	
+	
+	/** Access to maps, echoes and Tr/Te values*/
 	public Object[] getMapsImage(boolean writeParametersForExplorer) {
 		int fontSize=15;
-		ImagePlus maps= new Duplicator().run(hyperImg,1,3,1,dims[2],1,nTimepoints);
-		String[][][]texts=new String[3][dims[2]][nTimepoints];
-		for(int z=0;z<dims[2];z++)for(int t=0;t<nTimepoints;t++)for(int c=0;c<3;c++) {
+		int nMaps=getNumberOfMaps();
+		ImagePlus maps= new Duplicator().run(hyperImg,1,nMaps,1,dims[2],1,nTimepoints);
+		String[][][]texts=new String[nMaps][dims[2]][nTimepoints];
+		for(int z=0;z<dims[2];z++)for(int t=0;t<nTimepoints;t++)for(int c=0;c<nMaps;c++) {
 			texts[c][z][t]="   "+MRUtils.getDataTypeOfThisMagneticResonanceSlice(maps, c, z, t)+"  Day="+actualDay[t]+"    Z="+z;
 			if(writeParametersForExplorer) VitimageUtils.writeTextOnGivenImage(texts[c][z][t],maps ,fontSize ,30 ,dims[1]-30,c, z, t);
 		}  
@@ -320,28 +397,38 @@ public class HyperMRIT1T2 {
 		return new Object[] {maps,texts};
 	}
 
+	public int getNumberOfMaps() {
+		int nMaps=0;
+		for(int i=0;i<hyperImg.getNChannels();i++) {
+			if(hyperImg.getStack().getSliceLabel(VitimageUtils.getCorrespondingSliceInHyperImage(hyperImg, i, 0, 0)).contains("MAP")) {
+				nMaps=i+1;		
+			}
+		}
+		return nMaps;
+	}
 
 	public Object[] getEchoesImage(boolean writeParametersForExplorer) {
 		int fontSize=15;
-		ImagePlus echoes= new Duplicator().run(hyperImg,4,nChannels,1,dims[2],1,nTimepoints);
-		String[][][]texts=new String[nChannels-3][dims[2]][nTimepoints];
-		for(int z=0;z<dims[2];z++)for(int t=0;t<nTimepoints;t++) for(int c=0;c<nChannels-3;c++) {
+		int nMaps=getNumberOfMaps();
+		System.out.println("Nmaps="+nMaps);
+		System.out.println("new Duplicator().run(hyperImg,"+(nMaps+1)+","+nChannels+",1,"+dims[2]+",1,"+nTimepoints);
+		VitimageUtils.printImageResume(hyperImg);
+		ImagePlus echoes= new Duplicator().run(hyperImg,nMaps+1,nChannels,1,dims[2],1,nTimepoints);
+		String[][][]texts=new String[nChannels-nMaps][dims[2]][nTimepoints];
+		for(int z=0;z<dims[2];z++)for(int t=0;t<nTimepoints;t++) for(int c=0;c<nChannels-nMaps;c++) {
 			texts[c][z][t]="   "+MRUtils.getDataTypeOfThisMagneticResonanceSlice(echoes, c, z, t)+"  Day="+actualDay[t]+"   Z="+z+
 						"  TR="+(MRUtils.readTrInSliceLabel(echoes, c, z, t))+"  TE="+(MRUtils.readTeInSliceLabel(echoes, c, z, t));
 			if(writeParametersForExplorer) VitimageUtils.writeTextOnGivenImage(texts[c][z][t],echoes ,fontSize ,30 ,10,c , z, t);
-			//System.out.println("Just read tr="+MRUtils.readTrInSliceLabel(echoes, c, z, t)+"te="+MRUtils.readTeInSliceLabel(echoes, c, z, t));
 		}
 		echoes.setPosition(VitimageUtils.getCorrespondingSliceInHyperImage(echoes, 1, dims[2]/2, 0));
 		return new Object[] {echoes,texts};
 	}
 
-	
 	public int getT1T2SeqNumberReps(int t){
 		int nb=0;
 		for(int c=0;c<this.nChannels;c++)if(mrDataType[t][c]==MRDataType.T1T2SEQ)nb++;
 		return nb;
 	}
-
 	
 	public int getT1SeqNumberReps(int t){
 		int nb=0;
@@ -354,8 +441,6 @@ public class HyperMRIT1T2 {
 		for(int c=0;c<this.nChannels;c++)if(mrDataType[t][c]==MRDataType.T2SEQ)nb++;
 		return nb;
 	}
-
-
 	
 	public int[]getT1Indices(int t){
 		int[]ret=new int[getT1SeqNumberReps(t)];
@@ -396,33 +481,6 @@ public class HyperMRIT1T2 {
 		return ret;
 	}
 
-/*
-	public double[]getT1TrTimes(int t){
-		int incr=0;
-		double[]ret=new double[getT1SeqNumberReps(t)];
-		for(int c=0;c<this.nChannels;c++)if(mrDataType[t][c]==MRDataType.T1SEQ)ret[incr++]=this.Tr[t][c]-TR_ALPHA;		
-		return ret;
-	}
-
-	public double[][]getT1TrTimes(){
-		double[][]ret=new double[this.nTimepoints][];
-		for(int t=0;t<this.nTimepoints;t++)ret[t]=getT1TrTimes(t);
-		return ret;
-	}
-
-	public double[]getT1T2TrTimes(int t){
-		int incr=0;
-		double[]ret=new double[getT1T2SeqNumberReps(t)];
-		for(int c=0;c<this.nChannels;c++)if(mrDataType[t][c]==MRDataType.T1T2SEQ)ret[incr++]=this.Tr[t][c]-TR_ALPHA;		
-		return ret;
-	}
-
-	public double[][]getT1T2TrTimes(){
-		double[][]ret=new double[this.nTimepoints][];
-		for(int t=0;t<this.nTimepoints;t++)ret[t]=getT1T2TrTimes(t);
-		return ret;
-	}
-*/
 	public double[][][]getT1T2TeTimes(){
 		double[][][][]init=getT1T2TrTeTimes();
 		double[][][]ret=new double[this.nTimepoints][dims[2]][];
@@ -447,174 +505,30 @@ public class HyperMRIT1T2 {
 		return ret;
 	}
 	
-	
 	public double[][][]getT1T2TrTeTimes(int t){
 		int incr=0;
 		double[][][]ret=new double[dims[2]][getT1T2SeqNumberReps(t)][2];
-		for(int c=0;c<this.nChannels;c++)if(mrDataType[t][c]==MRDataType.T1T2SEQ) {
-			for(int z=0;z<dims[2];z++)
-				ret[z][incr]=new double[] {this.Tr[t][z][c],this.Te[t][z][c]};
-			incr++;
+		for(int c=0;c<this.nChannels;c++) {
+			System.out.print("Inspecting channel t"+t+" c"+c+" with "+this.Tr[t][0][c]+" , "+this.Te[t][0][c]+"...");
+			if(mrDataType[t][c]==MRDataType.T1T2SEQ) {
+				System.out.println("Ok.");
+				for(int z=0;z<dims[2];z++)
+					ret[z][incr]=new double[] {this.Tr[t][z][c],this.Te[t][z][c]};
+				incr++;
+			}
+			else System.out.println("No.");
 		}
 		return ret;
 	}
-	
+		
 	public double[][][][]getT1T2TrTeTimes(){
 		double[][][][]ret=new double[nTimepoints][][][];
 		for(int t=0;t<this.nTimepoints;t++)ret[t]=getT1T2TrTeTimes(t);
 		return ret;
 	}
-	/*
-	public double[]getT2TeTimes(int t){
-		double[]ret=new double[getT2SeqNumberReps(t)];
-		int incr=0;
-		for(int c=0;c<this.nChannels;c++)if(mrDataType[t][c]==MRDataType.T2SEQ)ret[incr++]=this.Te[t][c]+TR_ALPHA;		
-		return ret;
-	}
-
-	public double[][]getT2TeTimes(){
-		double[][]ret=new double[this.nTimepoints][];
-		for(int t=0;t<this.nTimepoints;t++)ret[t]=getT2TeTimes(t);
-		return ret;
-	}
-
-	public double[]getT1T2TeTimes(int t){
-		double[]ret=new double[getT1T2SeqNumberReps(t)];
-		int incr=0;
-		for(int c=0;c<this.nChannels;c++)if(mrDataType[t][c]==MRDataType.T1T2SEQ)ret[incr++]=this.Te[t][c]+(this.Tr[t][c]>9000 ? TE_ALPHA : 0);		
-		return ret;
-	}
-
-*/
-	/*
-	public double[][][]getMRISignalForThisVoxel(int x,int y, int z,int t){
-		return getMeanMRISignalAroundThisVoxel(x, y, z, t, 0,0);
-	}*/
-/*	
-	public double[][][]getMeanMRISignalAroundThisVoxel(int x,int y, int z,int t,int crossWidth,int crossThick){
-		int xm,ym,xM,yM,zm,zM;
-		xm=Math.max(0, x-crossWidth);
-		xM=Math.min(dims[0]-1, x+crossWidth);
-		ym=Math.max(0, y-crossWidth);
-		yM=Math.min(dims[1]-1, y+crossWidth);
-		zm=Math.max(0, z-crossThick);
-		zM=Math.min(dims[2]-1, z+crossThick);
-
-		double[]t1Times=this.getT1T2TrTeTimes(t);
-		double[]t2Times=this.getT2TeTimes(t);
-		int[]t1Indices=this.getT1Indices(t);
-		int[]t2Indices=this.getT2Indices(t);
-		int nHits=(xM-xm+1)*(yM-ym+1)*(zM-zm+1);
-		int currentChan;
-		double[]mrDataT1Seq= new double[t1Times.length];
-		double[]mrDataT2Seq= new double[t2Times.length];
-		double weightForEachVoxel=1.0/nHits;
-		float[]pixels;
-		for(int t1trInd=0;t1trInd<t1Indices.length;t1trInd++) {			
-			currentChan=t1Indices[t1trInd];
-			for(int zz=zm;zz<=zM;zz++) {
-				int indexSlice=this.nChannels*dims[2]*t + this.nChannels*zz + currentChan + 1;
-				pixels=((float[])(this.hyperImg.getStack().getProcessor(indexSlice).getPixels()));
-				for(int xx=xm;xx<=xM;xx++) {
-					for(int yy=ym;yy<=yM;yy++) {
-						mrDataT1Seq[t1trInd]+=weightForEachVoxel*(double)pixels[xx + this.dims[0] * yy];
-					}
-				}
-			}
-		}
-		for(int t2teInd=0;t2teInd<t1Indices.length;t2teInd++) {			
-			currentChan=t2Indices[t2teInd];
-			for(int zz=zm;zz<=zM;zz++) {
-				int indexSlice=this.nChannels*dims[2]*t + this.nChannels*zz + currentChan + 1;
-				pixels=((float[])(this.hyperImg.getStack().getProcessor(indexSlice).getPixels()));
-				for(int xx=xm;xx<=xM;xx++) {
-					for(int yy=ym;yy<=yM;yy++) {
-						mrDataT2Seq[t2teInd]+=weightForEachVoxel*(double)pixels[xx + this.dims[0] * yy];
-					}
-				}
-			}
-		}
-		
-		return new double[][][] {{t1Times,mrDataT1Seq},{t2Times,mrDataT2Seq}};		
-	}
-*/
-/*
-	public double[][][]getMeanMRISignalAroundThisVoxelT1T2(int x,int y, int z,int t,int crossWidth,int crossThick){
-		int xm,ym,xM,yM,zm,zM;
-		xm=Math.max(0, x-crossWidth);
-		xM=Math.min(dims[0]-1, x+crossWidth);
-		ym=Math.max(0, y-crossWidth);
-		yM=Math.min(dims[1]-1, y+crossWidth);
-		zm=Math.max(0, z-crossThick);
-		zM=Math.min(dims[2]-1, z+crossThick);
-
-		double[]t1t2TrTimes=this.getT1T2TrTimes(t);
-		double[]t1t2TeTimes=this.getT1T2TeTimes(t);
-		int[]t1t2Indices=this.getT1T2Indices(t);
-		int nHits=(xM-xm+1)*(yM-ym+1)*(zM-zm+1);
-		int currentChan;
-		double[]mrDataT1T2Seq= new double[t1t2TrTimes.length];
-		double weightForEachVoxel=1.0/nHits;
-		float[]pixels;
-		for(int echoInd=0;echoInd<t1t2Indices.length;echoInd++) {			
-			currentChan=t1t2Indices[echoInd];
-			for(int zz=zm;zz<=zM;zz++) {
-				int indexSlice=this.nChannels*dims[2]*t + this.nChannels*zz + currentChan + 1;
-				pixels=((float[])(this.hyperImg.getStack().getProcessor(indexSlice).getPixels()));
-				for(int xx=xm;xx<=xM;xx++) {
-					for(int yy=ym;yy<=yM;yy++) {
-						mrDataT1T2Seq[echoInd]+=weightForEachVoxel*(double)pixels[xx + this.dims[0] * yy];
-					}
-				}
-			}
-		}
-		
-		return new double[][][] {{t1t2TrTimes},{t1t2TeTimes},{mrDataT1T2Seq}};		
-	}
-	
-	public double[][][][]getFullMRISignalAroundThisVoxel(int x,int y, int z,int crossWidth,int crossThick){
-		int xm,ym,xM,yM,zm,zM;
-		xm=Math.max(0, x-crossWidth);
-		xM=Math.min(dims[0]-1, x+crossWidth);
-		ym=Math.max(0, y-crossWidth);
-		yM=Math.min(dims[1]-1, y+crossWidth);
-		zm=Math.max(0, z-crossThick);
-		zM=Math.min(dims[2]-1, z+crossThick);
-
-		int[][]t1Indices=this.getT1Indices();
-		int[][]t2Indices=this.getT2Indices();
-		int nHits=(xM-xm+1)*(yM-ym+1)*(zM-zm+1);
-		double[][][][]data= new double[nTimepoints][nHits][2][];//[times][vox][Seq][echos]
-		
-		int currentChan;
-		int index;
-		
-		for(int t=0;t<this.nTimepoints;t++) {			
-			for(int zz=zm;zz<=zM;zz++) {
-				for(int xx=xm;xx<=xM;xx++) {
-					for(int yy=ym;yy<=yM;yy++) {
-						index=(xx-xm) + (xM-xm+1)*(yy-ym) + (xM-xm+1)*(yM-ym+1)*(zz-zm);
-						data[t][index][0]=new double[t1Indices[t].length];
-						for(int t1trInd=0;t1trInd<t1Indices[t].length;t1trInd++) {			
-							currentChan=t1Indices[t][t1trInd];
-							int indexSlice=this.nChannels*dims[2]*t + this.nChannels*zz + currentChan + 1;
-							data[t][index][0][t1trInd]=hyperImg.getStack().getProcessor(indexSlice).getPixelValue(xx, yy);
-						}
-						data[t][index][1]=new double[t2Indices[t].length];
-						for(int t2teInd=0;t2teInd<t2Indices[t].length;t2teInd++) {			
-							currentChan=t2Indices[t][t2teInd];
-							int indexSlice=this.nChannels*dims[2]*t + this.nChannels*zz + currentChan + 1;
-							data[t][index][1][t2teInd]=hyperImg.getStack().getProcessor(indexSlice).getPixelValue(xx, yy);
-						}
-					}
-				}	
-			}
-		}
-		return data;
-	}
-*/
 	
 	
+	/**Access to magnitude data*/
 	public double[][][][]getFullMRISignalAroundThisVoxelT1T2(int x,int y, int z,int crossWidth,int crossThick,double sigmaXYInVoxels){
 		int xm,ym,xM,yM,zm,zM;
 		xm=Math.max(0, x-crossWidth);
@@ -643,7 +557,7 @@ public class HyperMRIT1T2 {
 		
 		ImagePlus temp=VitimageUtils.cropMultiChannelFloatImage(hyperImg,xm2,xM2,ym2,yM2,zm,zM);
 		temp=VitimageUtils.gaussianFilteringMultiChannel(temp,sigmaXYInVoxels,sigmaXYInVoxels,0);//It's no error : no "big smoothing" over Z, due to misalignment
-		
+	
 		for(int t=0;t<this.nTimepoints;t++) {			
 			for(int zz=zm;zz<=zM;zz++) {
 				for(int xx=xm;xx<=xM;xx++) {
@@ -656,7 +570,7 @@ public class HyperMRIT1T2 {
 							//data[t][index][0][t1trInd]=hyperImg.getStack().getProcessor(indexSlice).getPixelValue(xx, yy);
 							int indexSlice=this.nChannels*(zM-zm+1)*t + this.nChannels*(zz-zm) + currentChan + 1;
 							data[t][index][0][t1trInd]=temp.getStack().getProcessor(indexSlice).getPixelValue(xx-xm2, yy-ym2);
-							System.out.println("data["+t+"]["+index+"][0]["+t1trInd+"]="+data[t][index][0][t1trInd]);
+							//System.out.println("data["+t+"]["+index+"][0]["+t1trInd+"]="+data[t][index][0][t1trInd]);
 						}
 					}
 				}	
@@ -665,47 +579,9 @@ public class HyperMRIT1T2 {
 		return data;
 	}
 
-
-	
-	
-	/*
-	
-	public double[][][][]getFullMRISignalInTheseCoordinates(int xCor,int yCor, int zCor,int[][]coordinates){
-		double[][]t1Times=this.getT1T2TrTeTimes();
-		double[][]t2Times=this.getT2TeTimes();
-		int[][]t1Indices=this.getT1Indices();
-		int[][]t2Indices=this.getT2Indices();
-		int nHits=coordinates.length;
-		double[][][][]data= new double[t1Times.length][nHits][2][];//[times][vox][Seq][echos]		
-		int currentChan;
-		int index,xx,yy,zz;		
-		for(int t=0;t<this.nTimepoints;t++) {			
-			for(int vo=0;vo<nHits;vo++) {
-				xx=coordinates[vo][0];
-				yy=coordinates[vo][1];
-				zz=zCor;
-				data[t][vo][0]=new double[t1Indices[t].length];
-				data[t][vo][1]=new double[t2Indices[t].length];
-				//System.out.println("Processing ROI coordinates : zCor="+zCor+" t="+t+", pts="+xx+","+yy);
-				for(int t1trInd=0;t1trInd<t1Indices[t].length;t1trInd++) {			
-					currentChan=t1Indices[t][t1trInd];
-					int indexSlice=this.nChannels*dims[2]*t + this.nChannels*zz + currentChan + 1;
-					data[t][vo][0][t1trInd]=hyperImg.getStack().getProcessor(indexSlice).getPixelValue(xx, yy);
-				}
-				//System.out.println(TransformUtils.stringVectorN(data[t][vo][0],"T1seq"));
-				for(int t2teInd=0;t2teInd<t2Indices[t].length;t2teInd++) {			
-					currentChan=t2Indices[t][t2teInd];
-					int indexSlice=this.nChannels*dims[2]*t + this.nChannels*zz + currentChan + 1;
-					data[t][vo][1][t2teInd]=hyperImg.getStack().getProcessor(indexSlice).getPixelValue(xx, yy);
-				}
-				//System.out.println(TransformUtils.stringVectorN(data[t][vo][1],"T2seq")+"\n");
-			}
-		}
-		return data;
-	}*/
-
 	public double[][][][]getFullMRISignalInTheseCoordinatesT1T2(int xCor,int yCor, int zCor,int[][]coordinates,double sigmaXYInVoxels){
-		int[][]t1t2Indices=this.getT2Indices();
+		int[][]t1t2Indices=this.getT1T2Indices();
+		//System.out.println("GOT T1T2"+t1t2TrTeIndices[0][0].length+" , "+t1t2TrTeIndices[0][0][0].length);
 		int nHits=coordinates.length;
 		int bboxX0=100000000;
 		int bboxXf=0;
@@ -723,22 +599,22 @@ public class HyperMRIT1T2 {
 		bboxYf=Math.min(dims[1]-1, bboxYf+5);
 	
 		ImagePlus temp=VitimageUtils.cropMultiChannelFloatImage(hyperImg,bboxX0,bboxXf,bboxY0,bboxYf,zCor,zCor);
-		temp=VitimageUtils.gaussianFiltering(temp,sigmaXYInVoxels,sigmaXYInVoxels,0);//It's no error : no "big smoothing" over Z, due to misalignment
-		
+		temp=VitimageUtils.gaussianFilteringMultiChannel(temp,sigmaXYInVoxels,sigmaXYInVoxels,0);//It's no error : no "big smootphrahing" over Z, due to misalignment
 		double[][][][]data= new double[t1t2Indices.length][nHits][1][];//[times][vox][Seq][echos]		
 		int currentChan;
-		int index,xx,yy,zz;		
+		int index,xx,yy;	
 		for(int t=0;t<this.nTimepoints;t++) {			
 			for(int vo=0;vo<nHits;vo++) {
 				xx=coordinates[vo][0]-bboxX0;
 				yy=coordinates[vo][1]-bboxY0;
-				zz=0;
-				data[t][vo][1]=new double[t1t2Indices[t].length];
+				System.out.println("\nProcessing voxel "+vo+" at coordinates "+xx+" , "+yy);
+				data[t][vo][0]=new double[t1t2Indices[t].length];
 				for(int t1trInd=0;t1trInd<t1t2Indices[t].length;t1trInd++) {			
 					currentChan=t1t2Indices[t][t1trInd];
-					int indexSlice=this.nChannels*1*t + this.nChannels*0 + currentChan + 1;
+					int indexSlice=this.nChannels*t + currentChan + 1;
 					data[t][vo][0][t1trInd]=temp.getStack().getProcessor(indexSlice).getPixelValue(xx, yy);
 				}
+				System.out.println(" ->"+TransformUtils.stringVectorN(data[t][vo][0], ""));
 			}
 		}
 		return data;
@@ -769,4 +645,220 @@ public class HyperMRIT1T2 {
 	
 	
 	
+	
+	
+	public static HyperMRIT1T2 importHyperMapFromRawDataDir(String inputDir,String nameObservation) {
+		T1T2Seq_Importer t1t2=new T1T2Seq_Importer();
+		ImagePlus hyperMap=t1t2.run(inputDir,nameObservation);
+		return new HyperMRIT1T2(hyperMap);
+	}
+	
+	
+	public void computeMapsAgain() {
+		hyperImg.show();
+		VitimageUtils.waitFor(10000);
+		if(hyperImg.getNFrames()>1) {VitiDialogs.notYet("ComputeMapsAgain of 5D hypermaps in HyperMRIT1T2");return;}
+		int Z=hyperImg.getNSlices();
+		int C=hyperImg.getNChannels();
+		int T=hyperImg.getNFrames();
+		int X=hyperImg.getWidth();
+		int Y=hyperImg.getHeight();
+		ImagePlus imgMask=new Duplicator().run(hyperImg,4,4,1,Z,1,T);
+		ImagePlus []imgT1T2Line=VitimageUtils.stacksFromHyperstackFastBis((ImagePlus)(getEchoesImage(false)[0]));
+		boolean makeBoutureTrick=hyperImg.getStack().getSliceLabel(1).contains("BOUTURE");
+		IJ.run(imgMask,"32-bit","");
+		for(int i=0;i<imgT1T2Line.length;i++)IJ.run(imgT1T2Line[i],"32-bit","");
+		
+		//Compute T1T2mono
+		ImagePlus[]	maps=MRUtils.computeT1T2Map(imgT1T2Line, sigmaInUse,makeBoutureTrick ? MRUtils.T1T2_MONO_RICE : MRUtils.T1T2_MONO_RICE);		
+		ImagePlus M0Mono=maps[0];
+		ImagePlus T1Mono=maps[0];
+		ImagePlus T2Mono=maps[0];
+		ImagePlus khi2Mono=maps[3];
+
+		
+		//Compute T1T2bi
+		maps=MRUtils.computeT1T2Map(imgT1T2Line, sigmaInUse,makeBoutureTrick ? MRUtils.T1T2_MULTI_RICE : MRUtils.T1T2_MULTI_RICE);
+		ImagePlus M0Multi1=maps[0];
+		ImagePlus M0Multi2=maps[1];
+		ImagePlus T1Multi=maps[2];
+		ImagePlus T2Multi1=maps[3];
+		ImagePlus T2Multi2=maps[4];
+		ImagePlus khi2Multi=maps[5];
+
+		
+		//Combine
+		ImagePlus retM0=M0Mono.duplicate();
+		ImagePlus retT2=T2Mono.duplicate();
+		ImagePlus retT1=T1Mono.duplicate();
+		ImagePlus selectedModel=imgMask.duplicate();
+		ImagePlus portionMap=imgMask.duplicate();
+		int index;
+		for(int z=0;z<dims[2];z++) {
+			float[]valsRetM0=(float[]) retM0.getStack().getProcessor(z+1).getPixels();
+			float[]valsRetT2=(float[]) retT2.getStack().getProcessor(z+1).getPixels();
+			float[]valsRetT1=(float[]) retT1.getStack().getProcessor(z+1).getPixels();
+			float[]valsM0=(float[]) M0Mono.getStack().getProcessor(z+1).getPixels();
+			float[]valsM0Multi1=(float[]) M0Multi1.getStack().getProcessor(z+1).getPixels();
+			float[]valsM0Multi2=(float[]) M0Multi2.getStack().getProcessor(z+1).getPixels();
+			float[]valsT1=(float[]) T1Mono.getStack().getProcessor(z+1).getPixels();
+			float[]valsT1Multi=(float[]) T1Multi.getStack().getProcessor(z+1).getPixels();
+			float[]valsT2=(float[]) T2Mono.getStack().getProcessor(z+1).getPixels();
+			float[]valsT2Multi1=(float[]) T2Multi1.getStack().getProcessor(z+1).getPixels();
+			float[]valsT2Multi2=(float[]) T2Multi2.getStack().getProcessor(z+1).getPixels();
+			float[]valMask=(float[]) imgMask.getStack().getProcessor(z+1).getPixels();
+			float[]valKhi2=(float[]) khi2Mono.getStack().getProcessor(z+1).getPixels();
+			float[]valKhi2Multi=(float[]) khi2Multi.getStack().getProcessor(z+1).getPixels();
+			float[]valSelectedModel=(float[]) selectedModel.getStack().getProcessor(z+1).getPixels();
+			float[]valPortionMap=(float[]) portionMap.getStack().getProcessor(z+1).getPixels();
+			for(int y=0;y<dims[1];y++) {
+				for(int x=0;x<dims[0];x++) {
+					index=y*dims[0]+x;
+					if((int)Math.round(valMask[index])%2==0) {
+						valsRetM0[index]=0;
+						valsRetT1[index]=0;
+						valsRetT2[index]=0;
+						continue;//If out of mask, set to 0  (work already done)
+					}
+					if(valKhi2Multi[index]>=MRUtils.ERROR_KHI2) {
+						if(valKhi2[index]<MRUtils.ERROR_KHI2) {
+							//if multicomp is out, and monocomp khi < errorkhi, set to monocomp (already done)
+						}
+						else {
+							//else set to 0
+							valsRetM0[index]=0;
+							valsRetT1[index]=0;
+							valsRetT2[index]=0;
+						}
+					}
+					else {
+						if(valKhi2Multi[index]<valKhi2[index]) {
+							//if T2 bi less Khi, // eventually : and T2 vals > 10  , < 500 and ratio between components > 0.02, < 50
+							valsRetM0[index]=valsM0Multi1[index]+valsM0Multi2[index];
+							valsRetT1[index]=valsT1Multi[index];
+							valsRetT2[index]=(valsT2Multi1[index]*valsM0Multi1[index]+valsT2Multi2[index]*valsM0Multi2[index])/(valsM0Multi1[index]+valsM0Multi2[index]);
+							valSelectedModel[index]=2;
+							valPortionMap[index]=valsM0Multi1[index]/(valsM0Multi1[index]+valsM0Multi2[index]);
+						}
+						else { 
+							if(valKhi2[index]<MRUtils.ERROR_KHI2) {
+								//if T1 khi < errorkhi, set to T1
+								valsRetM0[index]=valsM0[index];
+								valsRetT1[index]=valsT1[index];
+								valsRetT2[index]=valsT2[index];
+							}
+							else {
+								//else set to 0
+								valsRetM0[index]=0;
+								valsRetT1[index]=0;
+								valsRetT2[index]=0;
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		ImagePlus []tempRes=new ImagePlus[C];
+		tempRes[0]=retM0;
+		tempRes[1]=retT1;
+		tempRes[2]=retT2;
+		tempRes[3]=imgMask;
+		for(int c=4;c<C;c++) {tempRes[c]=imgT1T2Line[c-4];}
+		for(int c=0;c<C;c++)tempRes[c]=VitimageUtils.convertFloatToShortWithoutDynamicChanges(tempRes[c]);			
+
+		ImagePlus hyperImg=Concatenator.run(tempRes);
+		hyperImg=HyperStackConverter.toHyperStack(hyperImg, C,Z,T,"xyztc","Grayscale");
+
+		
+		//Update capillaryvalues
+		short[]capVals;
+		int nHits;
+		int incr;
+		int slice=0;
+		double sum;
+		for(int t=0;t<T;t++) {
+			for(int z=0;z<Z;z++) {
+				ArrayList<int[]> coordsPointsCap=new ArrayList<int[]>();
+				capVals=(short[])imgMask.getStack().getProcessor(z+1).getPixels();
+				nHits=0;
+				for(int x=0;x<X;x++)for(int y=0;y<Y;y++) if(( capVals[VitimageUtils.getPixelIndex(x, X, y)] & 0xffff ) >4.5) {nHits++; coordsPointsCap.add(new int[] {x,y});};	
+				for(int c=0;c<C;c++) {
+					double[]vals=new double[nHits];
+					incr=0;
+					slice=VitimageUtils.getCorrespondingSliceInHyperImage(hyperImg, c, z, t);
+					capVals=(short[])hyperImg.getStack().getProcessor(slice).getPixels();				
+					for(int i=0;i<nHits;i++) {
+						vals[incr++]=(int)((capVals[VitimageUtils.getPixelIndex(coordsPointsCap.get(i)[0], X, coordsPointsCap.get(i)[1])]) & 0xffff);
+					}
+					double[]stats=VitimageUtils.statistics1D(vals);
+					String label=hyperImg.getStack().getSliceLabel(slice);
+					String []infos=label.split("_");
+					label="";
+					for(int i=0;i<infos.length;i++) {
+						if(infos[i].contains("CAP="))infos[i]=("CAP="+VitimageUtils.dou(stats[0])+"+-"+VitimageUtils.dou(stats[1]));
+						label+=(infos[i])+( (i==infos.length-1) ?  "" : "_");
+					}
+					hyperImg.getStack().setSliceLabel(label,slice);
+				}
+			}
+		}
+		
+		
+		//Update ranges and luts
+		hyperImg.setC(1);
+		IJ.run(hyperImg,"Fire","");
+		hyperImg.setDisplayRange(0,MRUtils.maxDisplayedM0 );
+
+		hyperImg.setC(2);
+		IJ.run(hyperImg,"Fire","");
+		hyperImg.setDisplayRange(0,MRUtils.maxDisplayedT1 );
+
+		hyperImg.setC(3);
+		IJ.run(hyperImg,"Fire","");
+		hyperImg.setDisplayRange(0,MRUtils.maxDisplayedT2 );
+
+		hyperImg.setC(4);
+		IJ.run(hyperImg,"Fire","");
+		hyperImg.setDisplayRange(0,1 );
+
+		hyperImg.setC(5);
+		IJ.run(hyperImg,"Fire","");
+		hyperImg.setDisplayRange(-1,1 );
+
+		for(int c=6;c<=C;c++) {
+			hyperImg.setC(c);
+			IJ.run(hyperImg,"Fire","");
+			hyperImg.setDisplayRange(0,MRUtils.maxDisplayedM0 );
+		}
+
+		hyperImg.show();
+
+		
+	}
+	
+
+	
+	
+	
+	
+	
+	/**Random helpers*/
+	public void showCopy(String text) {
+		ImagePlus temp=hyperImg.duplicate();
+		temp.show();
+		temp.setTitle(text);
+	}
+	
+	public ImagePlus getCopy() {
+		return hyperImg.duplicate();
+	}
+	
+	
+	
+	
+	
+	
+	
+
 }

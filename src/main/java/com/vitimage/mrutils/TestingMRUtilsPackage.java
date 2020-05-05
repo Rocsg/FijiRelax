@@ -16,24 +16,13 @@ public class TestingMRUtilsPackage {
 
 
 	public static void testDims() {
-		ImagePlus img1=IJ.openImage("/home/fernandr/Bureau/p1.tif");
-		ImagePlus img2=IJ.openImage("/home/fernandr/Bureau/p2.tif");
-		ImagePlus[]tab1=VitimageUtils.stacksFromHyperstackFastBis(img1);
-		ImagePlus[]tab2=VitimageUtils.stacksFromHyperstackFastBis(img2);
-		ImagePlus[]tab3=new ImagePlus[tab1.length+tab2.length];
-		for(int i=0;i<tab1.length;i++)tab3[i]=tab1[i];
-		for(int i=0;i<tab2.length;i++)tab3[i+tab1.length]=tab2[i];
-		ImagePlus res=new Concatenator().run(tab3);
-		String codeStacking="xyztc";
-		ImagePlus hyperImage=HyperStackConverter.toHyperStack(res, tab1.length+tab2.length, 4,1,codeStacking,"Grayscale");
-		res.show();
-		VitimageUtils.waitFor(1000000);
-
 		String pathSource="/home/fernandr/Bureau/Traitements/Sorgho/Donnees_brutes_export_Romain";
 		String tempStr=pathSource;
 		for (String str1 : VitimageUtils.stringArraySort( new File(tempStr).list())) {
+			System.out.println("\n\n\nSpecimen="+str1);
 			tempStr=pathSource+"/"+str1;
 			for (String str2 : VitimageUtils.stringArraySort( new File(tempStr).list())) {
+				System.out.println("|\n|--Experiment="+str2);
 				tempStr=pathSource+"/"+str1+"/"+str2;
 				for (String str3 : VitimageUtils.stringArraySort( new File(tempStr).list())) {
 					tempStr=pathSource+"/"+str1+"/"+str2+"/"+str3;
@@ -41,8 +30,10 @@ public class TestingMRUtilsPackage {
 					tempStr=pathSource+"/"+str1+"/"+str2+"/"+str3+"/"+str4;
 					String str5 = VitimageUtils.stringArraySort( new File(tempStr).list())[0];
 					tempStr=pathSource+"/"+str1+"/"+str2+"/"+str3+"/"+str4+"/"+str5;
-					System.out.println(tempStr);
-					VitimageUtils.printImageResume(IJ.openImage(tempStr));
+//					VitimageUtils.printImageResume(IJ.openImage(tempStr));
+					double []dims=VitimageUtils.getVoxelSizes(IJ.openImage(tempStr));
+					double vol=VitimageUtils.getVoxelVolume(IJ.openImage(tempStr));
+					System.out.println("|----"+str2+" "+str3+" "+str4+" VoxelVolume="+VitimageUtils.dou(1000*vol)+" .10^-3 mm3     "+"Voxelsizes = "+dims[0]+" X "+dims[1]+" X "+dims[1]);
 				}	
 			}			
 		}
@@ -63,21 +54,27 @@ public class TestingMRUtilsPackage {
 	
 	public static void chiasse() {
 		String dirIn="/home/fernandr/Bureau/Traitements/Sorgho/Cartes_calculees_methode_Romain";
-		String dirOut="/home/fernandr/Bureau/Traitements/Sorgho/Cartes_rangees_par_specimen";
+		boolean makeShort=false;
+		String dirOut="";
+		dirOut="/home/fernandr/Bureau/Traitements/Sorgho/Cartes_rangees_par_specimen";
+		if(makeShort)dirOut="/home/fernandr/Bureau/Traitements/Sorgho/Cartes_short";
 		String[]specs=new File(dirIn).list();
 		for(String sp : specs) {
 			System.out.println("Processing "+sp);
 			String[]infoTab=sp.split("_");
-			String strNew=infoTab[0]+"_"+infoTab[2]+"_"+infoTab[1]+".tif";
+			String strNew=infoTab[0]+"_"+infoTab[2]+".tif";
 			ImagePlus img=IJ.openImage(new File(dirIn,sp).getAbsolutePath());
 			img.setC(1);img.setDisplayRange(0, MRUtils.maxDisplayedM0);
 			img.setC(2);img.setDisplayRange(0, MRUtils.maxDisplayedT1);
 			img.setC(3);img.setDisplayRange(0, MRUtils.maxDisplayedT2);
-			for(int c=4;c<=img.getNChannels();c++) {img.setC(c);img.setDisplayRange(0, MRUtils.maxDisplayedM0);}
+			img.setC(4);img.setDisplayRange(0, 1);
+			img.setC(5);img.setDisplayRange(-1, 1);
+			for(int c=6;c<=img.getNChannels();c++) {img.setC(c);img.setDisplayRange(0, MRUtils.maxDisplayedM0);}
 			
 			String fileOut=new File(dirOut,infoTab[0]).getAbsolutePath();
 			fileOut=new File(fileOut,strNew).getAbsolutePath();
 			System.out.println("Sauvegarde in "+fileOut);
+			if(makeShort)img=new Duplicator().run(img,1,3,1,4,1,1);
 			IJ.saveAsTiff(img,fileOut);			
 		}
 		System.exit(0);

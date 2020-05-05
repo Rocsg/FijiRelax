@@ -10,7 +10,7 @@ import ij.macro.Program;
 import ij.macro.Tokenizer;
 
 public class SimplexDualCurveFitter{
-	
+	public static final boolean debugBionano=false;
 	public static  int IterFactor = 500;
 	protected double sigma;   
 	private static final double alpha = -1.0;	  // reflection coefficient
@@ -142,28 +142,28 @@ public class SimplexDualCurveFitter{
 						if(teData[c]==tabTeVals[te]) {
 							magData2D[tr][te]=magData[c];
 							tabTrSeriesLength[tr]=te+1;
-							System.out.println(magData2D[tr][te]);
+							if(debugBionano)System.out.println(magData2D[tr][te]);
 						}
 					}				
 				}
 			}
 		}
-		System.out.println("Nul ?"+(magData2D==null));
+		if(debugBionano)System.out.println("Nul ?"+(magData2D==null));
 	}	
 	
 	public void inspect2DTab() {
-		System.out.println("Nul ?"+(magData2D==null));
+		if(debugBionano)System.out.println("Nul ?"+(magData2D==null));
 		for(int i=0;i<magData2D.length;i++) {
-			System.out.println("\nInspecting new serie for Tr="+tabTrVals[i]+" of length "+tabTrSeriesLength[i]);
+			if(debugBionano)System.out.println("\nInspecting new serie for Tr="+tabTrVals[i]+" of length "+tabTrSeriesLength[i]);
 			for(int j=0;j<magData2D[i].length;j++) {
-				System.out.print("  Te "+tabTeVals[j]+" : "+magData2D[i][j]);
+				if(debugBionano)System.out.print("  Te "+tabTeVals[j]+" : "+magData2D[i][j]);
 			}
 		}		
-		System.out.println();
+		if(debugBionano)System.out.println();
 	}
 
 	public void inspectT2EstimatedValues() {
-		System.out.println("T2 vas computed. Values : T2="+this.t2+"  , R2="+this.r2+"  , M0="+this.m0t2);
+		if(debugBionano)System.out.println("T2 vas computed. Values : T2="+this.t2+"  , R2="+this.r2+"  , M0="+this.m0t2);
 	}
 	
 	public void computeT2Bionano() {
@@ -171,20 +171,20 @@ public class SimplexDualCurveFitter{
 		t2=0;
 		m0t2=0;
 		r2=Math.log(magData2D[indexTr10000][0]/magData2D[indexTr10000][2])/(tabTeVals[2]-tabTeVals[0]);
-		System.out.println("Computed r2="+r2);
+		if(debugBionano)System.out.println("Computed r2="+r2);
 		if(r2>0.1)r2=Double.NaN;
 		else if(r2<0.0006666)r2=Double.NaN;
 		else {
 			t2=1/r2;
 			m0t2=magData2D[indexTr10000][0]*Math.exp(tabTeVals[0]*r2);
-			System.out.println("Computed m0="+m0t2);
-			System.out.println("Computed t2="+t2);
+			if(debugBionano)System.out.println("Computed m0="+m0t2);
+			if(debugBionano)System.out.println("Computed t2="+t2);
 		}
 	}	
 	
 	
 	public void computeT1Bionano() {
-		System.out.println("\n\nT1 COMPUTATION");
+		if(debugBionano)System.out.println("\n\nT1 COMPUTATION");
 		//T1 COMPUTATION
     	//Sum all echoes for each Tr
 		double[]magSum=new double[magData2D.length-1];
@@ -195,29 +195,29 @@ public class SimplexDualCurveFitter{
         double factorT2=0;
         for(int i=0;i<nForSums;i++) {
         	factorT2+=Math.exp(-tabTeVals[i]/t2);
-        	System.out.println("Constitution factorT2="+factorT2+" apres iteration "+i);
+        	if(debugBionano)System.out.println("Constitution factorT2="+factorT2+" apres iteration "+i);
         }
         
     	//Build an ArrayList of cases to compute
         ArrayList<double[]>cases=new ArrayList<double[]>();
         for(int i=0;i<magSum.length;i++) for(int j=i+1;j<magSum.length;j++) {
-        	System.out.println("Checking couple "+tabTrVals[j]+" / "+tabTrVals[i]);
+        	if(debugBionano)System.out.println("Checking couple "+tabTrVals[j]+" / "+tabTrVals[i]);
     		boolean newCase=false;
         	if((tabTrVals[j]/tabTrVals[i])==1.5) {cases.add(new double[] {i,j,15,0,0,0});newCase=true;}
         	if((tabTrVals[j]/tabTrVals[i])==2) {cases.add(new double[] {i,j,20,0,0,0});newCase=true;}//      0       1         2      3    4
         	if((tabTrVals[j]/tabTrVals[i])==3) {cases.add(new double[] {i,j,30,0,0,0});newCase=true;}// Indice a , indice b,   Cas,   M0 , T1,
-        	if(newCase)System.out.println("i="+i+" Tr="+tabTrVals[i]+"  j="+j+" Tr="+tabTrVals[j]+"  constitued case"+TransformUtils.stringVectorN(cases.get(cases.size()-1),""));
+        	if(newCase)if(debugBionano)System.out.println("i="+i+" Tr="+tabTrVals[i]+"  j="+j+" Tr="+tabTrVals[j]+"  constitued case"+TransformUtils.stringVectorN(cases.get(cases.size()-1),""));
         }
         
         //Process the cases
         for(int i=0;i<cases.size();i++) {
         	double[]tab=cases.get(i);
-        	System.out.println("\nProcessing case "+i+" : "+TransformUtils.stringVectorN(cases.get(i),""));
+        	if(debugBionano)System.out.println("\nProcessing case "+i+" : "+TransformUtils.stringVectorN(cases.get(i),""));
         	double Ma=magSum[(int) tab[0]];
     		double Mb=magSum[(int) tab[1]];
     		double Ta=tabTrVals[(int) tab[0]];
     		double Tb=tabTrVals[(int) tab[1]];
-    		System.out.println("Ma="+Ma+" Ta="+Ta+"  Mb="+Mb+"  Tb="+Tb);
+    		if(debugBionano)System.out.println("Ma="+Ma+" Ta="+Ta+"  Mb="+Mb+"  Tb="+Tb);
     		try {
 	    		if(tab[2]==15) {//TODO : gerer les exceptions, et envoyer une valeur négative
 	        		tab[3]=-(2*Ma*Ma*Ma)/(Mb*Mb-3*Ma*Ma+Math.sqrt((-(Ma-Mb)*(Ma-Mb)*(Ma-Mb)*(3*Ma+Mb))));
@@ -229,16 +229,17 @@ public class SimplexDualCurveFitter{
 	        		tab[3]=-(2*Ma*Ma*Ma)/(Math.sqrt(-Ma*Ma*Ma*(3*Ma-4*Mb))-3*Ma*Ma);
 	        	}
     		}
-    		catch(Exception e) {System.out.println("Got an exception in polynom!");tab[3]=Double.NaN;}
+    		catch(Exception e) {if(debugBionano)System.out.println("Got an exception in polynom!");tab[3]=Double.NaN;}
     		try {
     			tab[4]=-Tb/(Math.log(1-Mb/tab[3]));        	
     		}
-    		catch(Exception e) {System.out.println("Got an exception in log!");tab[4]=Double.NaN;}
+    		catch(Exception e) {if(debugBionano)System.out.println("Got an exception in log!");tab[4]=Double.NaN;}
         	//Remove all values according to conditions
             if(tab[3]<=0)tab[3]=Double.NaN;
             if(tab[4]<=0)tab[4]=Double.NaN;
-            if(tab[4]>3000)tab[4]=Double.NaN;
-            System.out.println("Finally, values="+tab[3]+" , "+tab[4]);
+            double temp=tab[4];
+            if(tab[4]>3000) {temp=tab[4];tab[4]=Double.NaN;}
+            if(debugBionano)System.out.println("Finally, values="+tab[3]+" , "+temp+" set to "+tab[4]);
         }
         
         
@@ -261,8 +262,8 @@ public class SimplexDualCurveFitter{
         double m0t1Temp=meanHampel(tabM0);
 
         m0t1=m0t1Temp/factorT2;
-        System.out.println("Finally, got : t1="+t1+"  m0t1"+m0t1);
-        bionanoParams=new double[] {m0t1,t1,m0t2,t2};
+        if(debugBionano) System.out.println("Finally, got : t1="+t1+"  m0t1"+m0t1);
+        bionanoParams=new double[] {m0t1,t1,m0t2,t2,0};
     }
     
 	
@@ -270,29 +271,29 @@ public class SimplexDualCurveFitter{
 		if(tab.length==1)return tab[0];
 		//copy in tab with no nan
 		int nGood=0;
-		System.out.println("Hampel");
-		System.out.println(TransformUtils.stringVectorN(tab, "tabInit"));
+		if(debugBionano)System.out.println("Hampel");
+		if(debugBionano)System.out.println(TransformUtils.stringVectorN(tab, "tabInit"));
 		for(int i=0;i<tab.length;i++)if(!Double.isNaN(tab[i]))nGood++;
-		System.out.println("Ngood="+nGood);
+		if(debugBionano)System.out.println("Ngood="+nGood);
 		double[]tab2=new double[nGood];nGood=0;
 		for(int i=0;i<tab.length;i++)if(!Double.isNaN(tab[i]))tab2[nGood++]=tab[i];
-		System.out.println(TransformUtils.stringVectorN(tab, "tab2"));
+		if(debugBionano)System.out.println(TransformUtils.stringVectorN(tab, "tab2"));
 		
 		//compute mean and std
 		double[]stats=VitimageUtils.statistics1D(tab2);
-		System.out.println(TransformUtils.stringVectorN(stats, "Stats tab2"));
+		if(debugBionano)System.out.println(TransformUtils.stringVectorN(stats, "Stats tab2"));
 
 		//copy in tab with no outliers
 		nGood=0;
 		for(int i=0;i<tab2.length;i++)if( (tab2[i]<(stats[0]+3*stats[1])) && (tab2[i]>(stats[0]-3*stats[1])) ) nGood++;
 		double[]tabFinal=new double[nGood];nGood=0;
-		System.out.println("Ngood="+nGood);
+		if(debugBionano)System.out.println("Ngood="+nGood);
 		for(int i=0;i<tab2.length;i++)if( (tab2[i]<(stats[0]+3*stats[1])) && (tab2[i]>(stats[0]-3*stats[1])) ) tabFinal[nGood++]=tab2[i];
-		System.out.println(TransformUtils.stringVectorN(tabFinal, "tabFinal"));
+		if(debugBionano)System.out.println(TransformUtils.stringVectorN(tabFinal, "tabFinal"));
 			
 		//compute mean and std
 		double mean=VitimageUtils.statistics1D(tabFinal)[0];
-		System.out.println("Mean ="+mean+" . Return.");
+		if(debugBionano)System.out.println("Mean ="+mean+" . Return.");
 		return mean;
 	}
 	
@@ -307,12 +308,9 @@ public class SimplexDualCurveFitter{
     }
     
     public void doFit(int fitType) {
-    	System.out.println("Start FIT !"+fitType);
     	if(fitType==MRUtils.T1T2_BIONANO) {computeBioNano();return;}
-    	System.out.println("Start FITTT !"+fitType);
     	
     	doFit(fitType, false);
-    	System.out.println("Start FITTTTTT !"+fitType);
     }
     
     public void doFit(int fitType, boolean showSettings) {
@@ -407,6 +405,7 @@ public class SimplexDualCurveFitter{
         simp = new double[numVertices][numVertices];
         next = new double[numVertices];        
         maxIter = IterFactor * numParams * numParams;  // Where does this estimate come from?
+        if(fitType==MRUtils.T1T2_MULTIMULTI_RICE) maxIter/=numParams;
         restarts = defaultRestarts;
         nRestarts = 0;
         switch (fit) {
@@ -416,8 +415,8 @@ public class SimplexDualCurveFitter{
         	   simp[0][2] = 50;//T2
                break;
            case MRUtils.T1T2_MULTI_RICE:
-        	   simp[0][0] = VitimageUtils.max(magData)/2;
-        	   simp[0][1] = VitimageUtils.max(magData)/2;
+        	   simp[0][0] = VitimageUtils.max(magData)/2*1.1;
+        	   simp[0][1] = VitimageUtils.max(magData)/2*0.9;
         	   simp[0][2] = 1000;//T1
         	   simp[0][3] = 20;//T2
         	   simp[0][4] = 100;//T2
