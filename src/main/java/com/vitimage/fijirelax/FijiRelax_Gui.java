@@ -7,6 +7,7 @@ public class FijiRelax_Gui   extends PlugInFrame{
 
 	/**
 	 * 
+	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
