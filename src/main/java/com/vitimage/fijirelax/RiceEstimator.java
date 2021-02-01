@@ -1,10 +1,34 @@
-package com.vitimage.mrutils;
+package com.vitimage.fijirelax;
 
+import java.util.Random;
+
+import com.vitimage.common.Timer;
+import com.vitimage.common.TransformUtils;
 import com.vitimage.common.VitimageUtils;
+
+import ij.IJ;
+import ij.ImageJ;
+import ij.ImagePlus;
 
 public class RiceEstimator {
 
+
+	public static void test() {
+		int N=100;
+		int SNR=200;
+		double signal=735;
+		double sigma=700/Math.sqrt(SNR);
+		double[]tab=new double[N];
+		for(int i=0;i<N;i++) {
+			tab[i]=getRandomRiceRealization(signal,sigma);
+			System.out.println(tab[i]);
+		}
+		System.out.println(""+VitimageUtils.statistics1D(tab)[0]+" , "+VitimageUtils.statistics1D(tab)[1]);
+	}
+	
 	public static void main(String[]args) {
+		test();
+		System.exit(0);
 		RiceEstimator rice=getDefaultRiceEstimatorForNormalizedHyperEchoesT1AndT2Images();
 		double sigma=0.05;
 		double[]stats=computeSigmaAndMeanBgFromRiceSigmaStatic(sigma);
@@ -15,6 +39,7 @@ public class RiceEstimator {
 			System.out.println("Obs="+VitimageUtils.dou(obs)+" Mean="+VitimageUtils.dou(mea)+"  Sigma="+VitimageUtils.dou(sig));
 		}
 	}
+	
 	
 	private final static double epsilon=0.00001;
 	private final static boolean debug=false;
@@ -183,6 +208,7 @@ public class RiceEstimator {
 	}
 	    
 	static double besFunkCost(double d,double sigma2) {
+		if(sigma2<=0)return d;
 		double alpha=d*d/(4*sigma2*sigma2);
 		return (double)(Math.sqrt(Math.PI*sigma2*sigma2/2.0)*( (1+2*alpha)*bessi0NoExp(alpha) + 2*alpha*bessi1NoExp(alpha) ));
 	}
@@ -251,7 +277,29 @@ public class RiceEstimator {
 		return new double[] {meanBg,stdBg};
 	}
 
+	public static double getRandomRiceRealization(double originalSignal,double sigmaRice,int nRepets){
+		double acc=0;
+		for(int i=0;i<nRepets;i++) {
+			acc+=getRandomRiceRealization(originalSignal,sigmaRice);
+		}
+		return acc/nRepets;
+	}
 
+	public static double getRandomRiceRealization(double originalSignal,double sigmaRice){
+		Random rand=new Random();
+		double gaussX=rand.nextGaussian()*sigmaRice;
+		double gaussY=rand.nextGaussian()*sigmaRice;
+		double sigmaT=rand.nextDouble()*2*Math.PI;
+		double varX=originalSignal*Math.cos(sigmaT)+gaussX;
+		double varY=originalSignal*Math.sin(sigmaT)+gaussY;
+		return Math.sqrt(varX*varX+varY*varY);
+	}
+	
+	
+	
+	
+	
+	
 	
 	
 }

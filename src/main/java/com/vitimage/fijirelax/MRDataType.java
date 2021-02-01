@@ -1,4 +1,4 @@
-package com.vitimage.mrutils;
+package com.vitimage.fijirelax;
 
 public enum MRDataType {
 	T1SEQ,
@@ -13,7 +13,7 @@ public enum MRDataType {
 	GE3D,
 	T1MAP,
 	T2MAP,
-	M0MAP,
+	PDMAP,
 	MASKMAP,
 	OTHER
 }

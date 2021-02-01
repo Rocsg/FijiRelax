@@ -1,8 +1,8 @@
-package com.vitimage.mrutils;
+package com.vitimage.fijirelax;
 
 import java.io.File;
 
-import com.vitimage.aplimtools.MRI_HyperCurvesExplorer;
+//import com.vitimage.fijirelax.MRI_HyperCurvesExplorer;
 import com.vitimage.common.VitimageUtils;
 
 import ij.IJ;
@@ -12,9 +12,9 @@ import ij.plugin.Concatenator;
 import ij.plugin.Duplicator;
 import ij.plugin.HyperStackConverter;
 
-public class TestingMRUtilsPackage {
+public class TestingFijiRelaxPackage {
 
-
+/*
 	public static void testDims() {
 		String pathSource="/home/fernandr/Bureau/Traitements/Sorgho/Donnees_brutes_export_Romain";
 		String tempStr=pathSource;
@@ -44,7 +44,7 @@ public class TestingMRUtilsPackage {
 		
 		ImagePlus[]tab=new ImagePlus[4];
 		tab[0]=IJ.openImage("/home/fernandr/Bureau/Temp/m0.tif");
-		HyperMRIT1T2.measureMeanCapillaryValueAlongZ(tab[0]);
+		HyperMap.measureMeanCapillaryValueAlongZ(tab[0]);
 		VitimageUtils.waitFor(1000000);
 		tab[1]=IJ.openImage("/home/fernandr/Bureau/Temp/img22.tif");
 		tab[2]=IJ.openImage("/home/fernandr/Bureau/Temp/img33.tif");
@@ -64,12 +64,12 @@ public class TestingMRUtilsPackage {
 			String[]infoTab=sp.split("_");
 			String strNew=infoTab[0]+"_"+infoTab[2]+".tif";
 			ImagePlus img=IJ.openImage(new File(dirIn,sp).getAbsolutePath());
-			img.setC(1);img.setDisplayRange(0, MRUtils.maxDisplayedM0);
-			img.setC(2);img.setDisplayRange(0, MRUtils.maxDisplayedT1);
-			img.setC(3);img.setDisplayRange(0, MRUtils.maxDisplayedT2);
+			img.setC(1);img.setDisplayRange(0, MRUtils.maxDisplayedBionanoM0);
+			img.setC(2);img.setDisplayRange(0, MRUtils.maxDisplayedBionanoT1);
+			img.setC(3);img.setDisplayRange(0, MRUtils.maxDisplayedBionanoT2);
 			img.setC(4);img.setDisplayRange(0, 1);
 			img.setC(5);img.setDisplayRange(-1, 1);
-			for(int c=6;c<=img.getNChannels();c++) {img.setC(c);img.setDisplayRange(0, MRUtils.maxDisplayedM0);}
+			for(int c=6;c<=img.getNChannels();c++) {img.setC(c);img.setDisplayRange(0, MRUtils.maxDisplayedBionanoM0);}
 			
 			String fileOut=new File(dirOut,infoTab[0]).getAbsolutePath();
 			fileOut=new File(fileOut,strNew).getAbsolutePath();
@@ -151,5 +151,5 @@ public class TestingMRUtilsPackage {
 	public TestingMRUtilsPackage() {
 		MRI_HyperCurvesExplorer explorer=new MRI_HyperCurvesExplorer();
 	}
-
+*/
 }

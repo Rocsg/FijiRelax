@@ -1,12 +1,12 @@
-package com.vitimage.aplimtools;
+package com.vitimage.fijirelax;
 
 import java.io.File;
 import java.util.ArrayList;
 import com.vitimage.common.Timer;
 import com.vitimage.common.VitiDialogs;
 import com.vitimage.common.VitimageUtils;
+import com.vitimage.fijirelax.HyperMap;
 import com.vitimage.fijiyama.RegistrationAction;
-import com.vitimage.mrutils.HyperMRIT1T2;
 import com.vitimage.registration.BlockMatchingRegistration;
 import com.vitimage.registration.ItkTransform;
 import com.vitimage.registration.Transform3DType;
@@ -14,11 +14,14 @@ import com.vitimage.registration.Transform3DType;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.Concatenator;
+import ij.plugin.Duplicator;
 import ij.plugin.FolderOpener;
 import ij.plugin.HyperStackConverter;
 import math3d.Point3d;
 
-public class T1T2Seq_Importer{
+
+
+public class Custom_Format_Importer{
 	private static final long serialVersionUID = 1L;
 	private String inputDir="";
 	public String nameObservation="";
@@ -73,13 +76,18 @@ public class T1T2Seq_Importer{
 	private ImagePlus multiT1;
 	private ImagePlus imgMaskCap;
 	private static final int TrValueUsedForT2Seq=10000;
-
-	public static void main (String[]args) {
+	private String name;
+//	public static void main (String[]args) {
 		
+	//}
+	
+	public Custom_Format_Importer(String inputDir,String name) {
+		this.inputDir=inputDir;
+		this.name=name;
 	}
 	
 	
-	public ImagePlus run(String inputDir,String name) {
+	public HyperMap importHyperMap() {
 		Timer t=new Timer();
 		this.nameObservation=name;
 			this.inputDir=inputDir;
@@ -93,18 +101,19 @@ public class T1T2Seq_Importer{
 		this.voxs=VitimageUtils.getVoxelSizes(testDcm);
 
 		t.print("Reading images");
-		readT1T2();
-		t.print("Starting registration");
-		registerT1T2();
-		t.print("Finishing registration");
-		convert2DImgArrayTo1DArray();
-		makeNullMaps();
-		t.print("Finishing maps computation");
-		IJ.log("Finished !");
-		VitimageUtils.waitFor(10);
-		return stackSaveAndShowResultsT1T2();
+		return readT1T2();
+		//t.print("Starting registration");
+		//registerT1T2();
+		//t.print("Finishing registration");
+		//convert2DImgArrayTo1DArray();
+		//makeNullMaps();
+		//t.print("Finishing maps computation");
+		//IJ.log("Finished !");
+		//VitimageUtils.waitFor(10);
+		//return new HyperMap(stackSaveAndShowResultsT1T2());
 	}
-		
+	
+	
 	public void makeNullMaps(){
 		multiM0=VitimageUtils.nullImage(imgT1T2Line[0]);
 		multiT1=VitimageUtils.nullImage(imgT1T2Line[0]);
@@ -114,25 +123,33 @@ public class T1T2Seq_Importer{
 	public Object[] getFirstImageOfT1T2Serie(String inputDir) {
 		String imgPath=inputDir;
 		String[]subFile=null;
-		while(!imgPath.substring(imgPath.length()-4, imgPath.length()).equals(".dcm")){
+		System.out.println(imgPath);
+		while(!imgPath.substring(imgPath.length()-4, imgPath.length()).equals(".dcm") && !imgPath.substring(imgPath.length()-4, imgPath.length()).equals(".tif")){
 			IJ.log("Not yet an img :"+imgPath);
 			subFile=VitimageUtils.stringArraySort(new File(imgPath).list());
+			System.out.println(subFile[0]);
 			imgPath=new File(imgPath,subFile[0]).getAbsolutePath();
 		}
 		return new Object[] {IJ.openImage(imgPath),subFile.length};
 	}
 	
-	public void readT1T2() {
+	public HyperMap readT1T2() {
 		System.out.println(inputDir);
-		String[]listFiles=VitimageUtils.stringArraySort(new File(inputDir).list());
+		String[]listFiles=VitimageUtils.stringArraySortByTrValue(new File(inputDir).list());
 		imgT1T2 =new ImagePlus[listFiles.length][];
 		int nbSelected=listFiles.length;
 		int indexStart=listFiles.length-nbSelected;
+		int numberTot=0;
+
+		//Reading successive Tr sequences
 		for(int ii=indexStart;ii<listFiles.length;ii++) {
 			int i=ii-indexStart;
 			String[]strTes=VitimageUtils.stringArraySort(new File(inputDir,listFiles[ii]).list());
 			imgT1T2[i]=new ImagePlus[strTes.length];
+
+			//Reading successive Te in each Tr
 			for(int j=0;j<strTes.length;j++) {
+				numberTot++;
 				String str=new File(new File(inputDir,listFiles[ii]),strTes[j]).getAbsolutePath();
 				System.out.println("Opening MRI Data : "+str);						
 				imgT1T2[i][j]=FolderOpener.open(str, "");
@@ -141,17 +158,39 @@ public class T1T2Seq_Importer{
 				int nbAverage=VitimageUtils.getAveraging(imgT1T2[i][j]);
 				IJ.run(imgT1T2[i][j],"32-bit","");
 				if(nbAverage!=2)imgT1T2[i][j]=VitimageUtils.makeOperationOnOneImage(imgT1T2[i][j], 2, 2.0/nbAverage, false);
-				MRUtils.computeTeTrAndRiceSigmaOfEachSliceAndWriteItInTheLabels(imgT1T2[i][j],false,"T1T2SEQ_"+nameObservation,makeBoutureTrick);
 			}
 		}
-		int ZT2=VitimageUtils.getDimensions(imgT1T2[imgT1T2.length-1][0])[2];
-		System.out.println("ZT2="+ZT2);  
-		double[]meanRiceTab=new double[ZT2];
-		for(int z=0;z<ZT2;z++) {			meanRiceTab[z]=MRUtils.readSigmaInSliceLabel(imgT1T2[imgT1T2.length-1][0], 0, z, 0); }
-		double meanRiceOverT2=VitimageUtils.statistics1D(meanRiceTab)[0];
-		if(makeBoutureTrick)imgMask=VitimageUtils.getFloatBinaryMask(VitimageUtils.maxOfImageArrayDouble(imgT1T2),MRUtils.THRESHOLD_RATIO_BETWEEN_MAX_ECHO_AND_SIGMA_RICE*meanRiceOverT2,1E10);
-		else imgMask=VitimageUtils.getFloatBinaryMask(imgT1T2[imgT1T2.length-1][0],MRUtils.THRESHOLD_RATIO_BETWEEN_MAX_ECHO_AND_SIGMA_RICE*meanRiceOverT2,1E10);
-		imgMaskCap=HyperMRIT1T2.getAntiCapillaryMask(imgT1T2[imgT1T2.length-1][0]);
+
+		
+		//Compute sigma and label the slices
+		ImagePlus[]tab=new ImagePlus[numberTot];
+		int Z=imgT1T2[0][0].getNSlices();
+		int incr=0;
+		for(int i=0;i<imgT1T2.length;i++) {			
+			String type="";
+			if(i==(imgT1T2.length-1) && (imgT1T2[i].length>1))type="T2SEQ_";
+			else type="T1SEQ_";
+			for(int j=0;j<imgT1T2[i].length;j++) {
+				MRUtils.computeTeTrAndRiceSigmaOfEachSliceAndWriteItInTheLabels(imgT1T2[i][j],false,type+nameObservation,makeBoutureTrick);
+				tab[incr++]=imgT1T2[i][j];
+			}
+		}
+
+		//Convert to hyperStack
+		double valMax=VitimageUtils.maxOfImage(VitimageUtils.maxOfImageArrayDouble(imgT1T2));
+		for(int i=0;i<tab.length;i++)VitimageUtils.printImageResume(tab[i],""+i);
+		ImagePlus newHyperImg=Concatenator.run(tab);
+		VitimageUtils.printImageResume(newHyperImg,"Hyper");
+		newHyperImg=HyperStackConverter.toHyperStack(newHyperImg, tab.length,Z,1,"xyztc","Grayscale");		
+		
+		//Set display range and lut
+		for(int c=0;c<tab.length;c++) {
+			newHyperImg.setC(c+1);
+			IJ.run(newHyperImg,"Fire","");
+			newHyperImg.setDisplayRange(0, valMax);
+		}
+		
+		return new HyperMap(newHyperImg);
 	}		
 	
 	
@@ -162,23 +201,35 @@ public class T1T2Seq_Importer{
 					"\nForget early reps = false (dismiss TR<=1000 ms)"+
 					"\nNormalize before computation = true (correct uneven normalization issues before maps computation)"+
 					"\nMake sorgho trick = true (set all images in a common geometry to help analysis)\n\n");
+			makeSorghoTrick=true;
 			return true;
 		}
 		return false;
 	}
 
 	public boolean detectBouture(ImagePlus img) {
-		return VitimageUtils.isBouture(img);
+		System.out.println("Investigating if is Bouture");
+		boolean ret=VitimageUtils.isBouture(img);
+		System.out.println(ret);
+		System.out.println();
+		if(!ret && this.nameObservation.contains("BOUT"))ret=true;
+		VitimageUtils.waitFor(2000);
+		makeBoutureTrick=ret;
+		return ret;
 	}
 
 
 		
 	public void registerT1T2(){		
 		int nT1=this.imgT1T2.length;
+		if(nT1==1)return;
 		ItkTransform  []trs=new ItkTransform[nT1];
+		VitimageUtils.printImageResume(imgMask,"imgMask2");
+		VitimageUtils.printImageResume(imgMaskCap,"imgMaskCap2");
 
 		//In case of sorgho data, set them all to the same voxel size
 		if(makeSorghoTrick) {
+			System.out.println("Sorgho detect !");
 			double targetVZ=0.5;
 			double targetVoxVolume=1E-3;
 			double targetVX=Math.sqrt(targetVoxVolume/targetVZ);
@@ -191,8 +242,10 @@ public class T1T2Seq_Importer{
 			imgMask.getStack().setSliceLabel("", 1);
 			imgMask=new ItkTransform().transformImage(targetDims, targetVoxs, imgMask,false);
 			imgMask=VitimageUtils.getFloatBinaryMask(imgMask, 1.0, 1E10);
-			imgMaskCap=HyperMRIT1T2.getAntiCapillaryMask(imgT1T2[imgT1T2.length-1][0]);
+			imgMaskCap=VitimageUtils.getAntiCapillaryMask(imgT1T2[imgT1T2.length-1][0],VitimageUtils.bionanoCapillaryRadius);
 		}
+		VitimageUtils.printImageResume(imgMask,"imgMask3");
+		VitimageUtils.printImageResume(imgMaskCap,"imgMaskCap3");
 		imgMask=VitimageUtils.makeOperationBetweenTwoImages(imgMask,imgMaskCap, 1, true);
 			
 		
@@ -205,7 +258,7 @@ public class T1T2Seq_Importer{
 		imgRef=VitimageUtils.imageCopy(imgT1T2[nT1-1][0]);
 		
 		//If needed, handle a manual registration before
-		if(!forceNoMan) {
+		if(!forceNoMan || (nameObservation.contains("B032") && nameObservation.contains("J35"))) {
 			ImagePlus comp=VitimageUtils.compositeOf(imgT1T2[nT1-1][0],imgT1T2[nT1-2][0],"red=T2 first echo , green = T1 last rep time");
 			if(!dontShowNothing)comp.show();
 			if(VitiDialogs.getYesNoUI("Manual registration first ?", "Manual registration first ?\nNeeded if T1 stack and T2 stack are largely disaligned")) {
@@ -217,13 +270,18 @@ public class T1T2Seq_Importer{
 		
 		//Run automatic registration
 		int incr=0;
+		imgRef=imgT1T2[nT1-1][0];
+		ImagePlus maskReg=new Duplicator().run(imgMask);
+		maskReg=VitimageUtils.getFloatBinaryMask(maskReg, 2,10E8);
+		maskReg=VitimageUtils.makeOperationOnOneImage(maskReg,1, -1, true);
+		maskReg=VitimageUtils.makeOperationOnOneImage(maskReg,2, -1, true);
+
 		for(int iMov=0;iMov<nT1-1;iMov++) {	
 			if(skipRegForTesting) {
 				trs[iMov]=new ItkTransform();
 				continue;
 			}
 			imgMov=imgT1T2[iMov][0];
-			imgRef=imgT1T2[nT1-1][0];
 			regAct=new RegistrationAction();
 			regAct.defineSettingsSimplyFromTwoImages(imgRef,imgMov);
 			regAct.typeAutoDisplay=0;
@@ -234,18 +292,27 @@ public class T1T2Seq_Importer{
 				regAct.strideZ=regAct.strideZ*3;
 			};
 			regAct.higherAcc=1;
+			if(nameObservation.contains("B098") && nameObservation.contains("J70")) {
+				regAct.iterationsBMLin+=10;
+				regAct.strideX/=3;
+				regAct.strideY/=3;
+				regAct.strideZ-=1;
+				regAct.levelMaxLinear+=1;
+			}
 			bmRegistration=BlockMatchingRegistration.setupBlockMatchingRegistration(imgRef,imgMov,regAct);
 			bmRegistration.consoleOutputActivated=false;
 			bmRegistration.timingMeasurement=true;
+			bmRegistration.mask=maskReg.duplicate();
 			bmRegistration.refRange=new double[] {imgRef.getDisplayRangeMin(),imgRef.getDisplayRangeMax()};
 			bmRegistration.movRange=new double[] {imgMov.getDisplayRangeMin(),imgMov.getDisplayRangeMax()};
 			bmRegistration.flagRange=true;
 			bmRegistration.minBlockVariance=10;
 			bmRegistration.displayRegistration=viewRegistration ? 2 : 0;
+			if(nameObservation.contains("B032") && nameObservation.contains("J35"))bmRegistration.displayRegistration=2;
 			bmRegistration.displayR2=false;
 			bmRegistration.levelMin=-1;
 			bmRegistration.returnComposedTransformationIncludingTheInitialTransformationGiven=true;
-			trs[iMov]=bmRegistration.runBlockMatching(tr);
+			trs[iMov]=bmRegistration.runBlockMatching(tr,false);
 			bmRegistration.closeLastImages();
 	
 			regAct=new RegistrationAction();
@@ -259,20 +326,21 @@ public class T1T2Seq_Importer{
 			
 			if((!forgetEarlyReps) && (MRUtils.readTrInSliceLabel(imgMov,0,0,0)<=300) || makeBoutureTrick) {}
 			else {
-				if((!forgetEarlyReps) && (MRUtils.readTrInSliceLabel(imgMov,0,0,0)<=400))regAct.levelMaxDense=1;
+				regAct.levelMaxDense=1;
 				regAct.typeTrans=Transform3DType.DENSE;
 				bmRegistration=BlockMatchingRegistration.setupBlockMatchingRegistration(imgRef,imgMov,regAct);
 				bmRegistration.consoleOutputActivated=false;
 				bmRegistration.timingMeasurement=true;
 				bmRegistration.refRange=new double[] {imgRef.getDisplayRangeMin(),imgRef.getDisplayRangeMax()};
 				bmRegistration.movRange=new double[] {imgMov.getDisplayRangeMin(),imgMov.getDisplayRangeMax()};
+				bmRegistration.mask=maskReg.duplicate();
 				bmRegistration.flagRange=true;
 				bmRegistration.minBlockVariance=10;
 				bmRegistration.displayRegistration=viewRegistration ? 2 : 0;
 				bmRegistration.displayR2=false;
 				bmRegistration.levelMin=-1;
 				bmRegistration.returnComposedTransformationIncludingTheInitialTransformationGiven=true;
-				trs[iMov]=bmRegistration.runBlockMatching(trs[iMov]);
+				trs[iMov]=bmRegistration.runBlockMatching(trs[iMov],false);
 				bmRegistration.closeLastImages();
 			}
 			for(int j=0;j<imgT1T2[iMov].length;j++) {
@@ -297,10 +365,11 @@ public class T1T2Seq_Importer{
 	}
 	
 	public ImagePlus stackSaveAndShowResultsT1T2() {
-		if(makeSorghoTrick)nameObservation="SORGHO"+nameObservation;
-		if(makeBoutureTrick)nameObservation="BOUTURE"+nameObservation;
+		System.out.println("STARTING THE STACKING");
+		if(makeSorghoTrick)nameObservation="SORGHO_"+nameObservation;
+		if(makeBoutureTrick)nameObservation="BOUTURE_"+nameObservation;
 		int nImg=imgT1T2Line.length;
-		ImagePlus []tempRes=new ImagePlus[nImg+5];
+		ImagePlus []tempRes=new ImagePlus[nImg+4];
 		int curInd=0;
 		int nMaps=3;
 		tempRes[0]=multiM0.duplicate();		
@@ -316,6 +385,9 @@ public class T1T2Seq_Importer{
 		
 		for(int i=0;i<nImg;i++) {
 			tempRes[i+4]=imgT1T2Line[i].duplicate();
+			for(int z=1;z<=dims[2];z++) {
+				tempRes[i+4].getStack().setSliceLabel(tempRes[i+4].getStack().getSliceLabel(z).replace("_T1T2SEQ","T1T2SEQ"), z);
+			}
 		}
 		
 	
@@ -354,15 +426,15 @@ public class T1T2Seq_Importer{
 
 		hyperImg.setC(1);
 		IJ.run(hyperImg,"Fire","");
-		hyperImg.setDisplayRange(0,MRUtils.maxDisplayedM0 );
+		hyperImg.setDisplayRange(0,MRUtils.maxDisplayedBionanoM0 );
 
 		hyperImg.setC(2);
 		IJ.run(hyperImg,"Fire","");
-		hyperImg.setDisplayRange(0,MRUtils.maxDisplayedT1 );
+		hyperImg.setDisplayRange(0,MRUtils.maxDisplayedBionanoT1 );
 
 		hyperImg.setC(3);
 		IJ.run(hyperImg,"Fire","");
-		hyperImg.setDisplayRange(0,MRUtils.maxDisplayedT2 );
+		hyperImg.setDisplayRange(0,MRUtils.maxDisplayedBionanoT2 );
 
 		hyperImg.setC(4);
 		IJ.run(hyperImg,"Fire","");
@@ -371,7 +443,7 @@ public class T1T2Seq_Importer{
 		for(int c=0;c<nImg;c++) {
 			hyperImg.setC(5+(computeMulti ? 0 : 0)+c);
 			IJ.run(hyperImg,"Fire","");
-			hyperImg.setDisplayRange(0,MRUtils.maxDisplayedM0 );
+			hyperImg.setDisplayRange(0,MRUtils.maxDisplayedBionanoM0 );
 		}
 
 		hyperImg.setTitle("hypermap");

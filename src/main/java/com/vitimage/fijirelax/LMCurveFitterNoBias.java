@@ -1,4 +1,4 @@
-package com.vitimage.mrutils;
+package com.vitimage.fijirelax;
 import com.vitimage.common.VitimageUtils;
 
 import lma.LMAFunction;
@@ -6,7 +6,7 @@ import lma.LMAMatrix.InvertException;
 import lma.implementations.LMA;
 
 public class LMCurveFitterNoBias {
-
+	
 	public boolean debugLM=false;
 	public final static String[] timeunits={"ms", "s"};
 	public final static int[] timeitems={MRUtils.MSEC, MRUtils.SEC};
@@ -17,9 +17,10 @@ public class LMCurveFitterNoBias {
 	protected int fit;                // Number of curve type to fit
 
 	protected double[][] data; // x,y data to fit
-	private LMA lma;
+	private MRLMA lma;
 	private double[] parameters;
-
+	private float[][] parametersBoundaries;
+	
 	private float gfit;
 	public static double lambda = 0.001;
 	public static double minDeltaChi2 = 1e-30;
@@ -96,7 +97,12 @@ public class LMCurveFitterNoBias {
 		data=new double[2][xlength];
 		data[0]=xData;
 		data[1]=yData;
-
+        double minT=VitimageUtils.min(xData);
+        double maxT=VitimageUtils.max(xData);
+        double medT=minT/2+maxT/2;
+        double maxMag=VitimageUtils.max(yData);
+        double medMag=maxMag/2;
+/*
 		double firstx = xData[0];
 		double firsty = yData[0];
 		double thirdx = xData[2];
@@ -109,55 +115,64 @@ public class LMCurveFitterNoBias {
 		double tHope2=tHope*3;
 		double lastx = xData[xlength-1];
 		double lasty = yData[xlength-1];
-		int np=getNumParams(fitType);
-
-		parameters=new double[np];
-		double[] inparameters=new double[np];
 		double slope=10.0;
 		double islope=100;
 		if ((lastx - firstx) != 0.0)
 			slope = (lasty - firsty)/(lastx - firstx);
 
 		double yintercept = firsty - slope * firstx;
+		*/
+
+        int np=getNumParams(fitType);
+		double[] inparameters=new double[np];
+		parameters=new double[np];
+		parametersBoundaries=new float[np][2];
 
 		switch (fit) {
-		case MRUtils.T1_RECOVERY_RICE:
-			inparameters[0] = lasty;
-			inparameters[1] = 1000.0;
+		case MRUtils.T1_MONO_RICE:
+			inparameters[0] = maxMag;
+			inparameters[1] = medT;
+			if(MRUtils.useBoundaries) {
+				parametersBoundaries[0]=new float[] {(float) MRUtils.epsilon,(float) (maxMag*MRUtils.factorT1M0MaxRatio)};
+				parametersBoundaries[1]=new float[] {(float) (minT*MRUtils.factorT1MinRatio),(float) (maxT*MRUtils.factorT1MaxRatio)};
+			}
+			else parametersBoundaries=new float[][] {{(float) -MRUtils.infinity,(float) MRUtils.infinity},{(float) -MRUtils.infinity,(float) MRUtils.infinity}};
 			T1RecoveryRice t1rr=new T1RecoveryRice();
 			t1rr.setSigma(sigma);
 			t1rr.setLM(this);
-			lma = new LMA(t1rr,inparameters,data);
-			break;
-		case MRUtils.T1_MULTICOMP_RICE:
-			inparameters[0] = lasty/2;
-			inparameters[1] = 500.0;
-			inparameters[2] = lasty/2;
-			inparameters[3] = 2000.0;
-			T1MulticompRice t1mr=new T1MulticompRice();
-			t1mr.setSigma(sigma);
-			t1mr.setLM(this);
-			lma = new LMA(t1mr,inparameters,data);
+			lma = new MRLMA(t1rr,inparameters,data,parametersBoundaries);
 			break;
 
-		case MRUtils.T2_RELAX_RICE:
-			inparameters[0] = val;
-			inparameters[1] = 40;//tHope;
+		case MRUtils.T2_MONO_RICE:
+			inparameters[0] = maxMag;
+			inparameters[1] = medT;//tHope;
+			if(MRUtils.useBoundaries) {
+				parametersBoundaries[0]=new float[] {(float) MRUtils.epsilon,(float) (maxMag*MRUtils.factorT2M0MaxRatio)};
+				parametersBoundaries[1]=new float[] {(float) (minT*MRUtils.factorT2MinRatio),(float) (maxT*MRUtils.factorT2MaxRatio)};
+			}
+			else parametersBoundaries=new float[][] {{(float) -MRUtils.infinity,(float) MRUtils.infinity},{(float) -MRUtils.infinity,(float) MRUtils.infinity}};
 			T2RelaxRice t2rr=new T2RelaxRice();
 			t2rr.setSigma(sigma);
 			t2rr.setLM(this);
-			lma = new LMA(t2rr,inparameters,data);
+			lma = new MRLMA(t2rr,inparameters,data,parametersBoundaries);
 			break;
 
-		case MRUtils.T2_MULTICOMP_RICE:
-			inparameters[0] = val/2;
-			inparameters[1] = 20;//tHope;
-			inparameters[2] = val/3;
-			inparameters[3] = 100;//tHope2;
+		case MRUtils.T2_MULTI_RICE:
+			inparameters[0] = medMag+MRUtils.epsilon;
+			inparameters[1] = minT+MRUtils.epsilon;//tHope;
+			inparameters[2] = medMag-MRUtils.epsilon;
+			inparameters[3] = maxT-MRUtils.epsilon;//tHope2;
+			if(MRUtils.useBoundaries) {
+				parametersBoundaries[0]=new float[] {(float) MRUtils.epsilon,(float) ((maxMag)*MRUtils.factorT2M0MaxRatio)};
+				parametersBoundaries[1]=new float[] {(float) (minT*MRUtils.factorT2MinRatio),(float) (maxT*MRUtils.factorT2MaxRatio)};
+				parametersBoundaries[2]=new float[] {(float) MRUtils.epsilon,(float) ((maxMag)*MRUtils.factorT2M0MaxRatio)};
+				parametersBoundaries[3]=new float[] {(float) (minT*MRUtils.factorT2MinRatio),(float) (maxT*MRUtils.factorT2MaxRatio)};
+			}
+			else parametersBoundaries=new float[][] {{(float) -MRUtils.infinity,(float) MRUtils.infinity},{(float) -MRUtils.infinity,(float) MRUtils.infinity},{(float) -MRUtils.infinity,(float) MRUtils.infinity},{(float) -MRUtils.infinity,(float) MRUtils.infinity}};
 			T2MulticompRice t2mcr=new T2MulticompRice();
 			t2mcr.setSigma(sigma);
 			t2mcr.setLM(this);
-			lma = new LMA(t2mcr,inparameters,data);
+			lma = new MRLMA(t2mcr,inparameters,data,parametersBoundaries);
 			break;		
 		}
 	}
@@ -201,10 +216,9 @@ public class LMCurveFitterNoBias {
 	/** Get number of parameters for current fit formula */
 	public static int getNumParams(int fitType) {
 		switch (fitType) {
-		case MRUtils.T1_RECOVERY_RICE: return T1RecoveryRice.Nparams ;  
-		case MRUtils.T1_MULTICOMP_RICE: return T1MulticompRice.Nparams ;  
-		case MRUtils.T2_RELAX_RICE:  return  T2RelaxRice.Nparams  ;
-		case MRUtils.T2_MULTICOMP_RICE:  return  T2MulticompRice.Nparams  ;
+		case MRUtils.T1_MONO_RICE: return T1RecoveryRice.Nparams ;  
+		case MRUtils.T2_MONO_RICE:  return  T2RelaxRice.Nparams  ;
+		case MRUtils.T2_MULTI_RICE:  return  T2MulticompRice.Nparams  ;
 		}
 		return 0;
 	}

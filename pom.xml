@@ -5,14 +5,14 @@
 		http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.vitimage</groupId>
-  <artifactId>Aplim_Tools</artifactId>
+  <artifactId>Fiji_Relax</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>Aplim_Tools</name>
+  <name>Fiji_Relax</name>
 	<scm>
-		<connection>scm:git:git://github.com/Rocsg/AplimTools</connection>
-		<developerConnection>scm:git:git@github.com:Rocsg/AplimTools</developerConnection>
+		<connection>scm:git:git://github.com/Rocsg/FijiRelax</connection>
+		<developerConnection>scm:git:git@github.com:Rocsg/FijiRelax</developerConnection>
 		<tag>HEAD</tag>
-		<url>https://github.com/Rocsg/AplimTools</url>
+		<url>https://github.com/Rocsg/FijiRelax</url>
 	</scm>
  	<issueManagement>
 		<system>GitHub Issues</system>
@@ -25,7 +25,7 @@
 	<properties>
 		<package-name>com.vitimage</package-name>
 		<license.licenseName>bsd_2</license.licenseName>
-		<main-class>Bionano_T1T2M0_Importer</main-class>
+		<main-class>FijiRelax_Gui</main-class>
 		<license.copyrightOwners>vitimage</license.copyrightOwners>
   	    <maven.compiler.source>1.8</maven.compiler.source>
 	    <maven.compiler.target>1.8</maven.compiler.target>
@@ -61,7 +61,7 @@
 		</mailingList>
 	</mailingLists>
 	<organization>
-		<name>Vitimage</name>
+		<name>Vitimage / IFV / CIRAD</name>
 		<url>https://www.plan-deperissement-vigne.fr/travaux-de-recherche/programmes-de-recherche/vitimage</url>
 	</organization>
 	<licenses>
@@ -76,6 +76,18 @@
   	
   		
 	<dependencies>
+		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi -->
+		<dependency>
+		    <groupId>org.apache.poi</groupId>
+		    <artifactId>poi</artifactId>
+		    <version>3.17</version>
+		</dependency>
+		 
+		<dependency>
+		    <groupId>org.apache.poi</groupId>
+		    <artifactId>poi-ooxml</artifactId>
+		    <version>3.17</version>
+		</dependency>
 		<dependency>
 		    <groupId>net.imagej</groupId>
 		    <artifactId>ij</artifactId>
@@ -91,6 +103,27 @@
 		    <groupId>commons-io</groupId>
 		    <artifactId>commons-io</artifactId>
 		    <version>2.5</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-simple -->
+		<dependency>
+		    <groupId>org.slf4j</groupId>
+		    <artifactId>slf4j-simple</artifactId>
+		    <version>1.6.1</version>
+		    <scope>test</scope>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/sc.fiji/Trainable_Segmentation -->
+		<dependency>
+		    <groupId>sc.fiji</groupId>
+		    <artifactId>Trainable_Segmentation</artifactId>
+		    <version>3.2.34</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/com.github.mcib3d/mcib3d-core -->
+		<dependency>
+		    <groupId>com.github.mcib3d</groupId>
+		    <artifactId>mcib3d-core</artifactId>
+		    <version>master-47119b6729-1</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.scijava/scijava-java3d -->
