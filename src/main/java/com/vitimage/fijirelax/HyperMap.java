@@ -72,7 +72,11 @@ public class HyperMap {
 		this.hyperImg=hyperImg;
 		setup();
 	}
-			
+	
+	public static HyperMap hyperMapFactory(HyperMap hyp) {
+		return new HyperMap(hyp.getAsImagePlus());
+	}
+	
 	public static HyperMap importHyperMapFromNifti(String path,String imageName,double Tr, double TeSpacing) {
 		HyperMap hyper=new HyperMap();
 		ImagePlus img=IJ.openImage(imageName);
@@ -101,7 +105,7 @@ public class HyperMap {
 		return t1t2.importHyperMap();
 	}
 
-	public ImagePlus exportAsImagePlus() {
+	public ImagePlus getAsImagePlus() {
 		return hyperImg.duplicate();
 	}
 	

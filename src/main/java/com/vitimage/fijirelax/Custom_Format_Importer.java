@@ -77,9 +77,6 @@ public class Custom_Format_Importer{
 	private ImagePlus imgMaskCap;
 	private static final int TrValueUsedForT2Seq=10000;
 	private String name;
-//	public static void main (String[]args) {
-		
-	//}
 	
 	public Custom_Format_Importer(String inputDir,String name) {
 		this.inputDir=inputDir;
