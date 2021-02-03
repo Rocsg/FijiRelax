@@ -66,10 +66,8 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	public final String displayedNameImage2="Image 2";
 	public final String displayedNameCombinedImage="Data_combined";
 	public final String displayedNameHyperImage="Data_combined";
-	private final int waitingTimeHyperImage=30;
 
 	private Font mySurvivalFontForLittleDisplays=null;
-	private boolean undoButtonHasBeenPressed=false;
 
 	public String versionName="Handsome honeysuckle";
 	public String timeVersionFlag="  Release time : 2020-12-16 - 21:39 PM";
@@ -108,21 +106,25 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	private ArrayList<HyperMap>hypermapList=new ArrayList<HyperMap>();
 	private ArrayList<ImagePlus>imgShowedList=new ArrayList<ImagePlus>();
 
-	/**
-	 * 
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	public static void main(String[]args) {		
 		ImageJ ij=new ImageJ();
 		FijiRelax_Gui fj=new FijiRelax_Gui();
 		fj.run("");
+		VitimageUtils.waitFor(1000);
+		fj.automaticTest();
+	}
+
+	public void automaticTest() {
+		startFromTestImage("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Tests_Refactoring/1_Imported/hyper.tif");
 	}
 	
 	public FijiRelax_Gui() {
 		super("");
-		// TODO Auto-generated constructor stub
+		this.screenHeight=Toolkit.getDefaultToolkit().getScreenSize().height;
+		this.screenWidth=Toolkit.getDefaultToolkit().getScreenSize().width;
+		if(this.screenWidth>1920)this.screenWidth/=2;
 	}
 
 	public void run(String arg) {
@@ -143,20 +145,12 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 
 	
 	public void addLog(String t,int level) {
-		logArea.append((level==0 ? "\n > ": (level==1) ? "\n " : " ")+t);
+		logArea.append((level==0 ? "\n > ": (level==1) ? "\n\n > " : " ")+t);
 		logArea.setCaretPosition(logArea.getDocument().getLength());
 	}
 
-	public void displaySosMessage(int context){
-		IJ.showMessage(
-		"Start menu\n"+
-		"* First trial ? Choose register two images and test Fijiyama with demo images or with your own data.\n"+
-		"* Ready to process a N-time M-modalities series ? Choose Register 3d series\n"+
-		"* Go on a previous experiment (two images or series) ? Choose Open a previous study\n"+
-		"More information ? Visit the webpage : www.imagej.net/Fijiyama\n"
-		);
-	}
 
+	
 	
 	@SuppressWarnings("restriction")
 	public String []checkComputerCapacity(boolean verbose) {
@@ -181,6 +175,8 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		else return new String[] {"",""};
 	}
 
+	
+	
 	
 	
 	/* Registration Manager gui  and launching interface gui ************************************************************************************************/
@@ -217,11 +213,10 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		}
 
 
-		//settingsButton.setToolTipText("<html><p width=\"500\">" +"Advanced settings let you manage more parameters of the automatic registration algorithms"+"</p></html>");
-//		setRunToolTip(MAIN);
 
 		
-		//Panel with buttons for the context of two image registration
+		
+		//Buttons panels
 		JPanel []buttonsPanel=new JPanel[4];
 		for(int pan=0;pan<4;pan++) {
 			buttonsPanel[pan]=new JPanel();
@@ -234,6 +229,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 				buttonsPanel[pan].setLayout(new GridLayout(pan==1 ? 3 : 1,2,70,5));
 			}
 		}
+		
 		buttonsPanel[0].add(importButton);
 		buttonsPanel[0].add(openButton);
 		buttonsPanel[1].add(registerButton);
@@ -245,7 +241,11 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		buttonsPanel[2].add(explorerButton);
 		buttonsPanel[3].add(sosButton);
 		buttonsPanel[3].add(stressButton);
-			
+	
+		this.colorIdle=abortButton.getBackground();
+		colorStdActivatedButton=openButton.getBackground();
+		colorGreenRunButton=new Color(100,255,100);
+		
 		importButton.addActionListener(this);
 		openButton.addActionListener(this);
 		registerButton.addActionListener(this);
@@ -255,30 +255,22 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		stressButton.addActionListener(this);
 		abortButton.addActionListener(this);
 
-		colorStdActivatedButton=openButton.getBackground();
-		colorGreenRunButton=new Color(100,255,100);
-			
-		int width=isSurvivorVncTunnelLittleDisplay ? 350 : 500;
-			
-		this.colorIdle=abortButton.getBackground();
-//		disable(ABORT);
-//		enable(new int[] {RUN,UNDO,SAVE,FINISH,SETTINGS});
+		importButton.setToolTipText("<html><p width=\"500\">" +	"Import dicom dir, nifti 4D or series of nifti 3D."+"</p></html>");
+		openButton.setToolTipText("<html><p width=\"500\">" +	"Open a previously imported Hypermap from 4D nifti or 4D tif file."+"</p></html>");
+		registerButton.setToolTipText("<html><p width=\"500\">" +	"Register T1 / T2 series"+"</p></html>");
+		computeButton.setToolTipText("<html><p width=\"500\">" +	"Compute PD, T1 and/or T2 maps."+"</p></html>");
+		abortButton.setToolTipText("<html><p width=\"500\">" +	"Interruption of current process"+"</p></html>");
+		undoButton.setToolTipText("<html><p width=\"500\">" +	"Undo last action"+"</p></html>");
+		explorerButton.setToolTipText("<html><p width=\"500\">" +	"Run explorer on the current hypermap"+"</p></html>");
+		sosButton.setToolTipText("<html><p width=\"500\">" +	"Display Sos window"+"</p></html>");
+		stressButton.setToolTipText("<html><p width=\"500\">" +	"Feeling stressed with FijiRelax ?"+"</p></html>");
 
-
-
-		//Main frame and main panel
-		registrationFrame=new JFrame();
 		JPanel registrationPanelGlobal=new JPanel();
-		if(isSurvivorVncTunnelLittleDisplay ) {
-			registrationFrame.setSize(600,680);
-			registrationPanelGlobal.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-		}
-		else {
-			registrationFrame.setSize(750,850);
-			registrationPanelGlobal.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));			
-		}
+		if(isSurvivorVncTunnelLittleDisplay )registrationPanelGlobal.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+		else registrationPanelGlobal.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+		
 		registrationPanelGlobal.setLayout(new BoxLayout(registrationPanelGlobal, BoxLayout.Y_AXIS));
-		String[]panelText=new String[] {"Open data               ","Process data","Graphical explorer","Need help ?"};
+		String[]panelText=new String[] {"Open data","Process data","Graphical explorer","Need help ?"};
 		for(int pan=0;pan<4;pan++) {
 			registrationPanelGlobal.add(new JSeparator());
 			JPanel tmpPanel=new JPanel();
@@ -290,18 +282,18 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 			registrationPanelGlobal.add(new JLabel(""));
 			registrationPanelGlobal.add(new JLabel(""));
 		}
+
+		
+		
+		//Main frame and main panel		
+		registrationFrame=new JFrame();
 		registrationFrame.setLayout(new BoxLayout(registrationFrame.getContentPane(), BoxLayout.Y_AXIS));
-		//registrationFrame.setLayout(new BoxLayout(registrationFrame, BoxLayout.Y_AXIS));
 		registrationFrame.add(consolePanel);
 		registrationFrame.add(registrationPanelGlobal);
 		registrationFrame.setTitle("FijiRelax ");
 		registrationFrame.pack();
-		if(isSurvivorVncTunnelLittleDisplay ) {
-			registrationFrame.setSize(600,680);
-		}
-		else {
-			registrationFrame.setSize(750,850);
-		}
+		if(isSurvivorVncTunnelLittleDisplay ) registrationFrame.setSize(600,680);
+		else registrationFrame.setSize(750,850);
 		
 		registrationFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		registrationFrame.addWindowListener(new WindowAdapter(){
@@ -312,32 +304,19 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
                }
 		});
 		registrationFrame.setVisible(true);
-		registrationFrame.repaint();
 		VitimageUtils.adjustFrameOnScreen(registrationFrame,2,0);		
-		logArea.setVisible(true);
-		logArea.repaint();
 		
-		
-		//TODO : setup the tooltips
-		importButton.setToolTipText("<html><p width=\"500\">" +	"Import dicom dir, nifti 4D or series of nifti 3D."+"</p></html>");
-		openButton.setToolTipText("<html><p width=\"500\">" +	"Open a previously imported Hypermap from 4D nifti or 4D tif file."+"</p></html>");
-		registerButton.setToolTipText("<html><p width=\"500\">" +	"Import dicom dir, nifti 4D or series of nifti 3D."+"</p></html>");
-		computeButton.setToolTipText("<html><p width=\"500\">" +	"Import dicom dir, nifti 4D or series of nifti 3D."+"</p></html>");
-		abortButton.setToolTipText("<html><p width=\"500\">" +	"Import dicom dir, nifti 4D or series of nifti 3D."+"</p></html>");
-		undoButton.setToolTipText("<html><p width=\"500\">" +	"Import dicom dir, nifti 4D or series of nifti 3D."+"</p></html>");
-		explorerButton.setToolTipText("<html><p width=\"500\">" +	"Import dicom dir, nifti 4D or series of nifti 3D."+"</p></html>");
-		sosButton.setToolTipText("<html><p width=\"500\">" +	"Import dicom dir, nifti 4D or series of nifti 3D."+"</p></html>");
-		stressButton.setToolTipText("<html><p width=\"500\">" +	"Import dicom dir, nifti 4D or series of nifti 3D."+"</p></html>");
 		disable(new int[] {REGISTER,COMPUTE,ABORT,UNDO,EXPLORER});
-		enable(OPEN);
-		enable(IMPORT);
-		enable(SOS);
-		enable(STRESS);
+		enable(new int[] {OPEN,IMPORT,SOS,STRESS});
 	}
 
+	
+	
+	
+	
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
 		if(e.getSource()==this.importButton)runActionImport();
 		if(e.getSource()==this.openButton)runActionOpen();
 		if(e.getSource()==this.registerButton)runActionRegistration();
@@ -353,20 +332,38 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	
 	
 
-	//TODO : Open from nifti data
+	//Test approved : Ok for importing Hypermap with T1/T2 from tif
+	//TODO : Test with Hypermap with only T1 or T2 from tif
+	//TODO : Test with Hypermap with only echoes and no maps
+	//TODO : Test with Nifti hypermaps
 	public void runActionOpen() {
 		ImagePlus imgNew=VitiDialogs.chooseOneImageUI("Hypermap selection", "Choose nifti or tif hypermap");
 		if(imgNew!=null) {
 			this.currentHypermap=new HyperMap(imgNew);
 			this.hypermapList.add(this.currentHypermap);
 		}
+		this.addLog("Open Hypermap.", 1);
+		this.addLog(VitimageUtils.imageResume(imgNew), 0);
 		updateView();
 		enable(new int[] {REGISTER,COMPUTE,ABORT,UNDO,EXPLORER,SOS,STRESS} );
 	}
 	
 
+	public void startFromTestImage(String testPath) {
+		ImagePlus imgNew=IJ.openImage(testPath);
+		if(imgNew!=null) {
+			this.currentHypermap=new HyperMap(imgNew);
+			this.hypermapList.add(this.currentHypermap);
+		}
+		this.addLog("Start from test image :", 0);
+		this.addLog(testPath, 0);
+		updateView();
+		enable(new int[] {REGISTER,COMPUTE,ABORT,UNDO,EXPLORER,SOS,STRESS} );
+	}
+	
 	//TODO : Open from dicom data and nifti 3D
 	public void runActionImport() {		
+		this.addLog("Import image.", 1);
 		VitiDialogs.notYet("runActionImport");		
 	}
 
@@ -375,8 +372,9 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	
 	
 	
-	//TODO : Test registration
-		public void runActionRegistration() {
+	public void runActionRegistration() {
+		if(currentHypermap==null)return;
+		this.addLog("Register series.", 1);
 		HyperMap tmp=HyperMap.hyperMapFactory(this.currentHypermap);
 		tmp.registerEchoes();
 		hypermapList.add(tmp);
@@ -385,6 +383,8 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 
 	//TODO : Adapt thresholds to data
 	public void runActionCompute() {
+		if(currentHypermap==null)return;
+		this.addLog("Compute maps.", 1);
 		HyperMap tmp=HyperMap.hyperMapFactory(this.currentHypermap);
 		tmp.computeMaps();
 		hypermapList.add(tmp);
@@ -393,6 +393,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	
 	//TODO : threading
 	public void runActionAbort() {
+		this.addLog("Abort.", 0);
 		VitiDialogs.notYet("runActionAbort");
 	}
 	
@@ -401,12 +402,18 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		this.currentHypermap=hypermapList.get(hypermapList.size()-2);
 		this.hypermapList.remove(hypermapList.size()-1);
 		this.imgShowedList.remove(imgShowedList.size()-1);
+		this.addLog("Undo.", 0);
 		updateView();
 	}
 
-	//TODO : set up back the explorer
-	public void runActionExplorer() {		
-		VitiDialogs.notYet("runActionExplorer");
+	//TODO : test the explorer
+	public void runActionExplorer() {
+		if(this.currentHypermap==null)IJ.showMessage("No Hypermap opened");
+		else {
+			this.addLog("Starting explorer...", 1);
+			new MRI_HyperCurvesExplorer().runExplorerFromHyperMap(this.currentHypermap);
+		}
+		//TODO verifier les actionlistener
 	}
 	
 
@@ -426,6 +433,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	
 	
 	public void updateView() {
+		this.addLog("Updating view", 0);
 		if(this.hypermapList.size()==0)return;
 		ImagePlus temp=null;
 		boolean firstView=false;
@@ -437,22 +445,24 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		}
 		else this.viewSlice=(this.hypermapList.get(this.hypermapList.size()-1).getAsImagePlus().getNSlices())/2;
 		
-		
 		this.imgView=this.hypermapList.get(this.hypermapList.size()-1).getAsImagePlus();
 		if(firstView)this.viewSlice = this.imgView.getNSlices()/2;
 
-		
-		this.imgView.setZ(this.viewSlice);
-		imgView.show();
-		this.imgShowedList.add(imgView);
-		VitimageUtils.adjustFrameOnScreenRelative(imgView.getWindow(),registrationFrame,getRelativeOptimalPositionFor2DView(),0,10);
 
+
+		imgView.show();
+		System.out.println("View slice : "+this.viewSlice);
+		imgView.setPosition(1,this.viewSlice,1);
+		this.imgShowedList.add(imgView);
+
+		
+		VitimageUtils.adjustFrameOnScreenRelative(imgView.getWindow(),registrationFrame,getRelativeOptimalPositionFor2DView(),0,10);
 		java.awt.Rectangle w = imgView.getWindow().getBounds();
 		int max=0;
-
+		
 		
 		//If little image, enlarge it until its size is between half screen and full screen
-		while(imgView.getWindow().getWidth()<(screenWidth/2) && imgView.getWindow().getHeight()<(screenHeight/2) && (max++)<4) {
+		while(imgView.getWindow().getWidth()<(screenWidth/3) && imgView.getWindow().getHeight()<(screenHeight/3) && (max++)<4) {
 			int sx=imgView.getCanvas().screenX((int) (w.x+w.width));
 			int sy=imgView.getCanvas().screenY((int) (w.y+w.height));
 			imgView.getCanvas().zoomIn(sx, sy);
@@ -460,17 +470,17 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 			this.lastViewSizes=new int[] {imgView.getWindow().getWidth(),imgView.getWindow().getHeight()};
 		}
 
-		
 		//If big image, reduce it until its size is between half screen and full screen
 		while(imgView.getWindow().getWidth()>(screenWidth) || imgView.getWindow().getHeight()>(screenHeight)) {
+			System.out.println("View : "+(imgView.getWindow().getWidth() +" X "+(imgView.getWindow().getWidth())) );
 			int sx=imgView.getCanvas().screenX((int) (w.x+w.width));
 			int sy=imgView.getCanvas().screenY((int) (w.y+w.height));
+			System.out.println(sx+" "+sy);
 			imgView.getCanvas().zoomOut(sx, sy);
+			VitimageUtils.waitFor(50);
 			this.lastViewSizes=new int[] {imgView.getWindow().getWidth(),imgView.getWindow().getHeight()};
 		}
 		VitimageUtils.adjustFrameOnScreenRelative(imgView.getWindow(),registrationFrame,0,0,10);
-
-		imgView.setSlice(viewSlice);
 		imgView.updateAndRepaintWindow();
 	}
 	

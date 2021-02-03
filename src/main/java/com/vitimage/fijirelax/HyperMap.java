@@ -142,11 +142,10 @@ public class HyperMap {
 		hasT1T2sequence=false;		
 		hasMaps=false;
 		mrDataType=new MRDataType[T][Ctot];
-		System.out.println("Setup data type ");
 		for(int t=0;t<this.T;t++) {
 			for(int c=0;c<this.Ctot;c++) {
 				mrDataType[t][c]=MRUtils.getDataTypeOfThisMagneticResonanceSlice(hyperImg, c, 0, t);
-				System.out.println("t="+t+" channel="+c+" : "+mrDataType[t][c]);
+				//System.out.println("t="+t+" channel="+c+" : "+mrDataType[t][c]);
 				if(mrDataType[t][c]==MRDataType.T1SEQ)hasT1sequence=true;
 				if(mrDataType[t][c]==MRDataType.T2SEQ)hasT2sequence=true;
 				if(mrDataType[t][c]==MRDataType.PDMAP)hasMaps=true;					
@@ -850,9 +849,6 @@ public class HyperMap {
 		for(int m=0;m<nMaps-1;m++) {
 			maps[m]=VitimageUtils.makeOperationBetweenTwoImages(maps[m],imgMask,2,true);
 			for(int z=0;z<Z;z++) {
-				System.out.println("\n"+m);
-				System.out.println(name);
-				System.out.println(mrDataType.length);
 				maps[m].getStack().setSliceLabel(""+mrDataType[0][m]+"_"+name, z+1);
 			}
 		}
@@ -860,7 +856,7 @@ public class HyperMap {
 			imgMask.getStack().setSliceLabel(""+"MASKMAP"+"_"+name, z+1);
 			imgMask.setDisplayRange(0, 2);
 		}
-		
+
 		ImagePlus []tempRes=new ImagePlus[C+nMaps];
 		System.out.println("C="+C);
 		System.out.println("nMaps="+nMaps);
@@ -869,20 +865,20 @@ public class HyperMap {
 		}
 		tempRes[nMaps-1]=imgMask;
 		for(int c=0;c<imgT1T2Line.length;c++) {
-			System.out.println("Copie de "+(c)+" vers le canal "+(c+nMaps));
+		//	System.out.println("Copie de "+(c)+" vers le canal "+(c+nMaps));
 			tempRes[c+nMaps]=imgT1T2Line[c];
 		}
 		
-		for(int i=0;i<tempRes.length;i++)VitimageUtils.printImageResume(tempRes[i],""+i);
+		//for(int i=0;i<tempRes.length;i++)VitimageUtils.printImageResume(tempRes[i],""+i);
 		ImagePlus newHyperImg=Concatenator.run(tempRes);
-		VitimageUtils.printImageResume(newHyperImg,"Hyper");
+		VitimageUtils.printImageResume(newHyperImg,"New hyperMap");
 
 		newHyperImg=HyperStackConverter.toHyperStack(newHyperImg, C+nMaps,Z,T,"xyztc","Grayscale");		
 		hyperImg=newHyperImg;
 		hyperImg.setTitle("Hypermap_"+name);
 		hyperMaps=new Duplicator().run(hyperImg,1,nMaps,1,Z,1,T);
 		hyperEchoes=new Duplicator().run(hyperImg,nMaps+1,Ctot,1,Z,1,T);
-		
+
 		//Update ranges and luts
 		for(int c=0;c<Ctot;c++) {
 			if(c<nMaps && (mrDataType[0][c]==MRDataType.PDMAP)) {hyperImg.setC(c+1);hyperImg.setDisplayRange(0, maxPD);System.out.println(c+" "+maxPD);}
