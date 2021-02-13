@@ -1,10 +1,12 @@
-package com.vitimage.fijirelax;
+package com.vitimage.fijirelax.mrialgo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
-import com.vitimage.fijirelax.ValidationExperimentsFijiRelaxPaper;
+import com.vitimage.fijirelax.gui.Custom_Format_Importer;
+import com.vitimage.fijirelax.testing.ValidationExperimentsFijiRelaxPaper;
 import com.vitimage.common.Timer;
 import com.vitimage.common.TransformUtils;
 import com.vitimage.common.VitiDialogs;
@@ -12,6 +14,7 @@ import com.vitimage.common.VitimageUtils;
 import com.vitimage.fijiyama.RegistrationAction;
 import com.vitimage.registration.BlockMatchingRegistration;
 import com.vitimage.registration.ItkTransform;
+import com.vitimage.registration.Transform3DType;
 
 import ij.IJ;
 import ij.ImageJ;
@@ -32,6 +35,9 @@ import voltex.Mask;
 
 
 public class HyperMap {
+	public static int defaultOutlierAlgorithm=1;//1=Tukey fences, 2=double-sided MADe
+	public static double defaultOutlierStdDev=3;
+	public static int defaultOutlierNeighbourXY=3;
 	public String name="JOHN-DOE";
 	public double sigmaInUse=0;
 	public ImagePlus hyperImg;
@@ -65,7 +71,9 @@ public class HyperMap {
 	private double TE_ALPHA=0;
 
 	
-	/* Instance constructor and static factory*/
+	
+	
+	/** Main entry points : Main, Instance constructor and static factory ---------------------------------------------------------*/
 	public HyperMap() {}
 
 	public HyperMap(ImagePlus hyperImg) {
@@ -75,6 +83,14 @@ public class HyperMap {
 	
 	public static HyperMap hyperMapFactory(HyperMap hyp) {
 		return new HyperMap(hyp.getAsImagePlus());
+	}
+	
+	public ImagePlus getHyperEcho(int c,int t) {
+		if (c>=this.C)return getHyperEcho(this.C-1,t);
+		if(c<0)return getHyperEcho(0,t);
+		if (t>=this.T)return getHyperEcho(c,this.T-1);
+		if(t<0)return getHyperEcho(c,0);
+		return new Duplicator().run(hyperEchoes,c+1,c+1,1,Z,t,t);				
 	}
 	
 	public static HyperMap importHyperMapFromNifti(String path,String imageName,double Tr, double TeSpacing) {
@@ -109,9 +125,46 @@ public class HyperMap {
 		return hyperImg.duplicate();
 	}
 	
+	public static void main(String[]args) {
+	   		ImageJ ij=new ImageJ();
+
+	   		ImagePlus imgTest=IJ.openImage("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Tests_Refactoring/3_Computed_Maps/hyper.tif");
+		imgTest.show();
+		HyperMap hypTest=new HyperMap(imgTest);
+		ImagePlus res=hypTest.simulateOutlierRemoval(150,150,250,250,0,0);
+		IJ.showMessage("Outlier removal results with various parameters (Z slicer to change parameters)\nParameters are written in the image label (top line)");
+		res.show();
+		res.setTitle("Outlier removal results");
+		res.setPosition(VitimageUtils.getCorrespondingSliceInHyperImage(res, 0, 1, 0));
+
+		VitimageUtils.setImageWindowSizeTo(res,500);
+		if(true)return;
+		int oneForTukeyFenceTwoForMADe=2;
+		double nStdDev=5;
+		int blockHalfSize=4;
+		ImagePlus result=hypTest.replaceMapsOutliersSlicePerSlice(oneForTukeyFenceTwoForMADe ,nStdDev,blockHalfSize,true);
+		result.show();
+		if(true)return;
+		
+		double[]test=new double[1000];
+		for(int i=0;i<1000;i++)test[i]=new Random().nextGaussian()+14;
+
+		System.out.println(TransformUtils.stringVectorN(test,""));
+		System.out.println("Stats MADe : "+TransformUtils.stringVectorN(MADeStatsDoubleSided(test,null) , ""));  
+		System.out.println("Stats Quart : "+TransformUtils.stringVectorN(getQuartiles(test,null) , ""));  
+	    
+		for(double val=10;val<18;val+=0.2){
+			Object[]obj=MADeIsOutlier(val, test, null, 3);
+			Object[]obj2=tuckeyIsOutlier(val, test, null, 3);
+			System.out.println("Val="+val+"    "+"MADe : "+obj[0]+" -> "+obj[1]+"      "+"Tuckey : "+obj2[0]+" -> "+obj2[1]+"      ");
+	   		}
+	   	}
+
+
 	
 	
-	/* Setup object */	
+	
+	/** Setup object---------------------------------------------------------*/	
 	public void setup (){
 		setupDimensions();
 		setupDataType();
@@ -120,7 +173,6 @@ public class HyperMap {
 		setupTrTe();
 		setupSigmaTabs();
 	}
-	
 	
 	public void setupDimensions() {
 		//Dimensions
@@ -134,7 +186,6 @@ public class HyperMap {
 		this.voxs=VitimageUtils.getVoxelSizes(hyperImg);
 		this.Ctot=hyperImg.getNChannels();
 	}
-
 
 	public void setupDataType() {
 		hasT1sequence=false;
@@ -218,7 +269,6 @@ public class HyperMap {
 			for(int c=0;c<this.C;c++) {
 				for(int z=0;z<dims[2];z++) {
 					if(mrDataType[t][c+nMaps]!=MRDataType.T1SEQ  && mrDataType[t][c+nMaps]!=MRDataType.T2SEQ  && mrDataType[t][c+nMaps]!=MRDataType.T1T2SEQ) {
-						if(z==0)System.out.println(c+" : NAN");
 						sigmaRice[t][z][c]=Float.NaN;
 						Te[t][z][c]=Float.NaN;
 						Tr[t][z][c]=Float.NaN;
@@ -273,7 +323,9 @@ public class HyperMap {
 	
 	
 	
-	/* Helpers for capillary measurements and hypermap normalization */	
+	
+	
+	/** Helpers for capillary measurements and hypermap normalization--------------------------------------------------------- */	
 	public static double measureMeanCapillaryValueAlongZ(ImagePlus imgM0) {
 		//Find capillary in the central slice
 		ImagePlus img=new Duplicator().run(imgM0,1,1,imgM0.getNSlices()/2+1,imgM0.getNSlices()/2+1,1,1);
@@ -348,16 +400,9 @@ public class HyperMap {
 
 	
 	
-	
-	
-
-
     
     
-    
-    
-    
-	/* Helpers for accessing to data subparts */	
+	/** Helpers for accessing to data subparts ---------------------------------------------------------*/	
 	public ImagePlus getMask() {
 		if(!hasMaps)return null;
 		else return new Duplicator().run(hyperMaps,this.nMaps,this.nMaps,1,this.Z,1,this.T);
@@ -365,6 +410,19 @@ public class HyperMap {
 	
 	public ImagePlus getEchoesImage() {
 		return hyperEchoes.duplicate();
+	}
+	
+	public ImagePlus getMapsImage() {
+		return hyperMaps.duplicate();
+	}
+	
+	public String[][][] getEchoesImageText() {
+		String[][][]texts=new String[C][dims[2]][T];
+		for(int z=0;z<dims[2];z++)for(int t=0;t<T;t++) for(int c=0;c<C;c++) {
+		texts[c][z][t]="   "+MRUtils.getDataTypeOfThisMagneticResonanceSlice(hyperEchoes, c, z, t)+"  Day="+actualDay[t]+"   Z="+z+
+					"  TR="+(MRUtils.readTrInSliceLabel(hyperEchoes, c, z, t))+"  TE="+(MRUtils.readTeInSliceLabel(hyperEchoes, c, z, t));
+		}
+		return texts;
 	}
 
 	public ImagePlus getT1EchoesImage(int t) {
@@ -388,31 +446,25 @@ public class HyperMap {
 	
 	
 	
-	
-	
-	
-	/* Helpers for accessing to data T1 and T2 specific informations */	
+	/** Helpers for accessing to data T1 and T2 specific informations--------------------------------------------------------- */	
 	public int getT1T2SeqNumberReps(int t){
 		int nb=0;
 		for(int c=0;c<this.Ctot;c++)if( (mrDataType[t][c]==MRDataType.T1SEQ) ||  (mrDataType[t][c]==MRDataType.T2SEQ) )nb++;
 		return nb;
 	}
 	
-
 	public int getT1SeqNumberReps(int t){
 		int nb=0;
 		for(int c=0;c<this.Ctot;c++)if(mrDataType[t][c]==MRDataType.T1SEQ)nb++;
 		return nb;
 	}
 		
-
 	public int getT2SeqNumberReps(int t){
 		int nb=0;
 		for(int c=0;c<this.Ctot;c++)if(mrDataType[t][c]==MRDataType.T2SEQ)nb++;
 		return nb;
 	}
-	
-		
+			
 	public int[]getT1Indices(int t){
 		int[]ret=new int[getT1SeqNumberReps(t)];
 		int incr=0;
@@ -420,7 +472,6 @@ public class HyperMap {
 		return ret;
 	}
 	
-
 	public int[]getT2Indices(int t){
 		int[]ret=new int[getT2SeqNumberReps(t)];
 		int incr=0;
@@ -428,14 +479,12 @@ public class HyperMap {
 		return ret;
 	}
 
-
 	public int[]getT1T2Indices(int t){
 		int[]ret=new int[getT1T2SeqNumberReps(t)];
 		int incr=0;
 		for(int c=0;c<this.C;c++)if( (mrDataType[t][c+nMaps]==MRDataType.T1SEQ) || (mrDataType[t][c+nMaps]==MRDataType.T2SEQ) )ret[incr++]=c;		
 		return ret;
 	}
-
 	
 	public int[][]getT1Indices(){
 		int[][]ret=new int[this.T][];
@@ -443,13 +492,11 @@ public class HyperMap {
 		return ret;
 	}
 
-
 	public int[][]getT2Indices(){
 		int[][]ret=new int[this.T][];
 		for(int t=0;t<this.T;t++)ret[t]=this.getT2Indices(t);
 		return ret;
 	}
-
 
 	public int[][]getT1T2Indices(){
 		int[][]ret=new int[this.T][];
@@ -462,10 +509,7 @@ public class HyperMap {
 	
 	
 	
-	
-	
-	
-	/* Helpers for accessing to echo and recovery times */		
+	/** Helpers for accessing to echo and recovery times--------------------------------------------------------- */		
 	public double[][][]getT1T2TeTimes(){
 		double[][][][]init=getT1T2TrTeTimes();
 		double[][][]ret=new double[T][Z][];
@@ -509,7 +553,9 @@ public class HyperMap {
 		for(int t=0;t<this.T;t++)for(int z=0;z<dims[2];z++) {
 			ret[t][z]=new double[init[t][z].length];
 			for(int c=0;c<init[t][z].length;c++) {
+//				System.out.println("DEB "+init[t][z][c][0]);
 				ret[t][z][c]=init[t][z][c][0];
+				
 			}
 		}
 		return ret;
@@ -543,9 +589,9 @@ public class HyperMap {
 	public double[][][]getT1T2TrTeTimes(int t){
 		int incr=0;
 		double[][][]ret=new double[dims[2]][getT1T2SeqNumberReps(t)][2];
-		for(int c=0;c<this.C;c++) {
+		for(int c=0;c<this.Ctot;c++) {
 			if((mrDataType[t][c]==MRDataType.T1SEQ) || (mrDataType[t][c]==MRDataType.T2SEQ)) {
-				for(int z=0;z<dims[2];z++)ret[z][incr]=new double[] {this.Tr[t][z][c],this.Te[t][z][c]};
+				for(int z=0;z<dims[2];z++)ret[z][incr]=new double[] {this.Tr[t][z][c-(hasMaps ? nMaps : 0)],this.Te[t][z][c-(hasMaps ? nMaps : 0)]};
 				incr++;
 			}
 		}
@@ -555,9 +601,9 @@ public class HyperMap {
 	public double[][][]getT1TrTeTimes(int t){
 		int incr=0;
 		double[][][]ret=new double[dims[2]][getT1SeqNumberReps(t)][2];
-		for(int c=0;c<this.C;c++) {
+		for(int c=0;c<this.Ctot;c++) {
 			if(mrDataType[t][c]==MRDataType.T1SEQ) {
-				for(int z=0;z<dims[2];z++) ret[z][incr]=new double[] {this.Tr[t][z][c],this.Te[t][z][c]};
+				for(int z=0;z<dims[2];z++) ret[z][incr]=new double[] {this.Tr[t][z][c-(hasMaps ? nMaps : 0)],this.Te[t][z][c-(hasMaps ? nMaps : 0)]};
 				incr++;
 			}
 		}
@@ -567,9 +613,9 @@ public class HyperMap {
 	public double[][][]getT2TrTeTimes(int t){
 		int incr=0;
 		double[][][]ret=new double[dims[2]][getT2SeqNumberReps(t)][2];
-		for(int c=0;c<this.C;c++) {
+		for(int c=0;c<this.Ctot;c++) {
 			if(mrDataType[t][c]==MRDataType.T2SEQ) {
-				for(int z=0;z<dims[2];z++) ret[z][incr]=new double[] {this.Tr[t][z][c],this.Te[t][z][c]};
+				for(int z=0;z<dims[2];z++) ret[z][incr]=new double[] {this.Tr[t][z][c-(hasMaps ? nMaps : 0)],this.Te[t][z][c-(hasMaps ? nMaps : 0)]};
 				incr++;
 			}
 		}
@@ -602,7 +648,7 @@ public class HyperMap {
 	
 	
 	
-	/* Helpers for dynamic maps computation, give access to magnitude data and coordinates in a neighbourhood around a voxel*/
+	/** Helpers for dynamic maps computation, give access to magnitude data and coordinates in a neighbourhood around a voxel---------------------------------------------------------*/
 	public double[][][][]getFullMRISignalAroundThisVoxelT1T2(int x,int y, int z,int crossWidth,int crossThick,double sigmaXYInVoxels){
 		int xm,ym,xM,yM,zm,zM;
 		xm=Math.max(0, x-crossWidth);
@@ -717,17 +763,37 @@ public class HyperMap {
 	
 	
 	
-	/* Maps computation routines*/	
+	/** Maps computation routine---------------------------------------------------------*/	
 	public ImagePlus computeMaps() {
 		return computeMapsAgain();
 	}
 	
 	public ImagePlus computeMapsAgain() {
-		return computeMapsAgainAndMask(MRUtils.SIMPLEX,true,NoiseManagement.RICE,false,null,4);
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,4);
 	}
 	
 	public ImagePlus computeMapsAgainAndMask(int algType,boolean separated,NoiseManagement noise,boolean forgetFirstEcho,ImagePlus imgMaskUser,double nbStdNoiseAroundMeanForSelection) {
-		if(T>1) {IJ.log("Exit in HyperMap, you should code it one day, maps for 5D images");System.exit(0);}
+		if(T>1) {
+			ImagePlus []imgTab=new ImagePlus[T];
+			for(int t=0;t<T;t++) {
+				ImagePlus imgTemp=new Duplicator().run(this.hyperImg,1,Ctot,1,Z,t,t);
+				HyperMap hypTemp=new HyperMap(imgTemp);
+				imgTab[t]=hypTemp.computeMapsAgainAndMask(algType, separated, noise, forgetFirstEcho, imgMaskUser, nbStdNoiseAroundMeanForSelection);
+			}
+			double[][]ranges=new double[Ctot][2];
+			for(int c=0;c<Ctot;c++) {
+				imgTab[0].setC(c+1);
+				ranges[c]=new double[] {imgTab[0].getDisplayRangeMin(),imgTab[0].getDisplayRangeMax()};
+			}
+			ImagePlus img=VitimageUtils.hyperStackingFrames(imgTab);
+			for(int c=0;c<Ctot;c++) {
+				img.setC(c+1);
+				img.setDisplayRange(ranges[c][0],ranges[c][1]);
+			}
+			this.updateBothFromNewHyperImg(img);
+			return this.hyperImg;
+		}
+
 		int bitD=hyperImg.getBitDepth();
 		int nVox=Z*T*X*Y;
 		if(bitD!=16 && bitD!=32) {IJ.showMessage("Unexepected data type : no 16 nor 32-bits");System.exit(0);}
@@ -896,11 +962,11 @@ public class HyperMap {
 		return hyperImg;
 	}
 	
-	
-	
-	
-	
 	public void registerEchoes(){
+		registerEchoes(this.getDefaultRegistrationSettings());
+	}
+	
+	public void registerEchoes(RegistrationAction regAct){
 		double PD=this.hyperEchoes.getDisplayRangeMax();
 		if(! hasT1sequence)IJ.log("RegisterEchoes in HyperMap : no T1 sequence, thus nothing to do there");
 		ImagePlus []echoes=VitimageUtils.stacksFromHyperstackFastBis(hyperEchoes);
@@ -911,18 +977,15 @@ public class HyperMap {
 		double[][][]ret=new double[this.T][dims[2]][];
 		ArrayList<ArrayList<ImagePlus>> images=new ArrayList<ArrayList<ImagePlus>>();
 
-		for(int c=0;c<C;c++)		System.out.println("C="+c+" "+Te[0][0][c]+" "+Tr[0][0][c]);
 		for(int c=0;c<C;c++) {
 			if(curTr!=Tr[0][0][c]) {
 				curTr=Tr[0][0][c];
-				System.out.println("New TR : Tr:"+Tr[0][0][c]+" Te="+Te[0][0][c]);
 				nTr++;
 				nTe=-1;
 				images.add(new ArrayList<ImagePlus>());
 				images.get(nTr).add(echoes[c]);
 			}
 			else {
-				System.out.println("New TE : Tr:"+Tr[0][0][c]+" Te="+Te[0][0][c]);
 				nTe++;
 				images.get(nTr).add(echoes[c]);
 			}
@@ -932,55 +995,60 @@ public class HyperMap {
 		ItkTransform []trs=new ItkTransform[nTr-1];
 		
 		Timer t=new Timer();
-		t.print("\n\n\n\n\n\n\nStarting Registration\n\n\n\n\n\n\n");
+		t.print("Starting Registration");
 		for(int i=0;i<nTr-1;i++) {
 			BlockMatchingRegistration bmRegistration;
-			RegistrationAction regAct=new RegistrationAction();
-			regAct.defineSettingsSimplyFromTwoImages(images.get(nTr-1).get(0), images.get(i).get(0));
-			regAct.typeAutoDisplay=2;
-			regAct.higherAcc=0;
-			regAct.levelMaxLinear=2;
-			regAct.levelMinLinear=-1;
-			regAct.strideX*=2;
-			regAct.strideY*=2;
-			//regAct.strideZ*=2;
-//			System.out.println(regAct.readableString());
-//			IJ.saveAsTiff(images.get(nTr-1).get(0),"/home/fernandr/Bureau/testRef.tif");
-//			IJ.saveAsTiff(images.get(nTr-2).get(0),"/home/fernandr/Bureau/testMov.tif");
-//			System.exit(0);
-			bmRegistration=BlockMatchingRegistration.setupBlockMatchingRegistration(images.get(nTr-1).get(0),images.get(i).get(0) ,regAct);
-		//	bmRegistration.displayRegistration=2;
-			ItkTransform tr=bmRegistration.runBlockMatching(null,false);
-			bmRegistration.closeLastImages();
+			ItkTransform tr=null;
+
+			//Linear registration
+			if(regAct.getIterationsBMLinear()>0) {
+				regAct.typeTrans=Transform3DType.RIGID;
+				bmRegistration=BlockMatchingRegistration.setupBlockMatchingRegistration(images.get(nTr-1).get(0),images.get(i).get(0) ,regAct);
+				tr=bmRegistration.runBlockMatching(null,false);
+				bmRegistration.closeLastImages();
+			}
+			
+			if(regAct.getIterationsBMNonLinear()>0) {
+				regAct.typeTrans=Transform3DType.DENSE;
+				bmRegistration=BlockMatchingRegistration.setupBlockMatchingRegistration(images.get(nTr-1).get(0),images.get(i).get(0) ,regAct);
+				tr=bmRegistration.runBlockMatching(tr,false);
+				bmRegistration.closeLastImages();
+			}
 			for(int j=0;j<images.get(i).size();j++) {
 				ImagePlus temp=tr.transformImage(images.get(nTr-1).get(0),images.get(i).get(j));
 				images.get(i).set(j,temp);
 			}
 		    trs[i]=tr;
-//		    ImagePlus img=VitimageUtils.compositeOf(images.get(nTr-1).get(0),images.get(i).get(0));
-//		    img.setTitle(""+i);
-//		    img.show();
-//		    VitimageUtils.waitFor(500000);
-		    
-		}
-//		t.print("\n\n\n\n\n\n\nEnding registration\n\n\n\n\n\n\n");
-	
-		for(int tr=0;tr<nTr;tr++) {
-			if(tr<nTr-1)System.out.println("\nTransform "+tr+"\n"+trs[tr].drawableString());
 		}
 		
 		int incr=0;
 		for(int i=0;i<images.size();i++)for(int j=0;j<images.get(i).size();j++) {echoes[incr++]=images.get(i).get(j);}
 		this.hyperEchoes=VitimageUtils.hyperStackingChannels(echoes);
-		this.hyperEchoes.show();
 		if(hasMaps)this.updateHyperImgFromEchoesAndMaps();
 		else {
 			this.hyperImg=this.hyperEchoes;
 			this.setDisplayRange();
 		}
 	}
-	
+		
+	public RegistrationAction getDefaultRegistrationSettings() {
+		RegistrationAction regAct=new RegistrationAction();
+		regAct.defineSettingsSimplyFromTwoImages(this.getHyperEcho(0,0),this.getHyperEcho(0,0));
+		regAct.typeAutoDisplay=2;
+		regAct.higherAcc=0;
+		regAct.levelMaxLinear=2;
+		regAct.levelMinLinear=-1;
+		regAct.strideX*=2;
+		regAct.strideY*=2;
+		return regAct;
+	}
 
+	
+	
+	
+	
+	
+	/** HyperMap global update when a part of it changed ---------------------------------------------------------*/	
 	public void updateHyperImgFromEchoesAndMaps() {
 		ImagePlus []tab=new ImagePlus[Ctot];
 		ImagePlus[]maps=VitimageUtils.stacksFromHyperstackFastBis(hyperMaps);
@@ -997,11 +1065,10 @@ public class HyperMap {
 	
 	public void updateEchoesAndMaps() {
 		if(hasMaps) {
-			hyperMaps=new Duplicator().run(hyperImg,1,Z,1,nMaps,1,T);
-			hyperEchoes=new Duplicator().run(hyperImg,1,Z,nMaps+1,Ctot,1,T);
+			hyperMaps=new Duplicator().run(hyperImg,1,nMaps,1,Z,1,T);
+			hyperEchoes=new Duplicator().run(hyperImg,nMaps+1,Ctot,1,Z,1,T);
 		}
 		else hyperEchoes=hyperImg.duplicate();
-		this.setDisplayRange();
 	}
 	
 	public void updateBothFromNewHyperImg(ImagePlus hyperImgNew) {
@@ -1036,7 +1103,6 @@ public class HyperMap {
 		}
 		hyperImg.setC(1);
 	}
-
 	
 	public HyperMap pruneBionanoStuff() {
 		System.out.println("1");
@@ -1069,77 +1135,241 @@ public class HyperMap {
 	
 	
 	
-	/* Helpers for outlier detection and removal */	
+	
+	/** Helpers for outlier detection and removal--------------------------------------------------------- */	
+    public static Object[] tuckeyIsOutlier(double val,double []tabIn,double[]mask,double eRatio) {
+	    double[]tabStats=getQuartiles(tabIn,mask);
+	    double interQuart=tabStats[2]-tabStats[0];
+    	if(val<tabStats[1]-eRatio/2.0*interQuart)return new Object[] {true,tabStats[1],tabStats[1]};
+    	if(val>tabStats[1]+eRatio/2.0*interQuart)return new Object[] {true,tabStats[1],tabStats[1]};
+    	return new Object[]{false,val,tabStats[1]};
+    }
+    
     public static Object[] MADeIsOutlier(double val,double []tabIn,double[]mask,double eRatio) {
-	    	double factorB=1.4826;//see reference Leys at al. JESP 2013 - Detecting outliers:
-	    	double[]tabStats=MADeStatsDoubleSided(tabIn, mask);
-	    	if(tabStats.length==1)return new Object[] {false,val};
-	    	System.out.println("Median="+tabStats[0]+" meddown="+tabStats[1]+" medup"+tabStats[2]);
-	    	double madDown=tabStats[0]-tabStats[1];
-	    	double madUp=tabStats[2]-tabStats[0];
-	    	System.out.println("["+(tabStats[0]-eRatio*madDown)+" , "+(tabStats[0]+eRatio*madUp)+"]");
-	    	if(val<tabStats[0]-eRatio*factorB*madDown)return new Object[] {false,tabStats[0]};
-	    	if(val>tabStats[0]+eRatio*factorB*madUp)return new Object[] {false,tabStats[0]};
-	    	return(new Object[] {true,val});
-	    }
-		
+    	double factorB=1.4826;//see reference Leys at al. JESP 2013 - Detecting outliers:
+    	double[]tabStats=MADeStatsDoubleSided(tabIn, mask);
+    	if(tabStats.length==1)return new Object[] {true,val};
+    	double madDown=tabStats[0]-tabStats[1];
+    	double madUp=tabStats[2]-tabStats[0];
+    	if(val<tabStats[0]-eRatio*factorB*madDown)return new Object[] {true,tabStats[0],tabStats[0]};
+    	if(val>tabStats[0]+eRatio*factorB*madUp)return new Object[] {true,tabStats[0],tabStats[0]};
+    	return(new Object[] {false,val,tabStats[0]});
+    }
+	
     public static double[] MADeStatsDoubleSided(double[] tabIn,double []mask) {
-    	if (tabIn.length==0)return null;
-    	if(mask==null) {mask=new double[tabIn.length];for(int i=0;i<tabIn.length;i++)mask[i]=1;}
-    	List<Double> l=new ArrayList<Double>();
-    	for(int i=0;i<tabIn.length;i++)if(mask[i]>0)l.add(tabIn[i]);
-    	Double []tab=(Double[])(l.toArray(new Double[l.size()]));
-
-    	if(tab.length<=3)return new double[] {0};
-    	Arrays.sort(tab);
-    	System.out.print("[");
-    	for(int i=0;i<tab.length;i++)System.out.print(tab[i]+" ,");
-    	System.out.println("]");
-        double valMed=tab[tab.length/2];
-        double valMedUp=0;
-        double valMedDown=0;
-        if (tab.length%2==0)valMed=(tab[tab.length/2-1]+tab[tab.length/2])/2.0;
-
-        if (tab.length%4==0) {
-        	valMedDown=(tab[tab.length/4-1]+tab[tab.length/4])/2.0;
-        	valMedUp=(tab[3*tab.length/4-1]+tab[3*tab.length/4])/2.0;
-        }
-        if (tab.length%4==1) {
-        	valMedDown=tab[tab.length/4];
-        	valMedUp=tab[3*tab.length/4];
-        }
-        if (tab.length%4==2) {
-        	valMedDown=tab[tab.length/4];
-        	valMedUp=tab[3*tab.length/4];
-        }
-        if (tab.length%4==3) {
-        	valMedDown=(tab[tab.length/4+1]+tab[tab.length/4])/2.0;
-        	valMedUp=(tab[3*tab.length/4-1]+tab[3*tab.length/4])/2.0;
-        }
-        return new double[] {valMed,valMedDown,valMedUp};
+		if (tabIn.length==0)return null;
+		if(mask==null) {mask=new double[tabIn.length];for(int i=0;i<tabIn.length;i++)mask[i]=1;}
+		List<Double> l=new ArrayList<Double>();
+		for(int i=0;i<tabIn.length;i++)if(mask[i]>0)l.add(tabIn[i]);
+		Double []tab=(Double[])(l.toArray(new Double[l.size()]));
+	
+		if(tab.length<=5)return new double[] {0,0,0};
+		Arrays.sort(tab);
+		//System.out.print("[");
+	//for(int i=0;i<tab.length;i++)System.out.print(tab[i]+" ,");
+	//System.out.println("]");
+	    double valMed=tab[tab.length/2];
+	    double valMedUp=0;
+	    double valMedDown=0;
+	    if (tab.length%2==0)valMed=(tab[tab.length/2-1]+tab[tab.length/2])/2.0;
+	
+	    if (tab.length%4==0) {
+	    	valMedDown=(tab[tab.length/4-1]+tab[tab.length/4])/2.0;
+	    	valMedUp=(tab[3*tab.length/4-1]+tab[3*tab.length/4])/2.0;
+	    }
+	    if (tab.length%4==1) {
+	    	valMedDown=tab[tab.length/4];
+	    	valMedUp=tab[3*tab.length/4];
+	    }
+	    if (tab.length%4==2) {
+	    	valMedDown=tab[tab.length/4];
+	    	valMedUp=tab[3*tab.length/4];
+	    }
+	    if (tab.length%4==3) {
+	    	valMedDown=(tab[tab.length/4+1]+tab[tab.length/4])/2.0;
+	    	valMedUp=(tab[3*tab.length/4-1]+tab[3*tab.length/4])/2.0;
+	    }
+	    return new double[] {valMed,valMedDown,valMedUp};
     }
 
-    public static double[] getQuartiles(double[] tabIn) {
-    	int N=tabIn.length;
-    	if (tabIn.length==0)return null;
-    	List<Double> l=new ArrayList<Double>();
-    	for(int i=0;i<tabIn.length;i++)l.add(tabIn[i]);
-    	Double []tab=(Double[])(l.toArray(new Double[l.size()]));
-
-    	if(tab.length<=3)return new double[] {0};
-    	Arrays.sort(tab);
-    	return new double[] {tab[N/4],tab[N/2],tab[(3*N)/4]};
+    public static double[] getQuartiles(double[] tabInTmp,double []mask) {
+	  	if (tabInTmp.length==0)return null;
+		if(mask==null) {mask=new double[tabInTmp.length];for(int i=0;i<tabInTmp.length;i++)mask[i]=1;}
+		List<Double> lTmp=new ArrayList<Double>();
+		for(int i=0;i<tabInTmp.length;i++)if(mask[i]>0)lTmp.add(tabInTmp[i]);
+		Double []tabIn=(Double[])(lTmp.toArray(new Double[lTmp.size()]));
+		
+		int N=tabIn.length;
+		if (tabIn.length==0)return new double[] {0,0,0};
+		List<Double> l=new ArrayList<Double>();
+		for(int i=0;i<tabIn.length;i++)l.add(tabIn[i]);
+		Double []tab=(Double[])(l.toArray(new Double[l.size()]));
+	
+		if(tab.length<=5)return new double[] {0,0,0};
+		Arrays.sort(tab);
+		return new double[] {tab[N/4],tab[N/2],tab[(3*N)/4]};
     }
 
+    public ImagePlus replaceMapsOutliersSlicePerSlice(int oneForTukeyFenceTwoForMADe,double nStdDev,int blockHalfSize,boolean informUser) {
+	   if(oneForTukeyFenceTwoForMADe<1 || oneForTukeyFenceTwoForMADe>2)return VitimageUtils.nullImage(this.getMask());
+	   if(nStdDev<0) {IJ.showMessage("Please choose a positive value for outliers threshold");return VitimageUtils.nullImage(this.getMask());}
+   
+	   ImagePlus mapsTemp=new Duplicator().run(this.hyperMaps,1,nMaps,1,Z,1,T);
+	   ImagePlus mapsTempOut=new Duplicator().run(this.hyperMaps,1,nMaps,1,Z,1,T);
+	   ImagePlus maskChange=VitimageUtils.nullImage(new Duplicator().run(this.hyperMaps,1,1,1,Z,1,T));
+	   if(VitimageUtils.isNullImage(new Duplicator().run(this.hyperMaps,1,1,1,1,1,1))) {
+		   IJ.showMessage("Maps image is not yet computed. Compute it first");
+		   return VitimageUtils.nullImage(this.getMask());
+	   }
+	   
+	   Object[][]objs=new Object[nMaps-1][];
+	   double[]vals=new double[nMaps-1];
+	   double[][]tabs=new double[nMaps-1][];
+	   double[][]tabsMask=new double[nMaps-1][];
+	   float[][]valMaps=new float[nMaps][];
+	   float[][]valMapsOut=new float[nMaps][];
+	   float[]valMaskOut=null;
+	   int[]counts=new int[nMaps];
+	   int countGlob=0;
+	   int tot=T*Z;
+	   int percent=Math.max(1, tot/10);
+	   for(int t=0;t<T;t++) {
+		   for(int z=0;z<Z;z++) {
+			   if((z*T+t)%percent==0) {
+				   if(informUser)IJ.log("Outlier processing : "+(VitimageUtils.dou((z*T+t)/(0.01*tot)))+"%");
+				   if(informUser)IJ.showProgress((z*T+t)/(1.0*tot));
+			   }
+			   for(int map=0;map<nMaps;map++) {
+				   valMaps[map]=(float[]) mapsTemp.getStack().getProcessor(VitimageUtils.getCorrespondingSliceInHyperImage(mapsTemp, map, z, t)).getPixels();
+				   valMapsOut[map]=(float[]) mapsTempOut.getStack().getProcessor(VitimageUtils.getCorrespondingSliceInHyperImage(mapsTempOut, map, z, t)).getPixels();
+				   valMaskOut=(float[]) maskChange.getStack().getProcessor(VitimageUtils.getCorrespondingSliceInHyperImage(maskChange, 0, z, t)).getPixels();
+			   }
+			   for(int x=0;x<X;x++) {
+	    		   for(int y=0;y<Y;y++) {
+	    			   if(valMaps[nMaps-1][X*y+x]<=0) continue;
+	    			   counts[nMaps-1]++;
+	    			   for(int map=0;map<nMaps-1;map++) {
+	    				   double val=valMaps[map][X*y+x];
+	    				   tabsMask[map]=VitimageUtils.valuesOfBlock(mapsTemp,x-blockHalfSize,y-blockHalfSize,z,x+blockHalfSize,y+blockHalfSize,z,nMaps-1,t);
+	    				   tabs[map]=VitimageUtils.valuesOfBlock(mapsTemp,x-blockHalfSize,y-blockHalfSize,z,x+blockHalfSize,y+blockHalfSize,z,map,t);
+	    				   vals[map]=val;
+	    						   
+	    				   objs[map]= (oneForTukeyFenceTwoForMADe==2 ? MADeIsOutlier(val, tabs[map], tabsMask[map], nStdDev) : tuckeyIsOutlier(val, tabs[map], tabsMask[map], nStdDev));
+	    			   }
+	    			   boolean isOutlier=false;
+	    			   boolean []isOutlierTab=new boolean[nMaps-1];
+	    			   for(int map=0;map<nMaps-1;map++) {
+	    				   isOutlierTab[map]=(boolean) objs[map][0];
+	    				   if( isOutlierTab[map]) {
+	    					   counts[map]++;
+	    					   isOutlier=true;
+	    				   }
+	    			   }
+	    			   if(isOutlier) {
+	    				   valMaskOut[X*y+x]=1;
+	    				   countGlob++;
+	    				   //System.out.println("\nWe got an outlier at x="+x+" y="+y+" z="+z+" t="+t);
+	    				   for(int map=0;map<nMaps-1;map++) {
+	        				   //System.out.println(" map "+map+"\nData was="+TransformUtils.stringVectorN(tabs[map],"")+"\nMask was="+TransformUtils.stringVectorN(tabsMask[map],""));
+	        				   //System.out.println(" val=  "+vals[map]+" is outlier ? "+isOutlierTab[map]+" replaced by "+(double) objs[map][2]);
+	        				   valMapsOut[map][X*y+x]=(float) ((double)(objs[map][2]));
+	    				   }
+	    			   }
+	    		   }
+			   }
+		   }
+	   }    	   
+	   this.hyperMaps=mapsTempOut;
+	   this.updateHyperImgFromEchoesAndMaps();
+	   //  	   System.out.println("Bilan");
+	   //  	   System.out.println("Countglob="+countGlob);
+	   for(int map=0;map<nMaps-1;map++) {
+		   //   		   System.out.println("Count out "+map+" = "+counts[map]);
+		   }
+		   maskChange.setDisplayRange(0, 1);
+		   return maskChange;
+   }
+
+   public ImagePlus simulateOutlierRemoval(int x0,int y0,int x1,int y1,int z,int t){
+	   int nConfigs=2;
+	   int []configOutlier=new int[] {1,2};
+	   String[]textConfigOutlier=new String[] {"Tukey","MADe"};
+
+   int nStd=3;
+   int []nStdDev=new int[] {3,5,7};
+   String[]textStdDev=new String[] {"3*sigma","5*sigma","7*sigma"};
+   
+   int nNeighs=5;
+   int []neighXY=new int[] {1,2,3,4,5};
+   String[]textneighXY=new String[] {"radius=1","radius=2","radius=3","radius=4","radius=5"};
+
+   int totalConf=nConfigs*nStd*nNeighs;
+   int nC=this.nMaps;
+   
+   ImagePlus imgT1=new Duplicator().run(this.getAsImagePlus(),1,Ctot,z,z,t,t);
+   VitimageUtils.copyImageCalibrationAndRange(imgT1,this.getAsImagePlus());
+   ImagePlus imgT=VitimageUtils.cropMultiChannelFloatImage(imgT1, x0,x1, y0, y1, 0,0);
+   VitimageUtils.copyImageCalibrationAndRange(imgT,this.getAsImagePlus());
+   VitimageUtils.printImageResume(imgT,"imgT in HyperMap");
+   HyperMap hypShort=new HyperMap(imgT);
+   ImagePlus oldMap=  hypShort.getAsImagePlus();
+   ImagePlus [][]retTab=new ImagePlus[nC][totalConf+1];
+   double[][]ranges=new double[nMaps][2];
+   
+   for(int conf=0;conf<nConfigs;conf++) {
+	   for(int st=0;st<nStd;st++) {
+		   for(int nei=0;nei<nNeighs;nei++) {
+			   double progress=(conf*nStd*nNeighs+st*nNeighs+nei)/(1.0*totalConf);
+			   IJ.log("Outlier processing simulation : "+(VitimageUtils.dou(100*progress)+"%"));
+			   IJ.showProgress(progress);
+
+			   HyperMap hypTmp=HyperMap.hyperMapFactory(hypShort);
+			   ImagePlus maskChange=hypTmp.replaceMapsOutliersSlicePerSlice(configOutlier[conf], nStdDev[st], neighXY[nei],false);
+			   ImagePlus newMap=hypTmp.getAsImagePlus();
+			   String text="Result "+textConfigOutlier[conf]+" - "+textStdDev[st]+" - "+textneighXY[nei];
+			   for(int m=0;m<this.nMaps-1;m++) {
+//						   System.out.println("conf="+conf+" st="+st+" nei="+nei+" m="+m);
+				   retTab[m][1+conf*nNeighs*nStd+st*nNeighs+nei]=new Duplicator().run(newMap,m+1,m+1,1,1,1,1);						   
+				   retTab[m][1+conf*nNeighs*nStd+st*nNeighs+nei].getStack().setSliceLabel(text, 1);
+				   newMap.setC(m+1);
+				   ranges[m]=new double[] {newMap.getDisplayRangeMin(),newMap.getDisplayRangeMax()};
+			   }
+			   ranges[nMaps-1]=new double[] {0,1};
+			   retTab[nMaps-1][1+conf*nNeighs*nStd+st*nNeighs+nei]=new Duplicator().run(maskChange,1,1,1,1,1,1);	
+			   retTab[nMaps-1][1+conf*nNeighs*nStd+st*nNeighs+nei].getStack().setSliceLabel(text, 1);
+		   }
+	   }
+   }
+   String text="Initial maps without outliers removal";
+   for(int m=0;m<this.nMaps-1;m++) {
+	   retTab[m][0]=new Duplicator().run(oldMap,m+1,m+1,1,1,1,1);
+	   retTab[m][0].getStack().setSliceLabel(text, 1);
+   }
+   retTab[nMaps-1][0]=VitimageUtils.nullImage(retTab[0][0]);
+   retTab[nMaps-1][0].getStack().setSliceLabel(text, 1);
+
+   ImagePlus []hypTab=new ImagePlus[nC*(totalConf+1)];
+   for(int i=0;i<nC;i++)for(int j=0;j<totalConf+1;j++) {
+	   hypTab[i*(totalConf+1)+j]=retTab[i][j];
+   }
+   Concatenator con=new Concatenator();
+	con.setIm5D(true);
+	ImagePlus img2=con.concatenate(hypTab,false);
+	img2=HyperStackConverter.toHyperStack(img2, nMaps, 1,totalConf+1,"xyztc","Grayscale");
+		VitimageUtils.copyImageCalibrationAndRange(img2, imgT1);
+		img2.setC(this.nMaps);
+		img2.setDisplayRange(0, 1);
+		return img2;
+   }
+   
+       
+	   
+	   
+	   
+	   
+	   
     
-    
-    
-    
-    
-    
-    
-    
-	/* Random helpers*/
+	/** Random helpers ---------------------------------------------------------*/
 	public static String textAlg(int algType) {return algType==MRUtils.LM ? "LM" : "SIMP";}
 	
 	public static double meanRice(ImagePlus[]imgT1T2Line) {
@@ -1165,8 +1395,7 @@ public class HyperMap {
 	
 	
 	
-	
-	
+	/** Tidy needed below ---------------------------------------------------------*/
 	/*
 	public ImagePlus computeMapsAgainAndMaskOld(boolean recomputeMask,int algType,boolean  makeMono,boolean  makeMulti) {
 		boolean debug=true;
@@ -1507,19 +1736,6 @@ public class HyperMap {
 */
 	
 	
-	/*	public Object[] getEchoesImageWithText() {
-	int fontSize=15;
-	VitimageUtils.printImageResume(hyperImg);
-	ImagePlus echoes= new Duplicator().run(hyperImg,nMaps+1,C,1,dims[2],1,T);
-	String[][][]texts=new String[C-nMaps][dims[2]][T];
-	for(int z=0;z<dims[2];z++)for(int t=0;t<T;t++) for(int c=0;c<C-nMaps;c++) {
-		texts[c][z][t]="   "+MRUtils.getDataTypeOfThisMagneticResonanceSlice(echoes, c, z, t)+"  Day="+actualDay[t]+"   Z="+z+
-					"  TR="+(MRUtils.readTrInSliceLabel(echoes, c, z, t))+"  TE="+(MRUtils.readTeInSliceLabel(echoes, c, z, t));
-	}
-	echoes.setPosition(VitimageUtils.getCorrespondingSliceInHyperImage(echoes, 1, dims[2]/2, 0));
-	return new Object[] {echoes,texts};
-}
-*/
 
 
 	
@@ -1571,56 +1787,6 @@ public class HyperMap {
 	*/
 
    
-   /*
-public void regularizeMaps(double MADeFactor,int neighXY,int neighZ) {
-	ImagePlus img=hyperMaps.duplicate();
-	boolean[]outlier=new boolean[nMaps];
-	boolean isOutlier=false;
-	int[]outlierNumberByMap=new int[nMaps];
-	int outlierNumber=0;
-	double[]replaceValues=new double[nMaps];
-	int X=img.getWidth();
-	int Y=img.getHeight();
-	int Z=img.getNSlices();
-	int T=img.getNFrames();
-	double[]vals=null;
-	double[]valsMask=null;
-	double val=0;
-	Object[]objs=null;
-	for(int t=0;t<T;t++) {
-		for(int x=0;x<X;x++) {
-			for(int y=0;y<Y;y++) {
-				for(int z=0;z<Z;z++) {
-					valsMask=VitimageUtils.valuesOfBlock(hyper, x-neighXY, y-neighXY, z-neighZ, x+neighXY, y+neighXY, z+neighZ,nMaps,t);
-					isOutlier=false;
-					for(int n=0;n<nMaps;n++) {
-						vals=VitimageUtils.valuesOfBlock(hyper, x-neighXY, y-neighXY, z-neighZ, x+neighXY, y+neighXY, z+neighZ,n,t);
-						val=VitimageUtils.valuesOfBlock(hyper, x,y,z, x,y,z, n,t)[0];
-						objs=MADeIsOutlier(val,vals,valsMask,MADeFactor);
-						outlier[n]=(boolean) objs[0];
-						replaceValues[n]=(double) objs[1];
-						if(outlier[n]) {outlierNumberByMap[n]++;isOutlier=true;}
-					}
-					if(isOutlier) {
-						outlierNumber++;
-						for(int n=0;n<nMaps;n++) {
-							img.getStack().setVoxel(x, y, img.getStackIndex(n+1,z+1, t+1)-1, replaceValues[n]);
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	
-	System.out.println("Outliers detection and replacement. Total voxels="+(X*Y*Z*T));
-	for(int n=0;n<nMaps;n++) System.out.println("Outliers in map "+n+" : "+outlierNumberByMap[n]);
-	return img;
-}
-
-*/
-
-	
 	/*	
 	public static void main(String[]args) {
 		ImageJ ij=new ImageJ();

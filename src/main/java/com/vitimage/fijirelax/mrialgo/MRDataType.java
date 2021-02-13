@@ -1,4 +1,4 @@
-package com.vitimage.fijirelax;
+package com.vitimage.fijirelax.mrialgo;
 
 public enum MRDataType {
 	T1SEQ,

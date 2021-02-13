@@ -1,4 +1,4 @@
-package com.vitimage.fijirelax;
+package com.vitimage.fijirelax.testing;
 
 /*
 t2Init_dif = xData(1) - xData(end-1);
@@ -19,11 +19,11 @@ import com.vitimage.common.Timer;
 import com.vitimage.common.TransformUtils;
 import com.vitimage.common.VitimageUtils;
 import com.vitimage.fijiyama.RegistrationAction;
-import com.vitimage.fijirelax.HyperMap;
-import com.vitimage.fijirelax.MRDataType;
-import com.vitimage.fijirelax.MRUtils;
-import com.vitimage.fijirelax.NoiseManagement;
-import com.vitimage.fijirelax.RiceEstimator;
+import com.vitimage.fijirelax.mrialgo.HyperMap;
+import com.vitimage.fijirelax.mrialgo.MRDataType;
+import com.vitimage.fijirelax.mrialgo.MRUtils;
+import com.vitimage.fijirelax.mrialgo.NoiseManagement;
+import com.vitimage.fijirelax.mrialgo.RiceEstimator;
 import com.vitimage.registration.BlockMatchingRegistration;
 import com.vitimage.registration.ItkTransform;
 

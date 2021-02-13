@@ -1,5 +1,6 @@
-package com.vitimage.fijirelax;
+package com.vitimage.fijirelax.curvefit;
 import com.vitimage.common.VitimageUtils;
+import com.vitimage.fijirelax.mrialgo.MRUtils;
 
 import ij.IJ;
 import lma.LMAFunction;
@@ -7,15 +8,13 @@ import lma.LMAMatrix.InvertException;
 import lma.LMAMultiDimFunction;
 import lma.implementations.LMA;
 
-public class LMDualCurveFitterNoBias {
-	
+/** Class for building curve fitter */
+public class LMDualCurveFitterNoBias {	
 	public boolean debugLM=false;
 	public final static String[] timeunits={"ms", "s"};
 	public final static int[] timeitems={MRUtils.MSEC, MRUtils.SEC};
 	public final static String[] fititems2={"Simplex","Levenberg-Marquardt"};
 	public final static int[] constitems2={MRUtils.SIMPLEX,MRUtils.LM};
-
-
 	protected int fit;                // Number of curve type to fit
 
 	protected double[][] data; // x,y data to fit

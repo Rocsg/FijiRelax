@@ -1,5 +1,6 @@
-package com.vitimage.fijirelax;
+package com.vitimage.fijirelax.curvefit;
 import com.vitimage.common.VitimageUtils;
+import com.vitimage.fijirelax.mrialgo.MRUtils;
 
 import lma.LMAFunction;
 import lma.LMAMatrix.InvertException;

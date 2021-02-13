@@ -1,6 +1,7 @@
-package com.vitimage.fijirelax;
+package com.vitimage.fijirelax.curvefit;
 
 import com.vitimage.common.VitimageUtils;
+import com.vitimage.fijirelax.mrialgo.MRUtils;
 
 import ij.macro.Interpreter;
 import ij.macro.Program;
@@ -243,7 +244,9 @@ public class SimplexCurveFitterNoBias{
         double medT=minT/2+maxT/2;
         double maxMag=VitimageUtils.max(yData);
         double medMag=maxMag/2;
-/*        double firstx = xData[0];
+/*       
+ *      Initial implementation of Karl
+ *      double firstx = xData[0];
         double firsty = yData[0];
        
         double lastx = xData[numPoints-1];
@@ -402,7 +405,7 @@ public class SimplexCurveFitterNoBias{
 		return residuals;
 	}
     
-    /* Last "parametre" at each vertex of simplex is sum of residuals
+    /* Last "parameter" at each vertex of simplex is sum of residuals
      * for the curve described by that vertex
      */
     public double getSumResidualsSqr() {

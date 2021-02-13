@@ -1,9 +1,13 @@
-package com.vitimage.fijirelax;
+package com.vitimage.fijirelax.testing;
 
 import java.io.File;
 
 //import com.vitimage.fijirelax.MRI_HyperCurvesExplorer;
 import com.vitimage.common.VitimageUtils;
+import com.vitimage.fijiyama.Fijiyama_GUI;
+import com.vitimage.fijiyama.RegistrationAction;
+import com.vitimage.registration.ItkTransform;
+import com.vitimage.registration.Transform3DType;
 
 import ij.IJ;
 import ij.ImageJ;
@@ -14,6 +18,150 @@ import ij.plugin.HyperStackConverter;
 
 public class TestingFijiRelaxPackage {
 
+	
+	public static boolean isInteger(String s) {
+		try {
+			int a=Integer.parseInt(s);	
+		}catch (Exception e) {return false;}
+		return true;
+	}
+	
+	public static int safeParsePositiveInt(String s) {
+		int ERR_CODE=-999999999;
+		int ret=ERR_CODE;
+		try {
+			ret=Integer.parseInt(s);	
+		}catch (Exception e) {int a=1;}
+		if(ret!=ERR_CODE)return ret;
+		
+		ret=0;
+		int nbChars=s.length();
+		boolean isInteger=false;
+		int index=0;
+		while((index<(s.length()-1) && !isInteger(""+s.charAt(index)))){index++;}
+		while((index<(s.length()-1) && isInteger(""+s.charAt(index)))){
+			String s2=""+s.charAt(index);
+			ret*=10;
+			ret+=Integer.parseInt(s2);
+			index++;
+		}
+		return ret;
+	}
+	
+	
+	public static void main(String[]args) {
+		String s="D:\\Matt\\Stomata project\\Grasses\\Experiment 5\\MGX\\ABA\\ABA 1\\ABA_1_1\\Hv_ABA_1_1_SC.tif";
+		String s2="BLABLA\\pouet";
+		System.out.println(s2);
+		System.out.println(s2.replace("\\", "/"));
+		System.exit(0);
+		for(int i=0;i<s.length();i++)System.out.println(s.charAt(i));
+		System.out.println("["+safeParsePositiveInt("0010")+"]");
+		String pathToFjmFile="/home/fernandr/Bureau/A_Test/Matthew/Fijiyama_series_2021-02-08_02-50.fjm";
+		//String pathToFjmFile="/home/fernandr/Bureau/A_Test/Matthew/Fijiyama_series_2021-01-28_11-30.fjm";
+		
+			System.out.println("Starting setup");
+			//Verify the configuration file, and detect registration style: serie or two images
+			if(pathToFjmFile==null || (!(new File(pathToFjmFile).exists())) ||
+					(!(pathToFjmFile.substring(pathToFjmFile.length()-4,pathToFjmFile.length())).equals(".fjm"))) {
+				return;
+			}
+			String []names = new String[] {new File(pathToFjmFile).getParent(),new File(pathToFjmFile).getName()};	
+			String name=names[1].substring(0,names[1].length()-4);
+			String  serieOutputPath=names[0];
+
+			
+			String fjmFileContent=VitimageUtils.readStringFromFile(new File(names[0],names[1]).getAbsolutePath());
+
+			//Get parameters from file
+			String[]lines=fjmFileContent.split("\n");
+			name=lines[1].split("=")[1];
+			//this.serieOutputPath=(lines[3].split("=")[1]);
+			String serieInputPath=(lines[4].split("=")[1]);
+			int step=safeParsePositiveInt(lines[7].split("=")[1]);
+			int nSteps=safeParsePositiveInt(lines[8].split("=")[1]);
+			System.out.println(step);
+			
+/*			if(! isSerie) {
+				fijiyamaGui.mode=Fijiyama_GUI.MODE_TWO_IMAGES;
+				this.nTimes=1;
+				this.nMods=2;
+				this.referenceTime=0;this.referenceModality=0;
+				this.refTime=0;this.refMod=0;
+				this.movTime=0;this.movMod=1;
+				this.setupStructures();
+				this.paths[0][0]=lines[5].split("=")[1];
+				this.paths[0][1]=lines[6].split("=")[1];
+				fijiyamaGui.modeWindow=Fijiyama_GUI.WINDOWTWOIMG;
+			}
+			else {
+				fijiyamaGui.mode=Fijiyama_GUI.MODE_SERIE;
+				fijiyamaGui.modeWindow=Fijiyama_GUI.WINDOWSERIERUNNING;
+				this.referenceTime=Integer.parseInt(lines[5].split("=")[1]);
+				this.referenceModality=Integer.parseInt(lines[6].split("=")[1]);
+				//Read modalities
+				this.nMods=Integer.parseInt(lines[10].split("=")[1]);
+				if(this.nMods>1) {
+					this.mods=new String[this.nMods];
+					for(int i=0;i<this.nMods;i++)this.mods[i]=lines[11+i].split("=")[1];
+				}
+				
+				//Read times and nSteps
+				this.nTimes=Integer.parseInt(lines[12+this.nMods].split("=")[1]);
+				if(this.nTimes>1) {
+					this.times=new String[this.nTimes];
+					for(int i=0;i<this.nTimes;i++) {
+						this.times[i]=lines[13+this.nMods+i].split("=")[1];
+					}
+				}
+				this.expression=lines[14+this.nMods+this.nTimes].split("=")[1];
+				this.pathToMask=lines[15+this.nMods+this.nTimes].split("=")[1];
+				if(this.pathToMask.equals("None"))this.maskImage=null;
+				else this.maskImage=IJ.openImage(this.pathToMask);
+
+				this.setupStructures();
+
+				//Affecter les paths
+				for(int nt=0;nt<this.nTimes;nt++) {
+					for(int nm=0;nm<this.nMods;nm++) {
+						File f=new File(this.serieInputPath,expression.replace("{Time}", times[nt]).replace("{ModalityName}",mods[nm]));
+						IJ.log("Series images lookup : checking existence of image "+f.getAbsolutePath());
+						if(f.exists()) {
+							IJ.log("       Found.");
+							this.paths[nt][nm]=f.getAbsolutePath();
+						}
+						else IJ.log("      Not found.");
+					}
+				}
+				IJ.log("");
+			}
+		
+			//Check computer capacity and get a working copy of images
+			this.checkComputerCapacity(true);
+			if(!this.openImagesAndCheckOversizing())return false;
+			ItkTransform trTemp = null;
+			
+			//Read the steps : all RegistrationAction serialized .ser object, and associated transform for those already computed
+			File dirReg=new File(this.serieOutputPath,"Registration_files");		
+			for(int st=0;st<this.nSteps;st++) {
+				File f=new File(dirReg,"RegistrationAction_Step_"+st+".ser");
+				RegistrationAction regTemp=RegistrationAction.readFromTxtFile(f.getAbsolutePath());
+				if(regTemp.isDone()) {
+					f=new File(dirReg,"Transform_Step_"+st+(((regTemp.typeAction!=1) || (regTemp.typeTrans!=Transform3DType.DENSE))?".txt":".transform.tif"));
+					IJ.log("Transformation lookup : "+f+" type "+regTemp.typeTrans);
+					
+					if(regTemp.typeTrans!=Transform3DType.DENSE || regTemp.typeAction!=1)trTemp=ItkTransform.readTransformFromFile(f.getAbsolutePath());
+					else trTemp=ItkTransform.readAsDenseField(f.getAbsolutePath());				
+				}
+				addTransformAndActionBlindlyForBuilding(trTemp,regTemp);
+			}
+			currentRegAction=regActions.get(step);
+			this.unit=this.images[this.referenceTime][this.referenceModality].getCalibration().getUnit();
+			System.out.println("Finishing setup");
+			return true;
+		}
+*/	
+	}
 /*
 	public static void testDims() {
 		String pathSource="/home/fernandr/Bureau/Traitements/Sorgho/Donnees_brutes_export_Romain";

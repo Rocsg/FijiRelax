@@ -1,11 +1,12 @@
-package com.vitimage.fijirelax;
+package com.vitimage.fijirelax.gui;
 
 import java.io.File;
 import java.util.ArrayList;
 import com.vitimage.common.Timer;
 import com.vitimage.common.VitiDialogs;
 import com.vitimage.common.VitimageUtils;
-import com.vitimage.fijirelax.HyperMap;
+import com.vitimage.fijirelax.mrialgo.HyperMap;
+import com.vitimage.fijirelax.mrialgo.MRUtils;
 import com.vitimage.fijiyama.RegistrationAction;
 import com.vitimage.registration.BlockMatchingRegistration;
 import com.vitimage.registration.ItkTransform;

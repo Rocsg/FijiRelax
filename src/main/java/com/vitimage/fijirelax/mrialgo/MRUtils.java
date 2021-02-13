@@ -1,4 +1,4 @@
-package com.vitimage.fijirelax;
+package com.vitimage.fijirelax.mrialgo;
 
 
 import java.util.ArrayList;
@@ -13,6 +13,9 @@ import org.apache.poi.poifs.property.NPropertyTable;
 import com.sun.tools.javac.code.Attribute.Array;
 import com.vitimage.common.TransformUtils;
 import com.vitimage.common.VitimageUtils;
+import com.vitimage.fijirelax.curvefit.LMCurveFitterNoBias;
+import com.vitimage.fijirelax.curvefit.LMDualCurveFitterNoBias;
+import com.vitimage.fijirelax.curvefit.SimplexDualCurveFitterNoBias;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -76,6 +79,7 @@ public class MRUtils  {
 		return tab2;
 	}
 	
+	/**Not in use anymore*/
 	public static ImagePlus[] computeT1T2MapMultiThread(final ImagePlus[]imgsTemp,double sigmaSmoothing,int fitType,int algType, boolean debug) {
 		boolean isBionano=VitimageUtils.isFromBionano(imgsTemp[0]);
 		double[]voxs=VitimageUtils.getVoxelSizes(imgsTemp[0]);
@@ -329,7 +333,7 @@ public class MRUtils  {
 			case T1T2_DEFAULT_T2_MULTI_RICE : tabRet=new ImagePlus[] {imgM0,imgM02,imgT1,imgT2,imgT22,imgDelta,imgKhi2};break;
 			default : break;
 		}
-			return tabRet;
+		return tabRet;
 	}  
 	
 	public static ImagePlus simulateEchoesT2Relax(ImagePlus maps,double Tr,double[]Te,int nRepetitions,MRDataType typeAcq,double sigma,String nameSimul) {
@@ -557,7 +561,7 @@ public class MRUtils  {
 					
 					int incrTot=incrTotalFit.getAndIncrement();
 					if(incrTot%onePercent==0) {
-						IJ.log("Exponential curve fitting : "+(VitimageUtils.dou(incrTot*100.0/XYZ)+" %"));
+						IJ.log("Maps computation : "+(VitimageUtils.dou(incrTot*100.0/XYZ)+" %"));
 						IJ.showProgress(incrTot*1.0/XYZ);
 					}
 					

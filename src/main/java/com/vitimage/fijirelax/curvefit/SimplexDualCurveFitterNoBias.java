@@ -1,16 +1,17 @@
-package com.vitimage.fijirelax;
+package com.vitimage.fijirelax.curvefit;
 
 import java.util.ArrayList;
 
 import com.vitimage.common.TransformUtils;
 import com.vitimage.common.VitimageUtils;
+import com.vitimage.fijirelax.mrialgo.MRUtils;
 
 import ij.macro.Interpreter;
 import ij.macro.Program;
 import ij.macro.Tokenizer;
 
 public class SimplexDualCurveFitterNoBias{
-	boolean iterationsBreak=false;
+	public boolean iterationsBreak=false;
 	private boolean debug=false;
 	public boolean estimateDeltaTe=false;
 	public static final boolean debugBionano=false;
@@ -162,8 +163,6 @@ public class SimplexDualCurveFitterNoBias{
             order();
     
     		double rtol = sigma<=0 ? (Math.abs(simp[best][numParams] - simp[worst][numParams]))/((numPoints-numParams))  : (Math.abs(simp[best][numParams] - simp[worst][numParams]))/(sigma*sigma*(numPoints-numParams));
-  //          double rtol = 2 * Math.abs(simp[best][numParams] - simp[worst][numParams]) /
-           // (Math.abs(simp[best][numParams]) + Math.abs(simp[worst][numParams]) + 0.0000000001);
             if(debug)System.out.println("Delta khi2="+rtol+"\n");
             if (numIter >= maxIter) {
             	iterationsBreak=true;
@@ -264,15 +263,6 @@ public class SimplexDualCurveFitterNoBias{
                }
 			   else parametersBoundaries=new double[][] {{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},};
                break;
-/*           case MRUtils.T2_MONO_FIXED_BIAS:
-        	   simp[0][0] = maxMag;
-        	   simp[0][1] = medTe;
-               if(MRUtils.useBoundaries) {
-					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
-					parametersBoundaries[1]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
-               }
-			   else parametersBoundaries=new double[][] {{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},};
-               break;*/
            case MRUtils.T2_MONO:
         	   simp[0][0] = maxMag;
         	   simp[0][1] = medTe;
@@ -502,7 +492,6 @@ public class SimplexDualCurveFitterNoBias{
                 if (simp[i][numParams] > simp[nextWorst][numParams]) nextWorst = i;
             }
         }
-        //        IJ.log("B: " + simp[best][numParams] + " 2ndW: " + simp[nextWorst][numParams] + " W: " + simp[worst][numParams]);
     }
 
     /** Get number of iterations performed */
