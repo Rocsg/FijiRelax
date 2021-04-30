@@ -15,17 +15,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.vitimage.common.Timer;
-import com.vitimage.common.TransformUtils;
-import com.vitimage.common.VitimageUtils;
-import com.vitimage.fijiyama.RegistrationAction;
+import com.phenomen.common.Timer;
+import com.phenomen.common.TransformUtils;
+import com.phenomen.common.VitimageUtils;
+import com.phenomen.fijiyama.RegistrationAction;
 import com.vitimage.fijirelax.mrialgo.HyperMap;
 import com.vitimage.fijirelax.mrialgo.MRDataType;
 import com.vitimage.fijirelax.mrialgo.MRUtils;
 import com.vitimage.fijirelax.mrialgo.NoiseManagement;
 import com.vitimage.fijirelax.mrialgo.RiceEstimator;
-import com.vitimage.registration.BlockMatchingRegistration;
-import com.vitimage.registration.ItkTransform;
+import com.phenomen.registration.BlockMatchingRegistration;
+import com.phenomen.registration.ItkTransform;
 
 import ij.IJ;
 import ij.ImageJ;
@@ -68,16 +68,8 @@ public class ValidationExperimentsFijiRelaxPaper {
 	
 	public static void main(String[]args) {
 		ImageJ ij=new ImageJ();
-		//testRec();
-//		HyperMap hyperMap=HyperMap.importHyperMapFromRawDicomData("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Source_data/Vine/B098_J0_raw_dicomdir","B098_J0");
-//		IJ.saveAsTiff(hyperMap.hyperImg,"/home/fernandr/Bureau/FijiRelax_PrepaDOI/Paper_experiments/Exp_01_Registration_T1/Results/N098_PCH_J0_source.tif");
-	
-		
-		HyperMap hyperMap=new HyperMap(IJ.openImage("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Paper_experiments/Exp_01_Registration_T1/Results/N098_PCH_J0_source.tif"));
-		hyperMap.registerEchoes();
-		IJ.saveAsTiff(hyperMap.hyperImg,"/home/fernandr/Bureau/FijiRelax_PrepaDOI/Paper_experiments/Exp_01_Registration_T1/Results/N098_PCH_J0_registered.tif");
-		
-		
+		//processExperimentData(true,false,false,false,false);	
+		exp_02_generateMaps();
 		//exp_03_compute_maps_for_real_data2();
 		//generateExperimentData(false,false,true,false,false);
 		//exp_03_simulate_data_v2();
@@ -109,8 +101,8 @@ public class ValidationExperimentsFijiRelaxPaper {
 	public static int []spacingSimulations_exp_02=new int[] {8,10,10,10};
 	public static double[] valsT2Simulation_exp_02=new double[] {20,40,60,80};
 	public static int nRepet_exp_02=4;
-	public static int dimZ_exp_02=2;
-	public static int nEchoes_exp_02=30;
+	public static int dimZ_exp_02=12;
+	public static int nEchoes_exp_02=16;
 	public static double teSpacing_exp_02=10; //12.8 chez QMRLAB
 	public static int tr_exp_02=10000;
 	public static int valT1_exp_02=500;
@@ -198,9 +190,9 @@ public class ValidationExperimentsFijiRelaxPaper {
 	public static void processExperimentData(boolean procExp1,boolean procExp2,boolean procExp3,boolean procExp4,boolean procExp5) {
 		if(procExp1) {
 			//Exp 01 : Reg T1
-/*			exp_01_estimateMapsFromSimulatedEchoes();
-			exp_01_processResults();*/
-			exp_01_estimateMapsFromSimulatedEchoesRealData();
+/*			exp_01_estimateMapsFromSimulatedEchoes();*/
+			exp_01_processResults();
+			//exp_01_estimateMapsFromSimulatedEchoesRealData();
 
 			//
 			
@@ -209,7 +201,7 @@ public class ValidationExperimentsFijiRelaxPaper {
 		if(procExp2) {
 			//Exp 02 : Rice mono
 				//compute diffs and tab of results. Also display python code for simulating curve
-				exp_02_processResults();
+				//exp_02_processResults();
 
 		}			
 		
@@ -343,52 +335,6 @@ public class ValidationExperimentsFijiRelaxPaper {
 	
 
 	
-	/** Functions for exp01 in chrononological order of calling*/////////////////////////////////////////////////////////////////////////////////	
-	public static void exp_01_generateMaps() {
-		ImagePlus[]maps=new ImagePlus[2];
-		int[][] spacing=spacingSimulations_exp_01;
-		int dimX=spacing[0][0];int dimY=spacing[0][1]; //image size
-		int nCircles=spacing[1].length; // characteristics of simulated objects (circles)
-		int[]centersX=spacing[4];int[]centersY=spacing[5];int[] ratio=spacing[6];int radius=spacing[7][0]; 
-		ImagePlus img=IJ.createImage("map", dimX, dimY, dimZ_exp_01, 32);
-		for(int i=0;i<maps.length;i++)maps[i]=VitimageUtils.nullImage(img);
-
-		
-		float[][]mapVals=new float[2][];
-		for(int z=0;z<dimZ_exp_01;z++) {
-			for(int i=0;i<maps.length;i++)mapVals[i]=(float[]) maps[i].getStack().getPixels(z+1);
-
-			//Set all image to target non-null background value
-			for(int x=0;x<dimX;x++){
-				for(int y=0;y<dimY;y++){
-					int offset=y*dimX+x;
-					mapVals[0][offset]=PDDown_exp_01; mapVals[1][offset]=t1Down_exp_01;
-				}
-			}
-			
-			//Draw objects
-			for(int circX=0;circX<centersX.length;circX++) {
-				for(int circY=0;circY<centersY.length;circY++) {
-					for(int dx=-radius;dx<=radius;dx++){
-						for(int dy=-radius;dy<=radius;dy++){
-							double ray=Math.sqrt(dx*dx+dy*dy);
-							if(ray<radius) {
-								int offset=(centersY[circY]+dy)*dimX+(centersX[circX]+dx);
-								mapVals[0][offset]*=(ratio[circX]/10.0);
-								mapVals[1][offset]*=(ratio[circY]/10.0);
-							}							
-						}
-					}
-				}
-			}
-		}
-		
-		for(int i=0;i<maps.length;i++)maps[i]=VitimageUtils.gaussianFilteringIJ(maps[i], sigmaGauss_exp_01, sigmaGauss_exp_01, 0);
-		ImagePlus hyper=VitimageUtils.hyperStackingChannels(maps);
-		hyper.setC(1);hyper.setDisplayRange(0, PDUp_exp_01*3);		IJ.run(hyper,"Fire","");
-		hyper.setC(2);hyper.setDisplayRange(0, PDUp_exp_01*3);		IJ.run(hyper,"Fire","");
-		IJ.save(hyper,dirExp01+"/Source_data/SimulatedData_expected_maps.tif");
-	}
 	
 	public static void exp_01_generateSpinEchoT1Mono() {
 		//Collect simulated maps
@@ -536,6 +482,85 @@ public class ValidationExperimentsFijiRelaxPaper {
 		IJ.saveAsTiff(mapReg,dirExp01+"/Results/"+("SimulatedData_maps_estimation_after_registration.tif"));
 	}
 
+	
+	
+	public static ImagePlus gatherResultsWithVariousSNROnSlices(ImagePlus img) {
+		img.show();
+		int border1=21;
+		int border2=41;
+		int C=img.getNChannels();
+		int Z=img.getNSlices();
+		int T=img.getNFrames();
+		int X=img.getWidth();
+		int Y=img.getHeight();
+		ImagePlus out=new Duplicator().run(img,1,C,1,Z,1,1);
+		for(int c=0;c<C;c++)for(int z=0;z<Z;z++) {
+			float[]tabOut=(float[])out.getStack().getPixels(VitimageUtils.getCorrespondingSliceInHyperImage(img, c, Z, 0));
+
+			float[]tabIn0=(float[])img.getStack().getPixels(VitimageUtils.getCorrespondingSliceInHyperImage(img, c, Z, 0));
+			float[]tabIn1=(float[])img.getStack().getPixels(VitimageUtils.getCorrespondingSliceInHyperImage(img, c, Z, 1));
+			float[]tabIn2=(float[])img.getStack().getPixels(VitimageUtils.getCorrespondingSliceInHyperImage(img, c, Z, 2));
+			for(int y=0;y<Y;y++) {
+				for(int x=0;x<border1;x++) tabOut[y*X+x]=tabIn0[y*X+x];
+				for(int x=border1;x<border2;x++) tabOut[y*X+x]=tabIn1[y*X+x];
+				for(int x=border2;x<X;x++) tabOut[y*X+x]=tabIn2[y*X+x];
+			}
+		}
+		return out;
+	}
+	
+	
+	
+	/** Functions for exp01 in chrononological order of calling*/////////////////////////////////////////////////////////////////////////////////	
+	public static void exp_01_generateMaps() {
+		ImagePlus[]maps=new ImagePlus[2];
+		int[][] spacing=spacingSimulations_exp_01;
+		int dimX=spacing[0][0];int dimY=spacing[0][1]; //image size
+		int nCircles=spacing[1].length; // characteristics of simulated objects (circles)
+		int[]centersX=spacing[4];int[]centersY=spacing[5];int[] ratio=spacing[6];int radius=spacing[7][0]; 
+		ImagePlus img=IJ.createImage("map", dimX, dimY, dimZ_exp_01, 32);
+		for(int i=0;i<maps.length;i++)maps[i]=VitimageUtils.nullImage(img);
+
+		
+		float[][]mapVals=new float[2][];
+		for(int z=0;z<dimZ_exp_01;z++) {
+			for(int i=0;i<maps.length;i++)mapVals[i]=(float[]) maps[i].getStack().getPixels(z+1);
+
+			//Set all image to target non-null background value
+			for(int x=0;x<dimX;x++){
+				for(int y=0;y<dimY;y++){
+					int offset=y*dimX+x;
+					mapVals[0][offset]=PDDown_exp_01; mapVals[1][offset]=t1Down_exp_01;
+				}
+			}
+			
+			//Draw objects
+			for(int circX=0;circX<centersX.length;circX++) {
+				for(int circY=0;circY<centersY.length;circY++) {
+					for(int dx=-radius;dx<=radius;dx++){
+						for(int dy=-radius;dy<=radius;dy++){
+							double ray=Math.sqrt(dx*dx+dy*dy);
+							if(ray<radius) {
+								int offset=(centersY[circY]+dy)*dimX+(centersX[circX]+dx);
+								mapVals[0][offset]*=(ratio[circX]/10.0);
+								mapVals[1][offset]*=(ratio[circY]/10.0);
+							}							
+						}
+					}
+				}
+			}
+		}
+		
+		for(int i=0;i<maps.length;i++)maps[i]=VitimageUtils.gaussianFilteringIJ(maps[i], sigmaGauss_exp_01, sigmaGauss_exp_01, 0);
+		ImagePlus hyper=VitimageUtils.hyperStackingChannels(maps);
+		hyper.setC(1);hyper.setDisplayRange(0, PDUp_exp_01*3);		IJ.run(hyper,"Fire","");
+		hyper.setC(2);hyper.setDisplayRange(0, PDUp_exp_01*3);		IJ.run(hyper,"Fire","");
+		IJ.save(hyper,dirExp01+"/Source_data/SimulatedData_expected_maps.tif");
+	}
+
+	
+	
+	
 	public static void exp_01_processResults() {
 		ImagePlus []maps=VitimageUtils.stacksFromHyperstackFastBis(IJ.openImage(dirExp01+"/Results/"+("SimulatedData_maps_estimation.tif")));
 		ImagePlus []mapsReg=VitimageUtils.stacksFromHyperstackFastBis(IJ.openImage(dirExp01+"/Results/"+("SimulatedData_maps_estimation_after_registration.tif")));
@@ -574,18 +599,28 @@ public class ValidationExperimentsFijiRelaxPaper {
 							double ray=Math.sqrt(dx*dx+dy*dy);
 							if(ray<radius) {
 								int offset=(centersY[circY]+dy)*dimX+(centersX[circX]+dx);
+								//System.out.print(circX+" , "+circY+" - Processing point x="+(centersX[circX]+dx)+" y="+(centersY[circY]+dy));
 								tabValsAggregated[0][circX][circY][incr[circX][circY]]=mapVals[1][offset];
 								tabValsAggregated[1][circX][circY][incr[circX][circY]]=mapValsReg[1][offset];
 								tabValsAggregated[2][circX][circY][incr[circX][circY]]=mapValsInit[1][offset];
+								//System.out.println("  Collected : "+tabValsAggregated[2][circX][circY][incr[circX][circY]]);
 								incr[circX][circY]++;
 							}							
 						}
 					}
+					System.out.println("Mean="+VitimageUtils.statistics1D(tabValsAggregated[2][circX][circY])[0]);
 				}
 			}
 		}
 		
-		String[][]tabResults=new String[6][9];
+		String[][]tabResults=new String[7][10];
+		tabResults[0]=new String[] {"Without reg. PDx1.5","Without reg. PDx2","Without reg. PDx3", "With reg. PDx1.5","With reg. PDx2","With reg. PDx3", "Expected values PDx1.5","Expected values PDx2","Expected values PDx3"};
+		tabResults[1][0]="T1x1.5 - mean+-std";		
+		tabResults[2][0]="T1x1.5 - rel %";		
+		tabResults[3][0]="T1x2 - mean+-std";		
+		tabResults[4][0]="T1x2 - rel %";		
+		tabResults[5][0]="T1x3 - mean+-std";		
+		tabResults[6][0]="T1x3 - rel %";		
 		System.out.println("Nsamples="+nSamples);
 		String[]cases=new String[]{"Non reg", "Reg", "Init values"};
 		for(int c=0;c<cases.length;c++) {
@@ -597,14 +632,14 @@ public class ValidationExperimentsFijiRelaxPaper {
 					double[]stats=VitimageUtils.statistics1D(tabValsAggregated[c][i][j]);
 					double[]statsInit=VitimageUtils.statistics1D(tabValsAggregated[2][i][j]);
 					System.out.print(" ["+doudou(stats[0])+" +-"+doudou(stats[1])+"]" );			
-					tabResults[i*2+0][c*3+j]=""+doudou(stats[0])+" +-"+doudou(stats[1]);
+					tabResults[1+i*2+0][1+c*3+j]=""+doudou(stats[0])+" +-"+doudou(stats[1]);
 				}
 				System.out.println();
 				for(int j=0;j<centersY.length;j++) {
 					double[]stats=VitimageUtils.statistics1D(tabValsAggregated[c][i][j]);
 					double[]statsInit=VitimageUtils.statistics1D(tabValsAggregated[2][i][j]);
 					System.out.print(" ["+dou(100*(stats[0]-statsInit[0])/statsInit[0])+"]");			
-					tabResults[i*2+1][c*3+j]=""+dou(100*(stats[0]-statsInit[0])/statsInit[0]);
+					tabResults[1+i*2+1][1+c*3+j]=""+dou(100*(stats[0]-statsInit[0])/statsInit[0]);
 				}
 				System.out.println();
 			}
@@ -612,7 +647,99 @@ public class ValidationExperimentsFijiRelaxPaper {
 		writeStringTabInExcelFile(tabResults,dirExp01+"/Results/"+("table.csv"));
 
 	}
+
+	public static void processTableS1(ImagePlus expectedMaps,ImagePlus mapsWithout, ImagePlus mapsWith, String pathToCSV) {
+		expectedMaps.show();
+		expectedMaps.setTitle("Expected");
+		ImagePlus []maps=VitimageUtils.stacksFromHyperstackFastBis(mapsWithout);
+		ImagePlus []mapsReg=VitimageUtils.stacksFromHyperstackFastBis(mapsWith);
+		ImagePlus []mapsInit=VitimageUtils.stacksFromHyperstackFastBis(expectedMaps);
+
+		int dimZ=dimZ_exp_01;
+		int[][] spacing=spacingSimulations_exp_01;
+		int dimX=spacing[0][0];int dimY=spacing[0][1]; //image size
+		int[]centersX=spacing[4];int[]centersY=spacing[5];int[] ratio=spacing[6];int radius=spacing[7][0]; 
 		
+		float[][]mapVals=new float[2][];
+		float[][]mapValsReg=new float[2][];
+		float[][]mapValsInit=new float[2][];
+
+		int nSamples=0;
+		for(int dx=-radius;dx<=radius;dx++)for(int dy=-radius;dy<=radius;dy++){
+			double ray=Math.sqrt(dx*dx+dy*dy);
+			if(ray<radius) nSamples++;
+		}
+		nSamples*=dimZ_exp_01;
+		int[][]incr=new int[centersX.length][centersX.length];
+		
+		double[][][][]tabValsAggregated=new double[3][centersX.length][centersX.length][nSamples];
+		for(int z=0;z<dimZ_exp_01;z++) {
+			for(int i=0;i<2;i++) {
+				mapVals[i]=(float[]) maps[i].getStack().getPixels(z+1);
+				mapValsReg[i]=(float[]) mapsReg[i].getStack().getPixels(z+1);
+				mapValsInit[i]=(float[]) mapsInit[i].getStack().getPixels(z+1);
+			}
+			
+			//Draw objects
+			for(int circX=0;circX<centersX.length;circX++) {
+				for(int circY=0;circY<centersY.length;circY++) {
+					for(int dx=-radius;dx<=radius;dx++){
+						for(int dy=-radius;dy<=radius;dy++){
+							double ray=Math.sqrt(dx*dx+dy*dy);
+							if(ray<radius) {
+								int offset=(centersY[circY]+dy)*dimX+(centersX[circX]+dx);
+								//System.out.print(circX+" , "+circY+" - Processing point x="+(centersX[circX]+dx)+" y="+(centersY[circY]+dy));
+								tabValsAggregated[0][circX][circY][incr[circX][circY]]=mapVals[1][offset];
+								tabValsAggregated[1][circX][circY][incr[circX][circY]]=mapValsReg[1][offset];
+								tabValsAggregated[2][circX][circY][incr[circX][circY]]=mapValsInit[1][offset];
+								//System.out.println("  Collected : "+tabValsAggregated[2][circX][circY][incr[circX][circY]]);
+								incr[circX][circY]++;
+							}							
+						}
+					}
+					System.out.print("Mean NO="+VitimageUtils.dou(VitimageUtils.statistics1D(tabValsAggregated[0][circX][circY])[0]));
+					System.out.print("Mean YES="+VitimageUtils.dou(VitimageUtils.statistics1D(tabValsAggregated[1][circX][circY])[0]));
+					System.out.println("Mean EXPECT="+VitimageUtils.dou(VitimageUtils.statistics1D(tabValsAggregated[2][circX][circY])[0]));
+				}
+			}
+		}
+		
+		String[][]tabResults=new String[7][10];
+		tabResults[0]=new String[] {"Without reg. PDx1.5","Without reg. PDx2","Without reg. PDx3", "With reg. PDx1.5","With reg. PDx2","With reg. PDx3", "Expected values PDx1.5","Expected values PDx2","Expected values PDx3"};
+		tabResults[1][0]="T1x1.5 - mean+-std";		
+		tabResults[2][0]="T1x1.5 - rel %";		
+		tabResults[3][0]="T1x2 - mean+-std";		
+		tabResults[4][0]="T1x2 - rel %";		
+		tabResults[5][0]="T1x3 - mean+-std";		
+		tabResults[6][0]="T1x3 - rel %";		
+		System.out.println("Nsamples="+nSamples);
+		String[]cases=new String[]{"Non reg", "Reg", "Init values"};
+		for(int c=0;c<cases.length;c++) {
+			System.out.println("\n\nResult "+cases[c]);
+			for(int i=0;i<centersX.length;i++) {
+				System.out.println("");
+				System.out.println("------ T2 ratio : "+ratio[i]+"  ------");
+				for(int j=0;j<centersY.length;j++) {
+					double[]stats=VitimageUtils.statistics1D(tabValsAggregated[c][i][j]);
+					double[]statsInit=VitimageUtils.statistics1D(tabValsAggregated[2][i][j]);
+					System.out.print(" ["+doudou(stats[0])+" +-"+doudou(stats[1])+"]" );			
+					tabResults[1+i*2+0][1+c*3+j]=""+doudou(stats[0])+" +-"+doudou(stats[1]);
+				}
+				System.out.println();
+				for(int j=0;j<centersY.length;j++) {
+					double[]stats=VitimageUtils.statistics1D(tabValsAggregated[c][i][j]);
+					double[]statsInit=VitimageUtils.statistics1D(tabValsAggregated[2][i][j]);
+					System.out.print(" ["+dou(100*(stats[0]-statsInit[0])/statsInit[0])+"]");			
+					tabResults[1+i*2+1][1+c*3+j]=""+dou(100*(stats[0]-statsInit[0])/statsInit[0]);
+				}
+				System.out.println();
+			}
+		}
+		writeStringTabInExcelFile(tabResults,pathToCSV);
+	}
+
+	
+	
 	public static void exp_01_generateSpinEchoT1MonoRealData() {
 		//Collect simulated maps
 
@@ -803,7 +930,7 @@ public class ValidationExperimentsFijiRelaxPaper {
 		int spaceX=spacing[0];int lx=spacing[1];
 		int spaceY=spacing[2];int ly=spacing[3];
 		double valT1=valT1_exp_02;
-		double []valsT2=exp_02_getValsSigmaSimulation();
+		double []valsT2=new double[] {20,40,60,80};
 		double []valsSigma=exp_02_getValsSigmaSimulation();
 		int dimX=(spaceX+lx)*(valsSigma.length)+spaceX;
 		int dimY=(spaceY+ly)*(valsT2.length)+spaceY;
@@ -847,9 +974,10 @@ public class ValidationExperimentsFijiRelaxPaper {
 		hyper.setC(1);hyper.setDisplayRange(0, 1500);		IJ.run(hyper,"Fire","");
 		hyper.setC(2);hyper.setDisplayRange(0, 800);		IJ.run(hyper,"Fire","");
 		hyper.setC(3);hyper.setDisplayRange(0, 120);		IJ.run(hyper,"Fire","");
-		IJ.save(hyper,dirExp02+"/Source_data/maps.tif");
-		IJ.save(hyper,dirExp02+"/Results/Method_0_Source_values.tif");
-
+		//IJ.save(hyper,dirExp02+"/Source_data/maps.tif");
+		//IJ.save(hyper,dirExp02+"/Results/Method_0_Source_values.tif");
+		IJ.save(hyper,"home/fernandr/Bureau/FijiRelax_DOI/Experiments_for_figures_and_tables/Input_data/Images/Squared_fantoms/initial_maps.tif");
+		hyper.show();
 		return hyper;
 	}
 	
@@ -998,7 +1126,142 @@ public class ValidationExperimentsFijiRelaxPaper {
 	}
 
 	
-	public static void exp_02_processResults() {
+	
+	
+	
+	public static ImagePlus estimateMapsFromEchoesSquaredFantoms(ImagePlus imgSimulatedEchoes,int fitType) {
+		VitimageUtils.printImageResume(imgSimulatedEchoes);
+		int nEchoes=nEchoes_exp_02;
+		double Tr=tr_exp_02;
+		double TeSpacing=teSpacing_exp_02;
+		double[]tabTrTimes=new double[nEchoes];
+		double[]tabTeTimes=new double[nEchoes];
+
+		ImagePlus []imgs=new ImagePlus[nEchoes];
+		
+		ImagePlus img=imgSimulatedEchoes;
+		imgs=VitimageUtils.stacksFromHyperstackFastBis(img);
+		
+		
+		ImagePlus []maps=new ImagePlus[3];
+		double[]tabData=new double[nEchoes];
+		for(int ec=0;ec<nEchoes;ec++) {
+			tabTrTimes[ec]=Tr;
+			tabTeTimes[ec]=TeSpacing*(ec+1);
+		}
+		int dimZ= dimZ_exp_02;
+		int[] spacing=spacingSimulations_exp_02;
+		int spaceX=spacing[0];int lx=spacing[1];
+		int spaceY=spacing[2];int ly=spacing[3];
+		double valT1=valT1_exp_02;
+		double []valsT2=valsT2Simulation_exp_02;
+		double []valsSigma=null;
+		valsSigma=exp_02_getValsSigmaSimulation();
+		int dimX=(spaceX+lx)*(valsSigma.length)+spaceX;
+		maps[0]=VitimageUtils.nullImage(imgs[0]);
+		maps[1]=VitimageUtils.nullImage(imgs[0]);
+		maps[2]=VitimageUtils.nullImage(imgs[0]);
+		float[][]mapVals=new float[3][];
+		float[][]ecVals=new float[nEchoes][];
+		for(int z=0;z<dimZ;z++) {
+			for(int i=0;i<3;i++)mapVals[i]=(float[]) maps[i].getStack().getPixels(z+1);
+			for(int i=0;i<nEchoes;i++) {
+				System.out.println("i="+i);
+				ecVals[i]=(float[]) imgs[i].getStack().getPixels(z+1);
+			}
+
+			for(int i=0;i<valsT2.length;i++) {
+				System.out.println("i"+i);
+				for(int j=0;j<valsSigma.length;j++) {
+					for(int dx=0;dx<lx;dx++) {
+						for(int dy=0;dy<ly;dy++) {
+							int x=dx+j*(lx+spaceX)+spaceX;
+							int y=dy+i*(ly+spaceY)+spaceY;
+							for(int ec=0;ec<nEchoes;ec++)tabData[ec]=ecVals[ec][y*dimX+x];
+							double[]params=(double[]) MRUtils.makeFit(tabTrTimes, tabTeTimes, tabData, fitType, MRUtils.SIMPLEX, 400, valsSigma[j], false)[0];
+							mapVals[0][y*dimX+x]=(float) params[0];
+							mapVals[1][y*dimX+x]=(float) valT1;
+							mapVals[2][y*dimX+x]=(float) params[1];
+						}
+					}
+				}
+			
+			}
+		}
+
+	
+		
+		ImagePlus map=VitimageUtils.hyperStackingChannels(maps);
+		map.setC(1);map.setDisplayRange(0,  1500);		IJ.run(map,"Fire","");
+		map.setC(2);map.setDisplayRange(0,  800);		IJ.run(map,"Fire","");
+		map.setC(3);map.setDisplayRange(0,  120);		IJ.run(map,"Fire","");
+		String dat="Simulated";
+		return map;
+	}
+
+
+	
+	
+	
+	
+	public static void processResultsSquaredFantoms(ImagePlus[]dataToProcess,String pathToCSV) {
+		//Get the areas
+		String[][]tabResults=new String[5][10];
+		tabResults[0]=new String[] {"EXP 200","EXP 500","EXP 1000","OFF 200","OFF 500","OFF 1000","RICE 200","RICE 500","RICE 1000"};
+		tabResults[1][0]="T2=20 ms";
+		tabResults[2][0]="T2=40 ms";
+		tabResults[3][0]="T2=60 ms";
+		tabResults[4][0]="T2=80 ms";
+		int[] spacing=spacingSimulations_exp_02;
+		int spaceX=spacing[0];int lx=spacing[1];
+		int spaceY=spacing[2];int ly=spacing[3];
+		double []valsT2=valsT2Simulation_exp_02;
+		double []valsSigma=exp_02_getValsSigmaSimulation();
+		int dimX=(spaceX+lx)*(valsSigma.length)+spaceX;
+		int dimY=(spaceY+ly)*(valsT2.length)+spaceY;
+		int dimZ=dimZ_exp_02;
+		double[][][][] dataCubeReal=new double[2][valsT2.length][valsSigma.length][lx*ly*dimZ];// {M0, T2} ; { 
+		String[]testNames=new String[] {"Simulated_Method_0_Source_values.tif","Simulated_Method_1_Exp.tif","Simulated_Method_2_Bias.tif","Simulated_Method_3_Rice.tif"};
+		
+		for(int te=0;te<testNames.length;te++) {
+			System.out.println("\n\n\n\n\nProcessing "+testNames[te]);
+			ImagePlus img=dataToProcess[te];
+			float[][]valT2=new float[dimZ][];
+			for(int z=0;z<dimZ;z++) {
+				valT2[z]=(float[]) img.getStack().getPixels(z+1);
+			}
+			for(int i=0;i<valsT2.length;i++) {
+				for(int j=0;j<valsSigma.length;j++) {
+					for(int z=0;z<dimZ;z++) {
+						for(int dx=0;dx<lx;dx++) {
+							for(int dy=0;dy<ly;dy++) {
+								int x=dx+j*(lx+spaceX)+spaceX;
+								int y=dy+i*(ly+spaceY)+spaceY;
+								dataCubeReal[1][i][j][dx*ly+dy+z*lx*ly]=valT2[z][y*dimX+x];
+								valT2[z][y*dimX+x]=(float) ((valT2[z][y*dimX+x]/*-valsT2[i]*/)/valsT2[i]);
+							}
+						}
+					}
+				}
+			}
+			for(int i=0;i<valsT2.length;i++) {
+				System.out.println("");
+				System.out.println("------ "+valsT2[i]+" ms ------");
+				for(int j=0;j<valsSigma.length;j++) {
+					System.out.println("Stat over "+dataCubeReal[0][i][j].length);
+					double[]statsM0=VitimageUtils.statistics1D(dataCubeReal[0][i][j]);
+					double[]statsT2=VitimageUtils.statistics1D(dataCubeReal[1][i][j]);
+					System.out.print(" ["+dou(100*((statsT2[0]-valsT2[i])/valsT2[i]))+"+-"+dou(100*statsT2[1]/valsT2[i])+"]");
+					if(te>0)tabResults[i+1][3*(te-1)+j+1]=""+dou(100*((statsT2[0]-valsT2[i])/valsT2[i]))+"+-"+dou(100*statsT2[1]/valsT2[i]);
+				}
+			}
+		}	
+		
+		writeStringTabInExcelFile(tabResults,pathToCSV);
+	}
+	
+	
+	public static void processResultsSquaredFantomsOld(ImagePlus[]dataToProcess) {
 		//Get the areas
 		int[] spacing=spacingSimulations_exp_02;
 		int spaceX=spacing[0];int lx=spacing[1];
@@ -1013,7 +1276,7 @@ public class ValidationExperimentsFijiRelaxPaper {
 		
 		for(int te=0;te<testNames.length;te++) {
 			System.out.println("\n\n\n\n\nProcessing "+testNames[te]);
-			ImagePlus img=IJ.openImage(dirExp02+"/Results/"+testNames[te]);
+			ImagePlus img=dataToProcess[te];
 			ImagePlus []imgs=VitimageUtils.stacksFromHyperstackFastBis(img);
 			imgs[0].show();
 			imgs[2].show();
@@ -1042,7 +1305,7 @@ public class ValidationExperimentsFijiRelaxPaper {
 			img=VitimageUtils.hyperStackingChannels(imgs);
 			img.setC(1);IJ.run(img,"Fire","");img.setDisplayRange(-0.5, 0.5);
 			img.setC(3);IJ.run(img,"Fire","");img.setDisplayRange(0.8, 1.2);
-			IJ.saveAsTiff(img, dirExp02+"/Results/DIFF_"+testNames[te]);
+			//IJ.saveAsTiff(img, dirExp02+"/Results/DIFF_"+testNames[te]);
 
 			for(int i=0;i<valsT2.length;i++) {
 				System.out.println("");
@@ -1060,6 +1323,7 @@ public class ValidationExperimentsFijiRelaxPaper {
 		
 
 	public static ImagePlus[]stackToSlicesTframes(ImagePlus img){
+		VitimageUtils.printImageResume(img);
 		int X=img.getWidth();int Y=img.getHeight();int Z=img.getNFrames();
 		ImagePlus []ret=new ImagePlus[Z];
 		for(int z=0;z<Z;z++) {
@@ -1305,12 +1569,12 @@ public class ValidationExperimentsFijiRelaxPaper {
 
 			//Compute separated fits
 			HyperMap hyper=new HyperMap(IJ.openImage(dirExp03+"/Source_data/Simulation_SNR"+sigmas[1][indSig]+".tif"));
-			hyper.computeMapsAgainAndMask(MRUtils.SIMPLEX,true,NoiseManagement.RICE,false,null,5);
+			hyper.computeMapsAgainAndMask(MRUtils.SIMPLEX,true,NoiseManagement.RICE,false,null,4);
 			IJ.saveAsTiff(hyper.hyperImg,dirExp03+"/Results/Simul_SNR"+sigmas[1][indSig]+"_separated.tif");
 
 			//Compute cross fits
 			hyper=new HyperMap(IJ.openImage(dirExp03+"/Source_data/Simulation_SNR"+sigmas[1][indSig]+".tif"));
-			hyper.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,5);
+			hyper.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,4);
 			IJ.saveAsTiff(hyper.hyperImg,dirExp03+"/Results/Simul_SNR"+sigmas[1][indSig]+"_crossfit.tif");
 		}
 	}
@@ -1419,7 +1683,7 @@ public class ValidationExperimentsFijiRelaxPaper {
 		for(int s=1;s<sources.length;s++) {
 			HyperMap hyper=new HyperMap(IJ.openImage(sources[s]));			
 			hyper=hyper.pruneBionanoStuff();
-			hyper.computeMapsAgainAndMask(MRUtils.SIMPLEX,true,NoiseManagement.RICE,false,null,5);
+			hyper.computeMapsAgainAndMask(MRUtils.SIMPLEX,true,NoiseManagement.RICE,false,null,4);
 			System.out.println(dirExp03+"/Results/Sorgho_separated.tif");
 			IJ.saveAsTiff(hyper.hyperImg,dirExp03+"/Results/Sorgho_separated.tif");
 		
@@ -1442,7 +1706,7 @@ public class ValidationExperimentsFijiRelaxPaper {
 		for(int s=0;s<sources.length;s++) {
 			System.out.println("Here5");
 			HyperMap hyper=new HyperMap(IJ.openImage(sources[s]));			
-			hyper.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,5);
+			hyper.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,4);
 			System.out.println(dirExp03+"/Results/Vine_long_joint70.tif");
 			IJ.saveAsTiff(hyper.hyperImg,dirExp03+"/Results/Vine_long_joint133.tif");			
 		}

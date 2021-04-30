@@ -2,9 +2,9 @@ package com.vitimage.fijirelax.mrialgo;
 
 import java.util.Random;
 
-import com.vitimage.common.Timer;
-import com.vitimage.common.TransformUtils;
-import com.vitimage.common.VitimageUtils;
+import com.phenomen.common.Timer;
+import com.phenomen.common.TransformUtils;
+import com.phenomen.common.VitimageUtils;
 
 import ij.IJ;
 import ij.ImageJ;

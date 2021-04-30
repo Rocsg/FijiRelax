@@ -7,14 +7,14 @@ import java.util.Random;
 
 import com.vitimage.fijirelax.gui.Custom_Format_Importer;
 import com.vitimage.fijirelax.testing.ValidationExperimentsFijiRelaxPaper;
-import com.vitimage.common.Timer;
-import com.vitimage.common.TransformUtils;
-import com.vitimage.common.VitiDialogs;
-import com.vitimage.common.VitimageUtils;
-import com.vitimage.fijiyama.RegistrationAction;
-import com.vitimage.registration.BlockMatchingRegistration;
-import com.vitimage.registration.ItkTransform;
-import com.vitimage.registration.Transform3DType;
+import com.phenomen.common.Timer;
+import com.phenomen.common.TransformUtils;
+import com.phenomen.common.VitiDialogs;
+import com.phenomen.common.VitimageUtils;
+import com.phenomen.fijiyama.RegistrationAction;
+import com.phenomen.registration.BlockMatchingRegistration;
+import com.phenomen.registration.ItkTransform;
+import com.phenomen.registration.Transform3DType;
 
 import ij.IJ;
 import ij.ImageJ;
@@ -93,26 +93,31 @@ public class HyperMap {
 		return new Duplicator().run(hyperEchoes,c+1,c+1,1,Z,t,t);				
 	}
 	
-	public static HyperMap importHyperMapFromNifti(String path,String imageName,double Tr, double TeSpacing) {
-		HyperMap hyper=new HyperMap();
-		ImagePlus img=IJ.openImage(imageName);
-		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img);
-		img=VitimageUtils.hyperStackingChannels(tab);
-		hyper.hyperImg=img;
+	public static HyperMap importHyperMapFromNifti4D(String path,String imageName,double Tr, double TeSpacing) {
+		ImagePlus img2=IJ.openImage(path);
+//		img2.show();
+		img2.setTitle("Readen Nifti");
+		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
+		//		tab[0].show();
+		tab[0].setTitle("Readen tab0");
+		ImagePlus img=VitimageUtils.hyperStackingChannels(tab);
+		//img.show();
+		img.setTitle("Stacken Nifti");
+		
 		for(int c=0;c<img.getNChannels();c++) {
-			for(int z=0;z<img.getNChannels();z++) {
-				int sli=VitimageUtils.getCorrespondingSliceInHyperImage(hyper.hyperImg,c, z, 0);
-				ImageProcessor imgP=hyper.hyperImg.getStack().getProcessor(sli);
+			for(int z=0;z<img.getNSlices();z++) {
+				int sli=VitimageUtils.getCorrespondingSliceInHyperImage(img,c, z, 0);
+				ImageProcessor imgP=img.getStack().getProcessor(sli);
 				double[]stats=MRUtils.getBackgroundStatsFromProcessorTight(imgP);
 				double sigmaRice=RiceEstimator.computeRiceSigmaFromBackgroundValuesStatic(stats[0],stats[1]);
 				double tr=Tr;
 				double te=TeSpacing*(c+1);
 				String chain="T2SEQ_NIFTI_TR="+VitimageUtils.dou(tr)+"_TE="+VitimageUtils.dou(te)+"_SIGMARICE="+VitimageUtils.dou(sigmaRice);
-				hyper.hyperImg.getStack().setSliceLabel(chain,VitimageUtils.getCorrespondingSliceInHyperImage(hyper.hyperImg,c, z, 0) );
+				img.getStack().setSliceLabel(chain,VitimageUtils.getCorrespondingSliceInHyperImage(img,c, z, 0) );
 			}		
 		}
 		
-		hyper.setup();
+		HyperMap hyper=new HyperMap(img);
 		return hyper;
 	}
 		
@@ -435,9 +440,12 @@ public class HyperMap {
 	public ImagePlus getT2EchoesImage(int t) {
 		int nbT1=getT1SeqNumberReps(t);
 		int nbT2=getT2SeqNumberReps(t);		
+		IJ.log("Effectivement : nbT2="+nbT2);
 		if(!hasT1sequence) {
-			return new Duplicator().run(hyperEchoes,1,1+nbT2,1,Z,1,T);
+			IJ.log("Effectivement : alt1");
+			return new Duplicator().run(hyperEchoes,1,nbT2,1,Z,1,T);
 		}
+		IJ.log("Effectivement : alt2");
 		return new Duplicator().run(hyperEchoes,getT1SeqNumberReps(t)+1,getT1SeqNumberReps(t)+getT2SeqNumberReps(t),1,Z,1,T);
 	}
 
@@ -589,11 +597,20 @@ public class HyperMap {
 	public double[][][]getT1T2TrTeTimes(int t){
 		int incr=0;
 		double[][][]ret=new double[dims[2]][getT1T2SeqNumberReps(t)][2];
+		System.out.println("DEB IN HYPERMAP We are here");
+		System.out.println("HasMaps ?"+hasMaps);
+		System.out.println("Nmaps="+nMaps);
+		System.out.println("C="+C);
+		System.out.println("Ctot="+Ctot);
 		for(int c=0;c<this.Ctot;c++) {
+			System.out.print("Running c="+c+" "+mrDataType[t][c]+" index="+(c-((hasMaps||true) ? nMaps : 0)+" size="+this.Tr[t][0].length)+" incr="+incr);
 			if((mrDataType[t][c]==MRDataType.T1SEQ) || (mrDataType[t][c]==MRDataType.T2SEQ)) {
-				for(int z=0;z<dims[2];z++)ret[z][incr]=new double[] {this.Tr[t][z][c-(hasMaps ? nMaps : 0)],this.Te[t][z][c-(hasMaps ? nMaps : 0)]};
+				System.out.println("IN");
+				for(int z=0;z<dims[2];z++)ret[z][incr]=new double[] {this.Tr[t][z][c-((hasMaps||true) ? nMaps : 0)],this.Te[t][z][c-((hasMaps||true) ? nMaps : 0)]};
 				incr++;
 			}
+			else 				System.out.println("OUT");
+
 		}
 		return ret;
 	}
@@ -765,18 +782,29 @@ public class HyperMap {
 	
 	/** Maps computation routine---------------------------------------------------------*/	
 	public ImagePlus computeMaps() {
-		return computeMapsAgain();
-	}
-	
-	public ImagePlus computeMapsAgain() {
 		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,4);
 	}
+
+	public ImagePlus computeMaps(NoiseManagement noise) {
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,noise,false,null,4);
+	}
+
 	
+	public ImagePlus computeMapsWithMask(ImagePlus mask) {
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,mask,4);
+	}
+
+	
+	public ImagePlus computeMaps(double nStdDevForMask) {
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,nStdDevForMask);
+	}
+
+
 	public ImagePlus computeMapsAgainAndMask(int algType,boolean separated,NoiseManagement noise,boolean forgetFirstEcho,ImagePlus imgMaskUser,double nbStdNoiseAroundMeanForSelection) {
 		if(T>1) {
 			ImagePlus []imgTab=new ImagePlus[T];
 			for(int t=0;t<T;t++) {
-				ImagePlus imgTemp=new Duplicator().run(this.hyperImg,1,Ctot,1,Z,t,t);
+				ImagePlus imgTemp=new Duplicator().run(this.hyperImg,1,hasMaps ? Ctot : C,1,Z,t+1,t+1);
 				HyperMap hypTemp=new HyperMap(imgTemp);
 				imgTab[t]=hypTemp.computeMapsAgainAndMask(algType, separated, noise, forgetFirstEcho, imgMaskUser, nbStdNoiseAroundMeanForSelection);
 			}
@@ -810,7 +838,7 @@ public class HyperMap {
 
 		//Mask computation
 		double meanRice=meanRice(imgT1T2Line);
-		if(imgMask!=null) {maskGiven=true;imgMask=imgMaskUser;}
+		if(imgMaskUser!=null) {maskGiven=true;imgMask=imgMaskUser;IJ.run(imgMask,"32-bit","");}
 		else {
 			int index=0;
 			if(hasT2sequence) {
@@ -819,7 +847,7 @@ public class HyperMap {
 			}
 			else index=getT1Indices()[0][getT1Indices()[0].length-1];
 			ImagePlus max=imgT1T2Line[index];
-			imgMask=VitimageUtils.getFloatBinaryMask(max,(1.2+nbStdNoiseAroundMeanForSelection-1)*meanRice,1E10);
+			imgMask=VitimageUtils.getFloatBinaryMask(max,(1.2+nbStdNoiseAroundMeanForSelection)*meanRice,1E10);
 		}
 
 		//Extract sequences
@@ -900,8 +928,8 @@ public class HyperMap {
 		
 		//Handle image range for viewing
 		double maxPD=VitimageUtils.maxOfImage(VitimageUtils.maxOfImageArray(imgT1T2Line))*MRUtils.maxDisplayedPDratio;
-		double maxT1=VitimageUtils.max(getT1TrTimes()[0][0])*MRUtils.maxDisplayedT1ratio;
-		double maxT2=VitimageUtils.max(getT2TeTimes()[0][0])*MRUtils.maxDisplayedT2ratio;
+		double maxT1=VitimageUtils.max(getT1T2TrTimes()[0][0])*MRUtils.maxDisplayedT1ratio;
+		double maxT2=VitimageUtils.max(getT1T2TeTimes()[0][0])*MRUtils.maxDisplayedT2ratio;
 
 
 		//In case of a computed mask, also apply the threshold routine to the PD results to compose a single excluding mask
@@ -1036,10 +1064,12 @@ public class HyperMap {
 		regAct.defineSettingsSimplyFromTwoImages(this.getHyperEcho(0,0),this.getHyperEcho(0,0));
 		regAct.typeAutoDisplay=2;
 		regAct.higherAcc=0;
+		//In Fijiyama default settings, images could have a very different geometry. Here we have only minor translations / rotations to correct
 		regAct.levelMaxLinear=2;
 		regAct.levelMinLinear=-1;
 		regAct.strideX*=2;
 		regAct.strideY*=2;
+		regAct.iterationsBMDen=0;
 		return regAct;
 	}
 
@@ -1079,8 +1109,8 @@ public class HyperMap {
 	
 	public void setDisplayRange() {
 		double maxPD=VitimageUtils.maxOfImage(hyperEchoes)*MRUtils.maxDisplayedPDratio;
-		double maxT1=VitimageUtils.max(getT1TrTimes()[0][0])*MRUtils.maxDisplayedT1ratio;
-		double maxT2=VitimageUtils.max(getT2TeTimes()[0][0])*MRUtils.maxDisplayedT2ratio;
+		double maxT1=VitimageUtils.max(getT1T2TrTimes()[0][0])*MRUtils.maxDisplayedT1ratio;
+		double maxT2=VitimageUtils.max(getT1T2TeTimes()[0][0])*MRUtils.maxDisplayedT2ratio;
 
 		if(hasMaps) {
 			for(int c=0;c<this.nMaps;c++) {

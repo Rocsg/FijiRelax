@@ -98,7 +98,18 @@
 		    <artifactId>VIB-lib</artifactId>
 		    <version>2.2.0</version>
 		</dependency>
-		
+		<!-- https://mvnrepository.com/artifact/sc.fiji/fiji-lib
+		<dependency>
+		    <groupId>sc.fiji</groupId>
+		    <artifactId>fiji-lib</artifactId>
+		    <version>2.1.2</version>
+		</dependency>
+		https://mvnrepository.com/artifact/sc.fiji/Fiji_Plugins 
+		<dependency>
+		    <groupId>sc.fiji</groupId>
+		    <artifactId>Fiji_Plugins</artifactId>
+		    <version>3.1.1</version>
+		</dependency>		 -->
 		<dependency>
 		    <groupId>commons-io</groupId>
 		    <artifactId>commons-io</artifactId>
@@ -167,7 +178,7 @@
 		    <artifactId>Fijiyama_GUI</artifactId>
 		    <version>4.0.0</version>	    
 		    <scope>system</scope>
-			<systemPath>${basedir}/lib/Fijiyama_GUI/Fijiyama_GUI-jar/4.0.0/Fijiyama_GUI-4.0.0.jar</systemPath>
+			<systemPath>${basedir}/lib/Fijiyama/Fijiyama-jar/4.0.0/Fijiyama-4.0.0.jar</systemPath>
 		</dependency> 
 	</dependencies>
   	

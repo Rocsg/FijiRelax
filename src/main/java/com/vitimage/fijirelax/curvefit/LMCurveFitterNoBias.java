@@ -1,5 +1,5 @@
 package com.vitimage.fijirelax.curvefit;
-import com.vitimage.common.VitimageUtils;
+import com.phenomen.common.VitimageUtils;
 import com.vitimage.fijirelax.mrialgo.MRUtils;
 
 import lma.LMAFunction;

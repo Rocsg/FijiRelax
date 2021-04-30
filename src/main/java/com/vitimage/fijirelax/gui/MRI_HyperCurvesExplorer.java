@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.jogamp.nativewindow.VisualIDHolder;
-import com.vitimage.common.Timer;
+import com.phenomen.common.Timer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -41,9 +41,9 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import com.vitimage.common.TransformUtils;
-import com.vitimage.common.VitiDialogs;
-import com.vitimage.common.VitimageUtils;
+import com.phenomen.common.TransformUtils;
+import com.phenomen.common.VitiDialogs;
+import com.phenomen.common.VitimageUtils;
 import com.vitimage.fijirelax.mrialgo.HyperMap;
 import com.vitimage.fijirelax.mrialgo.MRUtils;
 import com.vitimage.fijirelax.mrialgo.RiceEstimator;

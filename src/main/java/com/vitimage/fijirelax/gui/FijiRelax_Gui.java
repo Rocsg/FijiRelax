@@ -29,13 +29,13 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 
-import com.vitimage.common.VitiDialogs;
-import com.vitimage.common.VitimageUtils;
+import com.phenomen.common.VitiDialogs;
+import com.phenomen.common.VitimageUtils;
 import com.vitimage.fijirelax.mrialgo.HyperMap;
-import com.vitimage.fijiyama.RegistrationAction;
-import com.vitimage.fijiyama.RegistrationManager;
-import com.vitimage.registration.OptimizerType;
-import com.vitimage.registration.Transform3DType;
+import com.phenomen.fijiyama.RegistrationAction;
+import com.phenomen.fijiyama.RegistrationManager;
+import com.phenomen.registration.OptimizerType;
+import com.phenomen.registration.Transform3DType;
 
 import ij.IJ;
 import ij.ImageJ;
@@ -65,7 +65,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	private JButton explorerButton=new JButton("Explorer");
 	private JButton undoButton=new JButton("Undo");
 	private JButton abortButton=new JButton("Abort");
-	private JButton stressButton=new JButton("I'm feeling stressed...");
+	private JButton stressButton=new JButton("Feeling stressed with FijiRelax ?");
 	private JButton outliersButton=new JButton("Process outliers");
 
 	//Some more Gui objects and constants
@@ -133,6 +133,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 
 	public void automaticTest() {
+//		startFromTestImage("/home/fernandr/Bureau/test.tif");
 		startFromTestImage("/home/fernandr/Bureau/Traitements/Sorgho/Series_temporelles/All_timeseries/BM1_Timeseries.tif");
 		//startFromTestImage("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Tests_Refactoring/3_Computed_Maps/hyper.tif");
 //		startFromTestImage("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Tests_Refactoring/1_Imported/hyper.tif");

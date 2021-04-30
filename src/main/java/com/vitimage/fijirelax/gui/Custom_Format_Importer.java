@@ -2,15 +2,15 @@ package com.vitimage.fijirelax.gui;
 
 import java.io.File;
 import java.util.ArrayList;
-import com.vitimage.common.Timer;
-import com.vitimage.common.VitiDialogs;
-import com.vitimage.common.VitimageUtils;
+import com.phenomen.common.Timer;
+import com.phenomen.common.VitiDialogs;
+import com.phenomen.common.VitimageUtils;
 import com.vitimage.fijirelax.mrialgo.HyperMap;
 import com.vitimage.fijirelax.mrialgo.MRUtils;
-import com.vitimage.fijiyama.RegistrationAction;
-import com.vitimage.registration.BlockMatchingRegistration;
-import com.vitimage.registration.ItkTransform;
-import com.vitimage.registration.Transform3DType;
+import com.phenomen.fijiyama.RegistrationAction;
+import com.phenomen.registration.BlockMatchingRegistration;
+import com.phenomen.registration.ItkTransform;
+import com.phenomen.registration.Transform3DType;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -301,8 +301,8 @@ public class Custom_Format_Importer{
 			bmRegistration.consoleOutputActivated=false;
 			bmRegistration.timingMeasurement=true;
 			bmRegistration.mask=maskReg.duplicate();
-			bmRegistration.refRange=new double[] {imgRef.getDisplayRangeMin(),imgRef.getDisplayRangeMax()};
-			bmRegistration.movRange=new double[] {imgMov.getDisplayRangeMin(),imgMov.getDisplayRangeMax()};
+			bmRegistration.setRefRange(new double[] {imgRef.getDisplayRangeMin(),imgRef.getDisplayRangeMax()});
+			bmRegistration.setMovRange(new double[] {imgMov.getDisplayRangeMin(),imgMov.getDisplayRangeMax()});
 			bmRegistration.flagRange=true;
 			bmRegistration.minBlockVariance=10;
 			bmRegistration.displayRegistration=viewRegistration ? 2 : 0;
@@ -329,8 +329,8 @@ public class Custom_Format_Importer{
 				bmRegistration=BlockMatchingRegistration.setupBlockMatchingRegistration(imgRef,imgMov,regAct);
 				bmRegistration.consoleOutputActivated=false;
 				bmRegistration.timingMeasurement=true;
-				bmRegistration.refRange=new double[] {imgRef.getDisplayRangeMin(),imgRef.getDisplayRangeMax()};
-				bmRegistration.movRange=new double[] {imgMov.getDisplayRangeMin(),imgMov.getDisplayRangeMax()};
+				bmRegistration.setRefRange(new double[] {imgRef.getDisplayRangeMin(),imgRef.getDisplayRangeMax()});
+				bmRegistration.setMovRange(new double[] {imgMov.getDisplayRangeMin(),imgMov.getDisplayRangeMax()});
 				bmRegistration.mask=maskReg.duplicate();
 				bmRegistration.flagRange=true;
 				bmRegistration.minBlockVariance=10;

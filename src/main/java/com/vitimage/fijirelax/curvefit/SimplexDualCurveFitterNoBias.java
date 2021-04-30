@@ -2,8 +2,8 @@ package com.vitimage.fijirelax.curvefit;
 
 import java.util.ArrayList;
 
-import com.vitimage.common.TransformUtils;
-import com.vitimage.common.VitimageUtils;
+import com.phenomen.common.TransformUtils;
+import com.phenomen.common.VitimageUtils;
 import com.vitimage.fijirelax.mrialgo.MRUtils;
 
 import ij.macro.Interpreter;
