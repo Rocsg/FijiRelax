@@ -1,4 +1,4 @@
-package com.vitimage.fijirelax.gui;
+package fr.cirad.image.fijirelax.gui;
 
 
 import java.awt.Color;
@@ -30,24 +30,25 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.jogamp.nativewindow.VisualIDHolder;
-import com.phenomen.common.Timer;
+import fr.cirad.image.common.Timer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import com.phenomen.common.TransformUtils;
-import com.phenomen.common.VitiDialogs;
-import com.phenomen.common.VitimageUtils;
-import com.vitimage.fijirelax.mrialgo.HyperMap;
-import com.vitimage.fijirelax.mrialgo.MRUtils;
-import com.vitimage.fijirelax.mrialgo.RiceEstimator;
+import fr.cirad.image.common.TransformUtils;
+import fr.cirad.image.common.VitiDialogs;
+import fr.cirad.image.common.VitimageUtils;
 
+import fr.cirad.image.fijirelax.mrialgo.HyperMap;
+import fr.cirad.image.fijirelax.mrialgo.MRUtils;
+import fr.cirad.image.fijirelax.mrialgo.RiceEstimator;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -60,6 +61,7 @@ import ij.gui.PointRoi;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.io.Opener;
+import ij.plugin.Duplicator;
 import ij.plugin.frame.PlugInFrame;
 import ij.plugin.frame.RoiManager;
 
@@ -75,6 +77,9 @@ import ij.plugin.frame.RoiManager;
 
 
 public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListener,KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {// 
+	Timer initTimer;
+	boolean hasT1=false;
+	boolean hasT2=false;
 	boolean sexyForBioInfo=true;
 	int numberBins=150 /(1) ;//over 3 decades it makes one bin every 1.2%
 	private double sigmaSmoothingBeforeEstimation=0.75;
@@ -83,23 +88,27 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	private int ySrcStart;
 	private boolean roiIsHidden=false;
 	private boolean isBionanoDisplay=false;//false;
-	JButton butNextEcho=new JButton("<Html><br>Next<br>echo<br> <Html>");
-	JButton switchButton=new JButton("<Html><br>Switch<br>Mono exp<br>Bi exp<br> <Html>");
-
-	JButton butPrevEcho=new JButton("<Html><br>Prev.<br>echo<br> <Html>");
+	JButton butNextEcho=new JButton("<Html>Next<br>echo<br> <Html>");
+	JButton buttonSwitchMono=new JButton("<Html>Single T2 component<br>(Mono-exp)<br><Html>");
+	JButton buttonSwitchBi=new JButton("<Html>Two T2 components<br>(Bi-exp)<br><Html>");
+	JButton butPrevEcho=new JButton("<Html>Prev.<br>echo<br> <Html>");
 	JButton butNextTr=new JButton("<Html><br>Next<br>Tr<br> <Html>");
 	JButton butPrevTr=new JButton("<Html><br>Prev.<br>Tr<br> <Html>");
 	JButton butPlay=new JButton("<Html><br>Play<br>with<br>prms<Html>");
 	JButton butAllCurves=new JButton("<Html><br>All<br>data<br> <Html>");
 
-	JButton butM0Map=new JButton("<Html> <br>M0<br>map<Html>");
-	JButton butT1Map=new JButton("<Html> <br>T1<br>map<Html>");
-	JButton butT2Map=new JButton("<Html> <br>T2<br>map<Html>");
+	JButton butM0Map=new JButton("<Html> PD<br>map<Html>");
+	JButton butT1Map=new JButton("<Html> T1<br>map<Html>");
+	JButton butT2Map=new JButton("<Html> T2<br>map<Html>");
 
 	JTextField textExp=new JTextField("Image exploration");
 	JTextArea textTim=new JTextArea("              Observation day");
 	JButton butPrevDay=new JButton("Prev. day");
 	JButton butNextDay=new JButton("Next day");
+	JButton buttonExp=new JButton("Exp. fit");
+	JButton buttonExport=new JButton("Export results");
+	JButton buttonOff=new JButton("Off. fit");
+	JButton buttonRice=new JButton("Rice. fit");
 	JTextArea textSli=new JTextArea("               Current Z-slice");
 	JButton butPrevSli=new JButton("Prev. slice");
 	JButton butNextSli=new JButton("Next slice");
@@ -119,10 +128,10 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	JButton butRoi=new JButton("<Html>Custom<br>ROI<Html>");
 
 	JTextArea textInfoEchoes=new JTextArea("-------T2SEQ Day 28 TR=10000 ms TE=11ms------",45,1);
-	JTextArea textInfoMaps=new JTextArea("--------M0MAP Day 28 -----------",45,1);
+	JTextArea textInfoMaps=new JTextArea("--------PDMAP Day 28 -----------",45,1);
 
 	private boolean playMode=false;
-	private int switchT1T2=1;
+	private int switchT1T2=0;
 	private double initMag=0;
 	private double xD;
 	private double yD;
@@ -192,7 +201,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	int computationRate=100;
 	int curEc1;
 	int curEc2;
-	int nRepetMonteCarlo=0;
+//	int nRepetMonteCarlo=0;
 	boolean gaussianWeighting=false;
 	int maxCurves=170;
 	double meanNoiseT1Cur=1;
@@ -234,7 +243,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	String rSentence="";
 	String pySentence="";
 	String matSentence="";
-	int crossWidth=3;//3;//3;
+	int crossWidth=3;//3;//3;//3;
 	int crossThick=0;
 	int xMouse=0;
 	int yMouse=0;
@@ -264,11 +273,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	private static final long serialVersionUID = 1L;
 	double xStepCuteT1=50;
 	double xStepCuteT2=3;
-	double [][]t1Times;
-	double [][]t2Times;
+	double [][][]t1Times;
+	double [][][]t2Times;
 	double [][][]t1t2Times;
-	double[]timesT1Cute;
-	double[]timesT2Cute;
+	double[][][][][]timesT1Cute;
+	double[][][][][]timesT2Cute;
 	double[][][][][]timesT1T2Cute;
 
 	double[][][][]dataTimelapseFull;
@@ -282,28 +291,30 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	double[][]paramsTimelapseT2;
 	double[][]paramsTimelapseT1T2;
 	double[][][]valsSpectrum;
+	double[][][]valsSpectrumT1;
+	double[][][]valsSpectrumT2;
 
 	//Updated just before plot being updated
 	double [][]tabFittenT1Mono;
-	double [][]tabFittenT1MonoCute;
+	double [][][]tabFittenT1MonoCute;
 	double[]jitterT1Mono;
 	double[]khi2T1Mono;
 	double[]pValT1Mono;
 
 	double [][]tabFittenT1Bicomp;
-	double [][]tabFittenT1BicompCute;
+	double [][][]tabFittenT1BicompCute;
 	double[]jitterT1Bicomp;
 	double[]khi2T1Bicomp;
 	double[]pValT1Bicomp;
 
 	double [][]tabFittenT2Mono;
-	double [][]tabFittenT2MonoCute;
+	double [][][]tabFittenT2MonoCute;
 	double[]jitterT2Mono;
 	double[]khi2T2Mono;
 	double[]pValT2Mono;
 
 	double [][]tabFittenT2Bicomp;
-	double [][]tabFittenT2BicompCute;
+	double [][][]tabFittenT2BicompCute;
 	double[]jitterT2Bicomp;
 	double[]khi2T2Bicomp;	
 	double[]pValT2Bicomp;
@@ -353,12 +364,20 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	private boolean T1T2MixedEstimation=false;
 	private int visualFactorT2=50;
 	private double maxT1T2OnPlot=0;
+	private double maxT2OnPlot=0;
+	private double maxT1OnPlot=0;
 	private double[][][] t1t2TrTimes;
 	private double[][][] t1t2TeTimes;
+	private double[][][] t1TrTimes;
+	private double[][][] t1TeTimes;
+	private double[][][] t2TrTimes;
+	private double[][][] t2TeTimes;
 	private PlotCanvas plotCanT1T2;
 	private double maxPlotYT1T2;
 	private double[][] timesT1T2BubbleCute;
 	private int lastCountT1T2;
+	private int lastCountT1;
+	private int lastCountT2;
 	private boolean[][] isSelectedCurve;
 	private boolean[][] isSelectedIndex;
 	private int TARGET_HEIGHT_FOR_UP_PLOTS_AND_IMGS;
@@ -377,16 +396,30 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	private ImagePlus imgRoi;
 	private String sigSmoBionano;
 	private int deltaT2=0;
+	private int noiseHandling=2;
+	private double[] binMed;
+	private double[] binMedT1;
+	private boolean normalizePDInMiddleTab=false;
 
 		
 	/** Entry points and startup functions--------------------------------------------------------------------------------*/
 	public static void main(String[]args) {
-		new MRI_HyperCurvesExplorer().runExplorerFromHyperMap(new HyperMap(IJ.openImage("/home/fernandr/Bureau/Traitements/Sorgho/Series_temporelles/All_timeseries/BM1_Timeseries.tif")));
+		ImageJ ij=new ImageJ();
+		//				new MRI_HyperCurvesExplorer().runExplorerFromHyperMap(new HyperMap(IJ.openImage("/home/fernandr/Bureau/testWithMapsT1.tif")));
+	//new MRI_HyperCurvesExplorer().runExplorerFromHyperMap(new HyperMap(IJ.openImage("/home/fernandr/Bureau/Traitements/Sorgho/Series_temporelles/All_timeseries/SSM1_Timeseries.tif")));
+//		new MRI_HyperCurvesExplorer().runExplorerFromHyperMap(new HyperMap(IJ.openImage("/home/fernandr/Bureau/test.tif")));
+//		new MRI_HyperCurvesExplorer().runExplorerFromHyperMap(new HyperMap(IJ.openImage("/home/fernandr/Bureau/test.tif")));
+		ImagePlus img=IJ.openImage("/home/fernandr/Bureau/FijiRelax_DOI/Tutorial_01_First_steps/Input_data/Images/HyperMap_simulated_fantoms.tif");
+//		ImagePlus img=IJ.openImage("/home/fernandr/Bureau/test.tif");
+		HyperMap hyp=new HyperMap(img);
+		hyp.computeMaps();
+		new MRI_HyperCurvesExplorer().runExplorerFromHyperMap(hyp);
 		if(true)return;
 	}
 	
 	public MRI_HyperCurvesExplorer() {
 		super("Vitimage MRI Water tracker ");
+		initTimer=new Timer();
 	}
 	
 	public void run(String arg) {
@@ -410,7 +443,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		if(!(fullHyp.getType()==ImagePlus.GRAY32))IJ.run(fullHyp,"32-bit","");
 		if(VitimageUtils.isBouture(fullHyp))this.deltaT2=25;
 		IJ.log("Opening hyperimage "+VitimageUtils.imageResume(fullHyp));
-		hyperMap=new HyperMap(fullHyp);		
+		hyperMap=new HyperMap(fullHyp);
+		if(!hyperMap.hasMaps)hyperMap.computeMaps();
+		this.hasT1=hyperMap.hasT1sequence;
+		this.hasT2=hyperMap.hasT2sequence;
+		
 		if(new File("/users/bionanonmri/").exists()) {
 			this.isBionanoDisplay=true;
 			IJ.showMessage("Detected Bionano server. \nSurvival display, but numerous cores");
@@ -424,8 +461,8 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		echoesText=hyperMap.getEchoesImageText();
 		dims=hyperMap.dims;
 		voxs=hyperMap.voxs;
-		if(ij==null)ij = new ImageJ();
-		else ij = IJ.getInstance();
+		/*if(ij==null)ij = new ImageJ();https://imagej.github.io/
+		else ij = IJ.getInstance();*/
 		IJ.log("Starting MRI Curve Explorer");
 		xCor=hyperMap.dims[0]/2;
 		yCor=hyperMap.dims[1]/2;
@@ -437,17 +474,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		startGui();
 	}
 	
-/*
-	public void setupTimesTrTe() {
-		if(!T1T2MixedEstimation) {
-			//this.t1Times=this.hyperMRIT1T2.getT1TrTimes();
-			//this.t2Times=this.hyperMRIT1T2.getT2TeTimes();
-		}
-		else {
-		}
-	}
-	*/
-	
+
 	public void setupStructures() {
 		timer=new Timer();
 		initializeScreenConstants();		
@@ -470,12 +497,12 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		//Corresponding curves and nice curves (for display)
 		this.tabFittenT1Mono=new double[this.nTimepoints][];
 		this.tabFittenT1Bicomp=new double[this.nTimepoints][];
-		this.tabFittenT1MonoCute=new double[this.nTimepoints][];
-		this.tabFittenT1BicompCute=new double[this.nTimepoints][];
+		this.tabFittenT1MonoCute=new double[this.nTimepoints][][];
+		this.tabFittenT1BicompCute=new double[this.nTimepoints][][];
 		this.tabFittenT2Mono=new double[this.nTimepoints][];
 		this.tabFittenT2Bicomp=new double[this.nTimepoints][];
-		this.tabFittenT2MonoCute=new double[this.nTimepoints][];
-		this.tabFittenT2BicompCute=new double[this.nTimepoints][];
+		this.tabFittenT2MonoCute=new double[this.nTimepoints][][];
+		this.tabFittenT2BicompCute=new double[this.nTimepoints][][];
 		this.tabFittenT1T2Mono=new double[this.nTimepoints][];
 		this.tabFittenT1T2Bicomp=new double[this.nTimepoints][];
 		this.tabFittenT1BiT2Bicomp=new double[this.nTimepoints][];
@@ -484,12 +511,18 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		this.tabFittenT1T2BicompCute=new double[this.nTimepoints][][];
 		this.tabFittenT1BiT2BicompCute=new double[this.nTimepoints][][];
 		this.tabFittenT1T2BionanoCute=new double[this.nTimepoints][][];
-		this.timesT1Cute=MRUtils.getProportionalTimes(0,maxT1,xStepCuteT1);
-		this.timesT2Cute=MRUtils.getProportionalTimes(0,maxT2,xStepCuteT2);
 		if(T1T2MixedEstimation) {
 			this.timesT1T2Cute=getCuteTimesT1T2();
 		}
-	
+		else {
+			if(hasT1) {
+				this.timesT1Cute=getCuteTimesT1();				
+			}
+			if(hasT2) {
+				this.timesT2Cute=getCuteTimesT2();				
+			}
+		}
+		
 		//Estimation errors
 		this.jitterT1Mono=new double[this.nTimepoints];
 		this.jitterT1Bicomp=new double[this.nTimepoints];
@@ -531,6 +564,10 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		
 		this.t1t2TeTimes=this.hyperMap.getT1T2TeTimes();
 		this.t1t2Times=new double[nTimepoints][dims[2]][];
+		if(!T1T2MixedEstimation) {
+			//this.t1Times=this.hyperMRIT1T2.getT1TrTimes();
+			//this.t2Times=this.hyperMRIT1T2.getT2TeTimes();
+		}
 		double[][][][][]tabRet=new double[nTimepoints][dims[2]][][][];
 		isSelectedCurve=new boolean[nTimepoints][];
 		isSelectedIndex=new boolean[nTimepoints][];
@@ -593,6 +630,121 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		//System.exit(0);
 		return tabRet;
 	}
+
+	public double[][][][][]getCuteTimesT2(){
+		double[][][][]t2trte=hyperMap.getT2TrTeTimes();// [Time][Curve (T1, puis T2 succ][Choice : Tr, Te or Visual T][actual values]
+		this.t2TrTimes=this.hyperMap.getT2TrTimes();
+		this.t2TeTimes=this.hyperMap.getT2TeTimes();
+//		this.t2Times=new double[nTimepoints][dims[2]][];
+//		this.t1Times=this.hyperMap.getT1TrTimes();
+		this.t2Times=this.hyperMap.getT2TeTimes();
+		double[][][][][]tabRet=new double[nTimepoints][dims[2]][][][];
+		isSelectedCurve=new boolean[nTimepoints][];
+		isSelectedIndex=new boolean[nTimepoints][];
+		for(int t=0;t<nTimepoints;t++) {
+			for(int z=0;z<dims[2];z++) {
+				//Collect all the possible transversal relaxations curves, that are successive points having the same Tr, but with varying Te
+				int nt1=0;
+				double memTr=-1;double memTe=-1;
+				boolean isUp=false;
+				this.isSelectedCurve[t]=new boolean[t2trte[t][z].length+1];//Enough space in fact, whereas it is not exactly the good number, but it is greater...
+				for(int c=0;c<t2trte[t][z].length;c++) {
+					if(t2trte[t][z][c][0]!=memTr) {
+						isSelectedCurve[t][nt1]=isUp;isUp=!isUp;memTr=t2trte[t][z][c][0];nt1++;
+					}
+					if(t2trte[t][z][c][0]>9000) {
+						t2trte[t][z][c][1]+=this.deltaT2;
+						t2TeTimes[t][z][c]+=this.deltaT2;
+					}
+				}
+				isSelectedCurve[t][nt1]=true;
+				double[][]valuesTrTe=new double[nt1][2];
+				tabRet[t][z]=new double[nt1][3][];
+				this.isSelectedIndex[t]=new boolean[t2trte[t][0].length];
+				this.t2Times[t][z]=new double[t2trte[t][z].length];
+				nt1=-1;memTr=-1;
+			
+				for(int c=0;c<t2trte[t][z].length;c++) {
+					t2Times[t][z][c]=t2trte[t][z][c][1];//DEBUG t2trte[t][z][c][0] + visualFactorT2 * t2trte[t][z][c][1];
+
+					if(t2trte[t][z][c][0]!=memTr) {memTr=t2trte[t][z][c][0];nt1++;valuesTrTe[nt1][0]=memTr;}
+					isSelectedIndex[t][c]=isSelectedCurve[t][nt1+1];
+					valuesTrTe[nt1][1]=t2trte[t][z][c][1];// Fatally, this will be the bigger (last) Te at the end
+				}
+				
+			
+				//Add the other curves : the transversal relaxations, constituted of successive growing Tr curves, with for each Te going from 0 to the max Te at this level
+				for(int cu=0;cu<valuesTrTe.length;cu++) {
+					int nPts=(int)Math.ceil(valuesTrTe[cu][1]*1.0/xStepCuteT2+5);
+					tabRet[t][z][cu]=new double[3][nPts];
+					for(int pt=0;pt<nPts;pt++) {
+						tabRet[t][z][cu][1][pt]=pt*xStepCuteT2+0.0001;
+						tabRet[t][z][cu][0][pt]=valuesTrTe[cu][0];
+					}
+				}
+				for(int i=0;i<tabRet[t][z].length;i++) {	
+					for(int j=0;j<tabRet[t][z][i][0].length;j++) {
+						tabRet[t][z][i][2][j]= tabRet[t][z][i][1][j];//DEBUG  tabRet[t][z][i][0][j]     +   visualFactorT2 * tabRet[t][z][i][1][j];
+						if(tabRet[t][z][i][2][j]>maxT2OnPlot)maxT2OnPlot=tabRet[t][z][i][2][j];
+					}
+				}
+			}
+		}
+		return tabRet;
+	}
+
+	
+	
+	public double[][][][][]getCuteTimesT1(){
+		double[][][][]t1trte=hyperMap.getT1TrTeTimes();// [Time][Curve (T1, puis T2 succ][Choice : Tr, Te or Visual T][actual values]
+		this.t1TrTimes=this.hyperMap.getT1TrTimes();	
+		this.t1TeTimes=this.hyperMap.getT1TeTimes();
+//		this.t1Times=new double[nTimepoints][dims[2]][];
+		this.t1Times=this.hyperMap.getT1TrTimes();
+		
+		double[][][][][]tabRet=new double[nTimepoints][dims[2]][][][];
+		for(int t=0;t<nTimepoints;t++) {
+			for(int z=0;z<dims[2];z++) {
+				/*collect all the possible transversal relaxations curves, that are successive points having the same Tr, but with varying Te
+				int nt1=0;
+				double memTr=-1;double memTe=-1;
+				boolean isUp=false;
+				this.isSelectedCurve[t]=new boolean[t1trte[t][z].length];//Enough space in fact, whereas it is not exactly the good number, but it is greater...
+				for(int c=0;c<t1trte[t][z].length;c++) {
+					if(t1trte[t][z][c][0]!=memTr) {
+						isSelectedCurve[t][nt1]=isUp;isUp=!isUp;memTr=t1trte[t][z][c][0];nt1++;
+					}
+				}*/
+				double[][]valuesTrTe=new double[1][2];
+				tabRet[t][z]=new double[1][3][];
+				this.t1Times[t][z]=new double[t1trte[t][z].length];
+				
+				for(int c=0;c<t1trte[t][z].length;c++) {
+					t1Times[t][z][c]=t1trte[t][z][c][0];//DEBUG + visualFactorT2 * t1trte[t][z][c][1];
+				}
+				
+				int nPts=(int)Math.ceil(t1Times[t][z][t1trte[t][z].length-1]*1.0/xStepCuteT1+1);
+				tabRet[t][z][0]=new double[3][nPts];
+				for(int pt=0;pt<nPts;pt++) {
+					tabRet[t][z][0][0][pt]=pt*xStepCuteT1;
+					tabRet[t][z][0][1][pt]=0;
+				} 
+			
+				//Calculate point on graph
+				for(int i=0;i<tabRet[t][z].length;i++) {	
+					for(int j=0;j<tabRet[t][z][i][0].length;j++) {
+						tabRet[t][z][i][2][j]=   tabRet[t][z][i][0][j] ;//DEBUG   +   visualFactorT2 * tabRet[t][z][i][1][j];
+						if(tabRet[t][z][i][2][j]>maxT1OnPlot)maxT1OnPlot=tabRet[t][z][i][2][j];
+					}
+				}
+			}
+		}
+		//System.exit(0);
+		return tabRet;
+	}
+
+	
+	
 	
 	public double[]t1t2selectCute(double[]dat,int time){
 		int n=0;
@@ -601,11 +753,36 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		for(int i=0;i<dat.length && i<isSelectedIndex[time].length;i++)if(switchAllCurves || isSelectedIndex[time][i])ret[n++]=dat[i];
 		return ret;
 	}
-	
 	public boolean t1t2SelectedCurve(int tran,int time) {
 		return (switchAllCurves || isSelectedCurve[time][tran]);
 	}
-					
+	
+	public boolean t1SelectedCurve(int tran,int time) {
+		return (true);
+	}
+
+	public double[]t1selectCute(double[]dat,int time){
+		int n=0;
+		for(int i=0;i<dat.length && i<isSelectedIndex[time].length;i++)if(switchAllCurves || isSelectedIndex[time][i])n++;
+		double[]ret=new double[n];n=0;
+		for(int i=0;i<dat.length && i<isSelectedIndex[time].length;i++)if(switchAllCurves || isSelectedIndex[time][i])ret[n++]=dat[i];
+		return ret;
+	}
+	
+	public boolean t2SelectedCurve(int tran,int time) {
+		return (switchAllCurves || isSelectedCurve[time][tran]);
+	}
+	public double[]t2selectCute(double[]dat,int time){
+		int n=0;
+		for(int i=0;i<dat.length && i<isSelectedIndex[time].length;i++)if(switchAllCurves || isSelectedIndex[time][i])n++;
+		double[]ret=new double[n];n=0;
+		for(int i=0;i<dat.length && i<isSelectedIndex[time].length;i++)if(switchAllCurves || isSelectedIndex[time][i])ret[n++]=dat[i];
+		return ret;
+	}
+	
+
+	
+	
 	public void startGui() {
 	    WindowManager.addWindow(this);
 	    instance = this;
@@ -627,6 +804,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		computeResultsAgain();			
 		actualizeCursor();
 		displayResultsAgain();
+		updateSwitchButtons();
 	}
 
 
@@ -704,7 +882,12 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 			butGrayLut.setFont(fontGui);
 			textLuts.setFont(fontGui);
 	
-			switchButton.setFont(fontGui);
+			buttonSwitchBi.setFont(fontGui);
+			buttonSwitchMono.setFont(fontGui);
+			buttonExp.setFont(fontGui);
+			buttonExport.setFont(fontGui);
+			buttonOff.setFont(fontGui);
+			buttonRice.setFont(fontGui);
 			textRoi.setFont(fontGui);
 			textSam.setFont(fontGui);
 			butPrevRoi.setFont(fontGui);
@@ -722,7 +905,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}		
 		ImageJ ij = IJ.getInstance();
 		//Prepare Image T1
-		imgCan1.setMagnification(1.0*DX_IMG/dims[0]);
+		imgCan1.setMagnification(Math.min(1.0*DX_IMG/dims[0],1.0*DY_IMG/dims[1]));
         imgCan1.addKeyListener(this);
         imgCan1.addMouseListener(this);
         imgCan1.addMouseMotionListener(this);
@@ -730,7 +913,8 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
         imgCan1.setSize(TARGET_WIDTH_FOR_PLOTS_AND_IMGS, TARGET_HEIGHT_FOR_PLOTS_AND_IMGS);
 
         //Prepare Image T2
-		imgCan2.setMagnification(1.0*DX_IMG/dims[0]);
+//		imgCan2.setMagnification(1.0*DX_IMG/dims[0]);
+		imgCan2.setMagnification(Math.min(1.0*DX_IMG/dims[0],1.0*DY_IMG/dims[1]));
 		initMag=imgCan2.getMagnification();
         imgCan2.addKeyListener(this);
         imgCan2.addMouseListener(this);
@@ -741,9 +925,6 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
         //Prepare Texts
         int totalY=3*DY_TEXT+2*DELTA_Y;
         int totalX=DX_PLOT_1+DELTA_X+DX_PLOT_2;
-        int eightX=totalX/8;
-        int eightY=totalY/8;
-        int quarterY=totalY/4;
         int []x0=new int[8]; 
         int []y0=new int[8];
         for(int i=0;i<8;i++){
@@ -752,21 +933,21 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
        }
         String []strTitles=new String[] {" T1 mono", " T1 mono" ," T1 bi"," Bionano ","   T2 mono","   T2 bi","   T2 bi","   Bionano"};
         String [][]strParams=new String[][] {
-        	{"M0 %cap"  , "T1 (ms)" , "" ,  "" , "Khi2/N" },
+        	{"PD "  , "T1 (ms)" , "" ,  "" , "Khi2/N" },
         	{"-"  , "-" , "" ,  "" , "-" },
-        	{"M0 %cap"  , "T1 (ms)" , "" ,  "" , "Khi2/N" },
+        	{"PD "  , "T1 (ms)" , "" ,  "" , "Khi2/N" },
         	{"-"  , "-" , "" ,  "" , "-" },
-        	{"Short M0"  , "1st T1" , "Long M0" ,  "2nd T1" , "Khi2/N" },
+        	{"Short PD"  , "1st T1" , "Long PD" ,  "2nd T1" , "Khi2/N" },
         	{"-"  , "-" , "" ,  "" , "-" },
-        	{"M0 %cap"  , "T1" , "" ,  "" , "" },
+        	{"PD "  , "T1" , "" ,  "" , "" },
         	{"-"  , "-" , "" ,  "" , "-" },
-        	{"M0 %cap"  , "T2 (ms)" , "" ,  "" , "Khi2" },
+        	{"PD "  , "T2 (ms)" , "" ,  "" , "Khi2/N" },
         	{"-"  , "-" , "" ,  "" , "-" },
-        	{"Short M0"  , "Short T2" , "Long M0" ,  "Long T2" , "Khi2/N" },
+        	{"Short PD"  , "Short T2" , "Long PD" ,  "Long T2" , "Khi2/N" },
         	{"-"  , "-" , "" ,  "" , "-" },
-        	{"Short M0"  , "Short T2" , "Long M0" ,  "Long T2" , "Khi2/N" },
+        	{"Short PD"  , "Short T2" , "Long PD" ,  "Long T2" , "Khi2/N" },
         	{"-"  , "-" , "" ,  "" , "-" },
-        	{"M0 %cap"  , "T2" , "" ,  "" , "" },
+        	{"PD "  , "T2" , "" ,  "" , "" },
         	{"-"  , "-" , "" ,  "" , "-" }
         };
         for(int i=0;i<8;i++) {
@@ -837,6 +1018,8 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
         gbc.gridy=0;        gbc.gridheight=1;     
         butEchoesPan.add(butNextEcho,gbc);
         gbc.gridy=1;        gbc.gridheight=1;     
+        butEchoesPan.add(new JButton(""),gbc);
+        gbc.gridy=2;        gbc.gridheight=1;     
         butEchoesPan.add(butPrevEcho,gbc);
         if(T1T2MixedEstimation) {
     		gbc.fill = GridBagConstraints.NONE;
@@ -905,6 +1088,8 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		gbc.fill = GridBagConstraints.BOTH;
         gbc.gridy=2;        gbc.gridheight=1;     
         butMapsPan.add(butT1Map,gbc);
+        boolean survivorT2=false;
+        if((!hasT1) && (!T1T2MixedEstimation))survivorT2=true;
         gbc.gridy=3;        gbc.gridheight=1;     
         text=new JTextArea();
         text.setFont(new Font("Arial",0,isBionanoDisplay ? 7 : 10));
@@ -912,7 +1097,8 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		butMapsPan.add(text,gbc);
 		gbc.fill = GridBagConstraints.BOTH;
 		gbc.gridy=4;        gbc.gridheight=1;     
-        butMapsPan.add(butT2Map,gbc);
+        if(survivorT2)butT1Map.setText("<Html>T2<br>map<br> <Html>");
+        else if(hasT2)butMapsPan.add(butT2Map,gbc);
         gbc.gridy=5;        gbc.gridheight=1;     
         text=new JTextArea();
         text.setFont(new Font("Arial",0,isBionanoDisplay ? 30 : 50));
@@ -1146,11 +1332,42 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
         gbc.gridwidth=1;     gbc.gridx=0;
         gbc.fill = GridBagConstraints.BOTH;
         
-		t1t2ParamsPanel.add(switchButton);
+        
+        JPanel switchModelPanel=new JPanel();
+        switchModelPanel.setBorder(BorderFactory.createEmptyBorder(isBionanoDisplay ? 0 :10,isBionanoDisplay ? 0 :10,isBionanoDisplay ? 0 :10,isBionanoDisplay ? 0 :10));
+        switchModelPanel.setLayout(new GridLayout(5,1,10,0));
+        switchModelPanel.add(buttonExp);
+        switchModelPanel.add(new JLabel());
+        switchModelPanel.add(buttonOff);
+        switchModelPanel.add(new JLabel());
+        switchModelPanel.add(buttonRice);
+        JPanel exportPanel=new JPanel();
+        exportPanel.setBorder(BorderFactory.createEmptyBorder(isBionanoDisplay ? 0 :10,isBionanoDisplay ? 0 :10,isBionanoDisplay ? 0 :10,isBionanoDisplay ? 0 :10));
+        exportPanel.setLayout(new GridLayout(5,1,10,0));
+        exportPanel.add(new JLabel());
+        exportPanel.add(new JLabel());
+        exportPanel.add(buttonExport);
+        exportPanel.add(new JLabel());
+        exportPanel.add(new JLabel());
+
+        JPanel switchMonoBiPanel=new JPanel();
+        switchMonoBiPanel.setBorder(BorderFactory.createEmptyBorder(isBionanoDisplay ? 0 :10,isBionanoDisplay ? 0 :10,isBionanoDisplay ? 0 :10,isBionanoDisplay ? 0 :10));
+        switchMonoBiPanel.setLayout(new GridLayout(2,1,10,0));
+        if(hasT2) {
+	        switchMonoBiPanel.add(buttonSwitchMono);
+	        switchMonoBiPanel.add(buttonSwitchBi);
+        }
+        
+        gbc.gridx=0;        gbc.gridheight=1;     
+		t1t2ParamsPanel.add(switchModelPanel);
         gbc.gridx=1;        gbc.gridheight=1;     
-		t1t2ParamsPanel.add(paramsTXPanel[0],gbc);
+		t1t2ParamsPanel.add(switchMonoBiPanel);
         gbc.gridx=2;        gbc.gridheight=1;     
+		t1t2ParamsPanel.add(paramsTXPanel[0],gbc);
+        gbc.gridx=3;        gbc.gridheight=1;     
 		t1t2ParamsPanel.add(paramsTXPanel[1],gbc);
+        gbc.gridx=4;        gbc.gridheight=1;     
+		t1t2ParamsPanel.add(exportPanel,gbc);
 		
         //Spectrum T1 and T2 panel
 		JPanel t1t2SpectrumPanel=new JPanel();
@@ -1219,7 +1436,12 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		textMisc.setBackground(centralButtonsPanel.getBackground());textMisc.setAlignmentX(CENTER_ALIGNMENT);
 		textLuts.setBackground(centralButtonsPanel.getBackground());textLuts.setAlignmentX(CENTER_ALIGNMENT);
 		
-		switchButton.addActionListener(this);
+		buttonExp.addActionListener(this);
+		buttonExport.addActionListener(this);
+		buttonOff.addActionListener(this);
+		buttonRice.addActionListener(this);
+		buttonSwitchMono.addActionListener(this);
+		buttonSwitchBi.addActionListener(this);
 		butAllCurves.addActionListener(this);
 		butPlay.addActionListener(this);
 		butPrevDay.addActionListener(this);
@@ -1277,8 +1499,8 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 			plotCanT1T2.setPlot(plotT1T2);
 		}
 		
-		plotT21 = new Plot("T1 timelapse tracker","T1 distribution (M0-weighted)","M0-weighted distribution",Plot.DEFAULT_FLAGS-Plot.X_GRID-Plot.Y_GRID+Plot.X_LOG_TICKS+Plot.X_LOG_NUMBERS);
-		plotT22 = new Plot("T2 timelapse tracker","T2 distribution (M0-weighted)","M0-weighted distribution",Plot.DEFAULT_FLAGS-Plot.X_GRID-Plot.Y_GRID+Plot.X_LOG_TICKS+Plot.X_LOG_NUMBERS);
+		plotT21 = new Plot("T1 timelapse tracker","T1 distribution (PD-weighted)","PD-weighted distribution",Plot.DEFAULT_FLAGS-Plot.X_GRID-Plot.Y_GRID+Plot.X_LOG_TICKS+Plot.X_LOG_NUMBERS);
+		plotT22 = new Plot("T2 timelapse tracker","T2 distribution (PD-weighted)","PD-weighted distribution",Plot.DEFAULT_FLAGS-Plot.X_GRID-Plot.Y_GRID+Plot.X_LOG_TICKS+Plot.X_LOG_NUMBERS);
 		plotT21.changeFont(new Font("Helvetica", 0, isBionanoDisplay ? 10 : 14));
 		plotT22.changeFont(new Font("Helvetica", 0, isBionanoDisplay ? 10 : 14));
 		plotT21.setBackgroundColor(sexyForBioInfo ? new Color(255,255,255) : new Color(0,0,0));
@@ -1430,17 +1652,25 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	public void computeResultsAgain() {
 		actualizeMeanEstimations();
 		actualizeDisplayedNumbers();
-		actualizeExportSentence();
 		Timer tim2=new Timer();
 		computeEstimationsForAllPointsMultiThreaded();
 		if(!T1T2MixedEstimation) {
-			tim2.print("Updating fit T1mono, FitT1 bi-exp, T2mono and T2 bi-exp on "+this.nPtsCur+" points over "+this.nTimepoints+" timepoints."+
-					" Total fits : "+(4*this.nPtsCur*this.nTimepoints)+"  . Total computation time : ");
+			tim2.print("Fit updated on "+this.nPtsCur+" voxels over "+this.nTimepoints+" timepoints."+
+					" Total fits : "+(((hasT1 ? 1 : 0 )+(hasT2 ? 2 : 0))*this.nPtsCur*this.nTimepoints)+"  . Total computation time : ");
 		}
-		else 			tim2.print("Updating fit T1T21mono, and bi-exp using "+this.nPtsCur+" voxels over "+this.nTimepoints+" timepoints."+
+		else 			tim2.print("Fit updated on "+this.nPtsCur+" voxels over "+this.nTimepoints+" timepoints."+
 				" Total fits : "+(2*this.nPtsCur*this.nTimepoints)+"  . Total computation time : ");
 		actualizeSpectrumCurves();
 		identifyRangedData();
+	}
+	
+	
+	public void actualizeSpectrumCurves() {
+		if(T1T2MixedEstimation)actualizeSpectrumCurvesT1T2();
+		else {
+			if(hasT1)actualizeSpectrumCurvesT1();
+			if(hasT2)actualizeSpectrumCurvesT2();
+		}
 	}
 
 	public void actualizeMriObservationsBasedOnData() {
@@ -1471,10 +1701,10 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		double[]vals;
 		for(int t=0;t<this.nTimepoints;t++) {			
 			if(!T1T2MixedEstimation) {
-				this.dataTimelapseT1[t]=new double[this.dataTimelapseFull[t][0][0].length];
-				this.dataTimelapseT1Sigmas[t]=new double[this.dataTimelapseFull[t][0][1].length];
-				this.dataTimelapseT2[t]=new double[this.dataTimelapseFull[t][0][1].length];
-				this.dataTimelapseT2Sigmas[t]=new double[this.dataTimelapseFull[t][0][1].length];
+				if(hasT1)this.dataTimelapseT1[t]=new double[this.dataTimelapseFull[t][0][0].length];
+				if(hasT1)this.dataTimelapseT1Sigmas[t]=new double[this.dataTimelapseFull[t][0][0].length];
+				if(hasT2)this.dataTimelapseT2[t]=new double[this.dataTimelapseFull[t][0][0].length];
+				if(hasT2)this.dataTimelapseT2Sigmas[t]=new double[this.dataTimelapseFull[t][0][0].length];
 			}
 			else {
 				this.dataTimelapseT1T2[t]=new double[this.dataTimelapseFull[t][0][0].length];
@@ -1487,8 +1717,8 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				}
 				double []stats=VitimageUtils.statistics1D(vals);
 				if(!T1T2MixedEstimation) {
-					this.dataTimelapseT1[t][ec]=stats[0];
-					this.dataTimelapseT1Sigmas[t][ec]=stats[1];						
+					if(hasT1)this.dataTimelapseT1[t][ec]=stats[0];
+					if(hasT1)this.dataTimelapseT1Sigmas[t][ec]=stats[1];						
 				}
 				else {
 					this.dataTimelapseT1T2[t][ec]=stats[0];
@@ -1496,19 +1726,21 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				}
 			}
 			if(!T1T2MixedEstimation) {
-				for(int ec=0;ec<this.dataTimelapseFull[t][0][1].length;ec++) {
+				for(int ec=0;ec<this.dataTimelapseFull[t][0][0].length;ec++) {
 					vals=new double[this.nPtsCur];
 					for(int vo=0;vo<this.nPtsCur;vo++) {
-						vals[vo]=this.dataTimelapseFull[t][vo][1][ec];
+						vals[vo]=this.dataTimelapseFull[t][vo][0][ec];
 					}
 					double []stats=VitimageUtils.statistics1D(vals);
-					this.dataTimelapseT2[t][ec]=stats[0];
-					this.dataTimelapseT2Sigmas[t][ec]=stats[1];						
+					if(hasT2)this.dataTimelapseT2[t][ec]=stats[0];
+					if(hasT2)this.dataTimelapseT2Sigmas[t][ec]=stats[1];						
 				}
 			}
 		}
 	}
 			
+
+
 	public int actualizeSelectedEcho(int plotType) {
 		double borderLeft=isBionanoDisplay ? 56 : 76;
 		double borderRight=isBionanoDisplay ? 14 : 20;
@@ -1523,23 +1755,23 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		double yPosPlot=vals[3]*yPos;
 		System.out.println("Point clicked in plot : "+this.xMouseRangeCurve+" , "+this.yMouseRangeCurve+" -> "+xPosPlot+","+yPosPlot);
 		int newTime=1;double minDist=1E20;
-		if(plotType==WIN_PLOT1) {
-			for(int t=0;t<this.t1Times[tCor].length;t++) {
-				if(Math.abs(this.t1Times[tCor][t]-xPosPlot)<minDist) {
-					minDist=Math.abs(this.t1Times[tCor][t]-xPosPlot);
+		if(plotType==WIN_PLOT1 && (hasT1 || T1T2MixedEstimation)) {
+			for(int t=0;t<this.t1Times[tCor][zCor].length;t++) {
+				if(Math.abs(this.t1Times[tCor][zCor][t]-xPosPlot)<minDist) {
+					minDist=Math.abs(this.t1Times[tCor][zCor][t]-xPosPlot);
 					newTime=t;
 				}
 			}
 		}
-		else if(plotType==WIN_PLOT2){
-			for(int t=0;t<this.t2Times[tCor].length;t++) {
-				if(Math.abs(this.t2Times[tCor][t]-xPosPlot)<minDist) {
-					minDist=Math.abs(this.t2Times[tCor][t]-xPosPlot);
-					newTime=t+this.t1Times[tCor].length;
+		else if(plotType==WIN_PLOT2 && (hasT2 || T1T2MixedEstimation)){
+			for(int t=0;t<this.t2Times[tCor][zCor].length;t++) {
+				if(Math.abs(this.t2Times[tCor][zCor][t]-xPosPlot)<minDist) {
+					minDist=Math.abs(this.t2Times[tCor][zCor][t]-xPosPlot);
+					newTime=t;
 				}
 			}
 		}
-		else {
+		else if(plotType==WIN_PLOT1T2){
 			for(int t=0;t<this.t1t2Times[tCor][zCor].length;t++) {
 				double dist=(t1t2Times[tCor][zCor][t]-xPosPlot)*(t1t2Times[tCor][zCor][t]-xPosPlot) + (dataTimelapseT1T2[tCor][t]-yPosPlot)*(dataTimelapseT1T2[tCor][t]-yPosPlot);
 				if(dist<minDist) {
@@ -1556,82 +1788,94 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		Timer tt=new Timer();
 		for(int tim=0;tim< this.nTimepoints;tim++) {
 			if(!T1T2MixedEstimation) {
-				
+				paramsTimelapseT1[tim]=new double[20];
+				paramsTimelapseT2[tim]=new double[20];
 				//Estimer T1 Monocomp
-				obj=fitAndEvaluate(t1Times[tim],this.timesT1Cute,dataTimelapseT1[tim],hyperMap.tabSigmasT1Seq[tim][zCor]+deltaSigma,this.fitAlgorithm,MRUtils.T1_MONO_RICE,this.nRepetMonteCarlo,this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1,true);
-		 		for(int prm=0;prm<2;prm++) {
-		 			paramsTimelapseT1[tim][prm]=((double[]) obj[0])[prm];
-		 		}
-		 		tabFittenT1Mono[tim]=(double[]) obj[2];
-		 		tabFittenT1MonoCute[tim]=(double[]) obj[3];
-		 		khi2T1Mono[tim]=(double) obj[4];
-		 		pValT1Mono[tim]=(double) obj[5];
-		 		jitterT1Mono[tim]=(double) obj[6];
+				if(hasT1) {
+					obj=fitAndEvaluateT1(t1TrTimes[tim][zCor],t1TeTimes[tim][zCor],this.timesT1Cute[tim][zCor],dataTimelapseT1[tim],hyperMap.tabSigmasT1Seq[tim][zCor]+deltaSigma,this.fitAlgorithm,getFitType(MRUtils.T1_MONO_RICE),this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1,true);
+					for(int prm=0;prm<((double[]) obj[0]).length;prm++) {
+			 			paramsTimelapseT1[tim][prm]=((double[]) obj[0])[prm];
+			 		}
+			 		tabFittenT1Mono[tim]=(double[]) obj[2];
+			 		tabFittenT1MonoCute[tim]=(double[][]) obj[3];
+			 		khi2T1Mono[tim]=(double) obj[4];
+			 		pValT1Mono[tim]=(double) obj[5];
+			 		jitterT1Mono[tim]=(double) obj[6];
+				}
 		
 		 		//Estimer T2 Monocomp
-		 		obj=fitAndEvaluate(t2Times[tim],this.timesT2Cute,dataTimelapseT2[tim],hyperMap.tabSigmasT2Seq[tim][zCor]+deltaSigma,this.fitAlgorithm,MRUtils.T2_MONO_RICE,this.nRepetMonteCarlo,this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1,true);
-		 		for(int prm=0;prm<2;prm++) {
-		 			paramsTimelapseT2[tim][prm]=((double[]) obj[0])[prm];
-		 		}
-		 		tabFittenT2Mono[tim]=(double[]) obj[2];
-		 		tabFittenT2MonoCute[tim]=(double[]) obj[3];
-		 		khi2T2Mono[tim]=(double) obj[4];
-		 		pValT2Mono[tim]=(double) obj[5];
-		 		jitterT2Mono[tim]=(double) obj[6];
-			
-		 		//Estimer T2 Bicomp
-		 		obj=fitAndEvaluate(t2Times[tim],this.timesT2Cute,dataTimelapseT2[tim],hyperMap.tabSigmasT2Seq[tim][zCor]+deltaSigma,this.fitAlgorithm,MRUtils.T2_MULTI_RICE,this.nRepetMonteCarlo,this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1,true);
-		 		for(int prm=2;prm<6;prm++) {
-		 			paramsTimelapseT2[tim][prm]=((double[]) obj[0])[prm-2];
-		 		}
-		 		tabFittenT2Bicomp[tim]=(double[]) obj[2];
-		 		tabFittenT2BicompCute[tim]=(double[]) obj[3];
-		 		khi2T2Bicomp[tim]=(double) obj[4];
-		 		pValT2Bicomp[tim]=(double) obj[5];
-		 		jitterT2Bicomp[tim]=(double) obj[6];
+				if(hasT2) {
+					System.out.println(TransformUtils.stringVectorN(t2TrTimes[tim][zCor],"1"));
+					System.out.println(TransformUtils.stringVectorN(t2TeTimes[tim][zCor],"2"));
+					obj=fitAndEvaluateT2(t2TrTimes[tim][zCor],t2TeTimes[tim][zCor],this.timesT2Cute[tim][zCor],dataTimelapseT2[tim],hyperMap.tabSigmasT2Seq[tim][zCor]+deltaSigma,this.fitAlgorithm,getFitType(MRUtils.T2_MONO_RICE),this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1,true);
+			 		for(int prm=0;prm<((double[]) obj[0]).length;prm++) {
+			 			paramsTimelapseT2[tim][prm]=((double[]) obj[0])[prm];
+			 		}
+			 		tabFittenT2Mono[tim]=(double[]) obj[2];
+			 		tabFittenT2MonoCute[tim]=(double[][]) obj[3];
+			 		khi2T2Mono[tim]=(double) obj[4];
+			 		pValT2Mono[tim]=(double) obj[5];
+			 		jitterT2Mono[tim]=(double) obj[6];
+				
+			 		//Estimer T2 Bicomp
+					obj=fitAndEvaluateT2(t2TrTimes[tim][zCor],t2TeTimes[tim][zCor],this.timesT2Cute[tim][zCor],dataTimelapseT2[tim],hyperMap.tabSigmasT2Seq[tim][zCor]+deltaSigma,this.fitAlgorithm,getFitType(MRUtils.T2_MULTI_RICE),this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1,true);
+					for(int prm=0;prm<((double[]) obj[0]).length;prm++) {
+				 			paramsTimelapseT2[tim][6+prm]=((double[]) obj[0])[prm];
+			 		}
+			 		tabFittenT2Bicomp[tim]=(double[]) obj[2];
+			 		tabFittenT2BicompCute[tim]=(double[][]) obj[3];
+			 		khi2T2Bicomp[tim]=(double) obj[4];
+			 		pValT2Bicomp[tim]=(double) obj[5];
+			 		jitterT2Bicomp[tim]=(double) obj[6];
+				}
 			}
 			else {
 		 		//Estimer T1T2 Monocomp
-		 		tt.print("Before mono");
-				obj=fitAndEvaluateT1T2(t1t2TrTimes[tim][zCor],t1t2TeTimes[tim][zCor],this.timesT1T2Cute[tim][zCor],dataTimelapseT1T2[tim],hyperMap.tabSigmasT1T2Seq[tim][zCor]+deltaSigma,this.fitAlgorithm,MRUtils.T1T2_MONO_RICE,this.nRepetMonteCarlo,this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1,true);
-		 		for(int prm=0;prm<3;prm++) {
-		 			paramsTimelapseT1T2[tim][prm]=((double[]) obj[0])[prm];
+				paramsTimelapseT1T2[tim]=new double[20];
+		 		
+				obj=fitAndEvaluateT1T2(t1t2TrTimes[tim][zCor],t1t2TeTimes[tim][zCor],this.timesT1T2Cute[tim][zCor],dataTimelapseT1T2[tim],hyperMap.tabSigmasT1T2Seq[tim][zCor]+deltaSigma,this.fitAlgorithm,getFitType(MRUtils.T1T2_MONO_RICE),this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1,true);
+				for(int prm=0;prm<((double[]) obj[0]).length;prm++) {
+			 		paramsTimelapseT1T2[tim][prm]=((double[]) obj[0])[prm];
 		 		}
 		 		tabFittenT1T2Mono[tim]=(double[]) obj[2];
 		 		tabFittenT1T2MonoCute[tim]=(double[][]) obj[3];
-		 		System.out.println("H1 size"+tabFittenT1T2MonoCute[tim].length);
 		 		khi2T1T2Mono[tim]=(double) obj[4];
 		 		pValT1T2Mono[tim]=(double) obj[5];
 		 		jitterT1T2Mono[tim]=(double) obj[6];
 			
 		 		//Estimer T1T2 Multicomp
-		 		tt.print("Before multi");
-		 		obj=fitAndEvaluateT1T2(t1t2TrTimes[tim][zCor],t1t2TeTimes[tim][zCor],this.timesT1T2Cute[tim][zCor],dataTimelapseT1T2[tim],hyperMap.tabSigmasT1T2Seq[tim][zCor]+deltaSigma,this.fitAlgorithm,MRUtils.T1T2_MULTI_RICE,this.nRepetMonteCarlo,this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1,true);
-		 		for(int prm=0;prm<5;prm++) {
-		 			paramsTimelapseT1T2[tim][3+prm]=((double[]) obj[0])[prm];
+		 		obj=fitAndEvaluateT1T2(t1t2TrTimes[tim][zCor],t1t2TeTimes[tim][zCor],this.timesT1T2Cute[tim][zCor],dataTimelapseT1T2[tim],hyperMap.tabSigmasT1T2Seq[tim][zCor]+deltaSigma,this.fitAlgorithm,getFitType(MRUtils.T1T2_MULTI_RICE),this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1,true);
+		 		for(int prm=0;prm<((double[]) obj[0]).length;prm++) {
+				 		paramsTimelapseT1T2[tim][6+prm]=((double[]) obj[0])[prm];
 		 		}
 		 		tabFittenT1T2Bicomp[tim]=(double[]) obj[2];
 		 		tabFittenT1T2BicompCute[tim]=(double[][]) obj[3];
 		 		khi2T1T2Bicomp[tim]=(double) obj[4];
 		 		pValT1T2Bicomp[tim]=(double) obj[5];
 		 		jitterT1T2Bicomp[tim]=(double) obj[6];
-
-		 		
-		 		
-		 		
-				System.out.println("\nMono t"+tim+" : khi="+khi2T1T2Mono[tim]+" p="+pValT1T2Mono[tim]);
-				System.out.println("Bi t"+tim+" : khi="+khi2T1T2Bicomp[tim]+" p="+pValT1T2Bicomp[tim]);
-				System.out.println("Bibi t"+tim+" : khi="+khi2T1BiT2Bicomp[tim]+" p="+pValT1BiT2Bicomp[tim]);
-				System.out.println("Bionano t"+tim+" : khi="+khi2T1T2Bionano[tim]+" p="+pValT1T2Bionano[tim]);
 			}
 		}		
 		System.out.println("||");
 		System.out.println("||");
 	}
+	
+	
 
 	public void computeEstimationsForAllPointsMultiThreaded() {
 		if(T1T2MixedEstimation) {computeEstimationsForAllPointsMultiThreadedT1T2();return;}
-		//Prepare input data and output places for threads
+		else {
+			if(hasT1) {
+				System.out.println("Compute T1 multi thread");
+				computeEstimationsForAllPointsMultiThreadedT1();
+			}
+			
+			if(hasT2) {
+				System.out.println("Compute T2 multi thread");
+				computeEstimationsForAllPointsMultiThreadedT2();
+			}
+			if(true)return;
+		}
+		/*		//Prepare input data and output places for threads
 		int nThreads=VitimageUtils.getNbCores();
 		Thread[]threads=VitimageUtils.newThreadArray(nThreads);
 		int[][]listVoxOnThreads=VitimageUtils.listForThreads(this.nPtsCur, nThreads);
@@ -1651,10 +1895,10 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				estimatedParams[nt][nVo]=new double[this.nTimepoints][][];
 				for(int nTime=0;nTime<this.nTimepoints;nTime++) {
 					dataParams[nt][nVo][nTime]=new double[6][];
-					dataParams[nt][nVo][nTime][0]=t1Times[nTime];
+					dataParams[nt][nVo][nTime][0]=t1Times[nTime][zCor];
 					dataParams[nt][nVo][nTime][1]=dataTimelapseFull[nTime][listVoxOnThreads[nt][nVo]][0];
 					dataParams[nt][nVo][nTime][2]=new double[] {hyperMap.tabSigmasT1Seq[nTime][zCor]+deltaSigma};
-					dataParams[nt][nVo][nTime][3]=t2Times[nTime];
+					dataParams[nt][nVo][nTime][3]=t2Times[nTime][zCor];
 					dataParams[nt][nVo][nTime][4]=dataTimelapseFull[nTime][listVoxOnThreads[nt][nVo]][1];
 					dataParams[nt][nVo][nTime][5]=new double[] {hyperMap.tabSigmasT2Seq[nTime][zCor]+deltaSigma};
 				}
@@ -1675,14 +1919,14 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 							for (int numTime=0;numTime<nTimes;numTime++) {
 								double[][]tempParams=new double[2][8];
 						 		//Estimer T1 Monocomp
-								Object[] obj=fitAndEvaluate(dataParams[numThread][numVo][numTime][0],null,dataParams[numThread][numVo][numTime][1],dataParams[numThread][numVo][numTime][2][0],finalFitAlgorithm,MRUtils.T1_MONO_RICE,finalRepetMonteCarlo,1,false);
+								Object[] obj=fitAndEvaluate(dataParams[numThread][numVo][numTime][0],null,dataParams[numThread][numVo][numTime][1],dataParams[numThread][numVo][numTime][2][0],finalFitAlgorithm,getFitType(MRUtils.T1_MONO_RICE),finalRepetMonteCarlo,1,false);
 								tempParams[0][0]=((double[])obj[0])[0];
 								tempParams[0][1]=((double[])obj[0])[1];
 								tempParams[0][2]=((double) obj[6])>=9999 ? 0 : 1;
 								double khiT1Mono=(double) obj[4];
 						
 						 		//Estimer T1 Bicomp
-						 		obj=fitAndEvaluate(dataParams[numThread][numVo][numTime][0],null,dataParams[numThread][numVo][numTime][1],dataParams[numThread][numVo][numTime][2][0],finalFitAlgorithm,MRUtils.T1_MONO_RICE,finalRepetMonteCarlo,1,false);
+						 		obj=fitAndEvaluate(dataParams[numThread][numVo][numTime][0],null,dataParams[numThread][numVo][numTime][1],dataParams[numThread][numVo][numTime][2][0],finalFitAlgorithm,getFitType(MRUtils.T1_MONO_RICE),finalRepetMonteCarlo,1,false);
 						 		tempParams[0][3]=((double[])obj[0])[0];
 						 		tempParams[0][4]=((double[])obj[0])[1];
 						 		tempParams[0][5]=((double[])obj[0])[2];
@@ -1691,14 +1935,14 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 								double khiT1Bi=(double) obj[4];
 
 								//Estimer T2 Monocomp
-						 		obj=fitAndEvaluate(dataParams[numThread][numVo][numTime][3],null,dataParams[numThread][numVo][numTime][4],dataParams[numThread][numVo][numTime][5][0],finalFitAlgorithm,MRUtils.T2_MONO_RICE,finalRepetMonteCarlo,1,false);	
+						 		obj=fitAndEvaluate(dataParams[numThread][numVo][numTime][3],null,dataParams[numThread][numVo][numTime][4],dataParams[numThread][numVo][numTime][5][0],finalFitAlgorithm,getFitType(MRUtils.T2_MONO_RICE),finalRepetMonteCarlo,1,false);	
 						 		tempParams[1][0]=((double[])obj[0])[0];
 						 		tempParams[1][1]=((double[])obj[0])[1];
 						 		tempParams[1][2]=((double) obj[6])>=9999 ? 0 : 1;
 								double khiT2Mono=(double) obj[4];
 
 						 		//Estimer T2 Bicomp
-						 		obj=fitAndEvaluate(dataParams[numThread][numVo][numTime][3],null,dataParams[numThread][numVo][numTime][4],dataParams[numThread][numVo][numTime][5][0],finalFitAlgorithm,MRUtils.T2_MULTI_RICE,finalRepetMonteCarlo,1,false);
+						 		obj=fitAndEvaluate(dataParams[numThread][numVo][numTime][3],null,dataParams[numThread][numVo][numTime][4],dataParams[numThread][numVo][numTime][5][0],finalFitAlgorithm,getFitType(MRUtils.T2_MULTI_RICE),finalRepetMonteCarlo,1,false);
 						 		tempParams[1][3]=((double[])obj[0])[0];
 						 		tempParams[1][4]=((double[])obj[0])[1];
 						 		tempParams[1][5]=((double[])obj[0])[2];
@@ -1732,6 +1976,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 			}
 		}
 	}
+	
+	*/
+	}
 
 	public void computeEstimationsForAllPointsMultiThreadedT1T2() {
 		//Prepare input data and output places for threads
@@ -1743,7 +1990,6 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		final double[][][][][]dataParams=new double[nThreads][][][][];
 		final double[][][][][]estimatedParams=new double[nThreads][][][][];
 		final int finalFitAlgorithm=this.fitAlgorithm;
-		final int finalRepetMonteCarlo=this.nRepetMonteCarlo;
 		final int nData=this.nPtsCur;
 		final int nTimes=this.nTimepoints;
 		for(int nt=0;nt<nThreads;nt++) {
@@ -1775,31 +2021,21 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 							if(nData>10 && (numBl%(nData/10)==0))IJ.log(" "+VitimageUtils.dou((numBl*100.0)/nData)+"%");
 							if(nData>10 && (numBl%(nData/10)==0))System.out.println(" "+VitimageUtils.dou((numBl*100.0)/nData)+"%");
 							for (int numTime=0;numTime<nTimes;numTime++) {
-								double[][]tempParams=new double[2][17];
+								double[][]tempParams=new double[1][17];
 						 		//Estimer T1T2 Monocomp
-								Object[] obj=fitAndEvaluateT1T2(dataParams[numThread][numVo][numTime][0],dataParams[numThread][numVo][numTime][1],null,dataParams[numThread][numVo][numTime][2],dataParams[numThread][numVo][numTime][3][0],finalFitAlgorithm,MRUtils.T1T2_MONO_RICE,finalRepetMonteCarlo,1,false);
-								tempParams[0][0]=((double[])obj[0])[0];
-								tempParams[0][1]=((double[])obj[0])[1];
-								tempParams[0][2]=((double[])obj[0])[2];
-								tempParams[0][3]=((double) obj[6])>=9999 ? 0 : 1;
+								Object[] obj=fitAndEvaluateT1T2(dataParams[numThread][numVo][numTime][0],dataParams[numThread][numVo][numTime][1],null,dataParams[numThread][numVo][numTime][2],dataParams[numThread][numVo][numTime][3][0],finalFitAlgorithm,getFitType(MRUtils.T1T2_MONO_RICE),1,false);
+								for(int n=0;n<((double[])obj[0]).length;n++)tempParams[0][n]=((double[])obj[0])[n];
+								tempParams[0][15]=((double) obj[6])>=9999 ? 0 : 1;
 								double khiT1T2Mono=(double) obj[4];
 								double pT1T2Mono=(double) obj[5];
 						
 						 		//Estimer T1MonoT2Bi
-								obj=fitAndEvaluateT1T2(dataParams[numThread][numVo][numTime][0],dataParams[numThread][numVo][numTime][1],null,dataParams[numThread][numVo][numTime][2],dataParams[numThread][numVo][numTime][3][0],finalFitAlgorithm,MRUtils.T1T2_MULTI_RICE,finalRepetMonteCarlo,1,false);
-								tempParams[0][4]=((double[])obj[0])[0];
-								tempParams[0][5]=((double[])obj[0])[1];
-								tempParams[0][6]=((double[])obj[0])[2];
-								tempParams[0][7]=((double[])obj[0])[3];
-								tempParams[0][8]=((double[])obj[0])[4];
-								tempParams[0][9]=((double) obj[6])>=9999 ? 0 : 1;
+								obj=fitAndEvaluateT1T2(dataParams[numThread][numVo][numTime][0],dataParams[numThread][numVo][numTime][1],null,dataParams[numThread][numVo][numTime][2],dataParams[numThread][numVo][numTime][3][0],finalFitAlgorithm,getFitType(MRUtils.T1T2_MULTI_RICE),1,false);
+								for(int n=0;n<((double[])obj[0]).length;n++)tempParams[0][n+6]=((double[])obj[0])[n];
+								tempParams[0][16]=((double) obj[6])>=9999 ? 0 : 1;
 								double khiT1T2Bi=(double) obj[4];
 								double pT1T2Bi=(double) obj[5];
 
-								//Select best
-								if(pT1T2Mono<=pT1T2Bi )tempParams[0][9]=tempParams[0][16]=0;
-								else tempParams[0][3]=tempParams[0][16]=0;
-							//	if(pT1BiT2Bi<pT1T2Mono && pT1BiT2Bi<pT1T2Bi)tempParams[0][3]=tempParams[0][9]=0;
 								estimatedParams[numThread][numVo][numTime]=tempParams;
 							}							
 						}
@@ -1823,63 +2059,171 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 			}
 		}
 	}
+		
+	public void computeEstimationsForAllPointsMultiThreadedT1() {
+		//Prepare input data and output places for threads
+		int nThreads=VitimageUtils.getNbCores();
+		Thread[]threads=VitimageUtils.newThreadArray(nThreads);
+		int[][]listVoxOnThreads=VitimageUtils.listForThreads(this.nPtsCur, nThreads);
+		AtomicInteger atomNumThread=new AtomicInteger(0);
+		AtomicInteger curProcessedBlock=new AtomicInteger(0);
+		final double[][][][][]dataParams=new double[nThreads][][][][];
+		final double[][][][][]estimatedParams=new double[nThreads][][][][];
+		final int finalFitAlgorithm=this.fitAlgorithm;
+		final int nData=this.nPtsCur;
+		final int nTimes=this.nTimepoints;
+		for(int nt=0;nt<nThreads;nt++) {
+			dataParams[nt]=new double[listVoxOnThreads[nt].length][][][];
+			estimatedParams[nt]=new double[listVoxOnThreads[nt].length][][][];
+			for(int nVo=0;nVo<listVoxOnThreads[nt].length;nVo++) {
+				dataParams[nt][nVo]=new double[this.nTimepoints][][];
+				estimatedParams[nt][nVo]=new double[this.nTimepoints][][];
+				for(int nTime=0;nTime<this.nTimepoints;nTime++) {
+					dataParams[nt][nVo][nTime]=new double[4][];
+					dataParams[nt][nVo][nTime][0]=t1TrTimes[nTime][zCor];
+					dataParams[nt][nVo][nTime][1]=t1TeTimes[nTime][zCor];//TODO : danger at the slice 0 and 1 if crossThick > 0, estimation will be abusive. Cross thick have been prevented acting, thus
+					dataParams[nt][nVo][nTime][2]=dataTimelapseFull[nTime][listVoxOnThreads[nt][nVo]][0];
+					dataParams[nt][nVo][nTime][3]=new double[] {hyperMap.tabSigmasT1Seq[nTime][zCor]};
+				}
+			}
+		}
+
 	
-	public Object[] fitAndEvaluate(double[]tabTimes,double[]tabTimesCute,double[]tabData,double sigmaRice,int fitAlgorithm,int fitCurveType,int nbMonteCarloSimulations,int nbPts,boolean niceCurveComputation) {
-		int nParams=(fitCurveType==MRUtils.T1_MONO_RICE || fitCurveType==MRUtils.T2_MONO_RICE) ? 2 : 4; 
-		boolean isT1=(fitCurveType==MRUtils.T1_MONO_RICE || fitCurveType==MRUtils.T1_MONO_RICE); 
-		double []estimatedParams=new double[nParams];
-		double []estimatedSigmas=new double[nParams];
-		double [][]estimation=null;//MRUtils.makeFit(tabTimes,tabTimes, tabData,fitCurveType,fitAlgorithm,100,sigmaRice,nbMonteCarloSimulations,nbPts,this.riceEstimator,false);
-		for(int i=0;i<nParams;i++) {estimatedParams[i]=estimation[0][i] ;  estimatedSigmas[i]=estimation[1][i];}
-		double []tabFitten=null;//MRUtils.fittenRelaxationCurve(tabTimes,estimatedParams,sigmaRice,fitCurveType);
-		double []tabFittenCute=null;//niceCurveComputation ? MRUtils.fittenRelaxationCurve(tabTimesCute,estimatedParams,sigmaRice,fitCurveType) : null;
-		double[]accs=null;//MRUtils.fittingAccuracies(tabData,tabTimes,sigmaRice,estimatedParams,fitCurveType,false,riceEstimator,this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1);
-		if((nParams==4) && (estimatedParams[1]>estimatedParams[3])) {
-			double tmp=estimatedParams[1];estimatedParams[1]=estimatedParams[3];estimatedParams[3]=tmp;
-			tmp=estimatedParams[0];estimatedParams[0]=estimatedParams[2];estimatedParams[2]=tmp;
-			tmp=estimatedSigmas[1];estimatedSigmas[1]=estimatedSigmas[3];estimatedSigmas[3]=tmp;
-			tmp=estimatedSigmas[0];estimatedSigmas[0]=estimatedSigmas[2];estimatedSigmas[2]=tmp;
-		}		
+		
+		for (int ithread = 0; ithread < nThreads; ithread++) {  
+			threads[ithread] = new Thread() {  { setPriority(Thread.NORM_PRIORITY); }  
+				public void run() {  
+					try {
+						int numThread=atomNumThread.getAndIncrement();
+						for (int numVo=0;numVo<dataParams[numThread].length;numVo++) {
+							int numBl=curProcessedBlock.getAndIncrement();
+							if(nData>10 && (numBl%(nData/10)==0))IJ.log(" "+VitimageUtils.dou((numBl*100.0)/nData)+"%");
+							if(nData>10 && (numBl%(nData/10)==0))System.out.println(" "+VitimageUtils.dou((numBl*100.0)/nData)+"%");
+							for (int numTime=0;numTime<nTimes;numTime++) {
+								double[][]tempParams=new double[1][17];
+						 		//Estimer T1 Monocomp
+								Object[] obj=fitAndEvaluateT1(dataParams[numThread][numVo][numTime][0],dataParams[numThread][numVo][numTime][1],null,dataParams[numThread][numVo][numTime][2],dataParams[numThread][numVo][numTime][3][0],finalFitAlgorithm,getFitType(MRUtils.T1_MONO_RICE),1,false);
+								for(int n=0;n<((double[])obj[0]).length;n++)tempParams[0][n]=((double[])obj[0])[n];
+								tempParams[0][15]=((double) obj[6])>=9999 ? 0 : 1;
+								double khiT1T2Mono=(double) obj[4];
+								double pT1T2Mono=(double) obj[5];
+						
+								estimatedParams[numThread][numVo][numTime]=tempParams;
+							}							
+						}
+					} catch(Exception ie) {ie.printStackTrace();}
+				} 
+			};  		
+		}				
+		VitimageUtils.startAndJoin(threads);
 		
 		
-		double jitter=0;
-		double[]statsRice=RiceEstimator.computeSigmaAndMeanBgFromRiceSigmaStatic(sigmaRice);
-		if((!isT1) && tabData[0]<(statsRice[0]+3*statsRice[1]) ) {//T2 curve with the first point being very low -> no estimation possible there
-			jitter=9999;accs[1]=100;//System.out.println("Jitter set in T2 computation cause first point is too low : "+tabData[0]+" , "+statsRice[0]+" , "+statsRice[1]);
-		}
-		if((isT1) && tabData[tabData.length-1]<(statsRice[0]+3*statsRice[1]) ) {//T1 curve with the last point being very low -> no estimation possible there
-			jitter=9999;accs[1]=100;//System.out.println("Jitter set in T1 computation cause last point is too low : "+tabData[0]+" , "+statsRice[0]+" , "+statsRice[1]);
-		}
-		if(isT1 && nParams==2) {//T1_MONOCOMP
-			if(estimatedParams[0]<0 || estimatedParams[0]>MRUtils.maxAcceptableBionanoM0  
-			|| estimatedParams[1]<MRUtils.minAcceptableBionanoT1 || estimatedParams[1]>MRUtils.maxAcceptableBionanoT1)  {
-				jitter=9999;accs[1]=100;//System.out.println("Jitter set in T1 monocomp. Parameters were "+TransformUtils.stringVectorN(estimatedParams, ""));
+		//Gather results
+		pointsEstimations=new double[this.nTimepoints][this.nPtsCur][2][17];
+		for(int nt=0;nt<nThreads;nt++) {
+			for(int nVo=0;nVo<listVoxOnThreads[nt].length;nVo++) {
+				for(int nTime=0;nTime<this.nTimepoints;nTime++) {
+					pointsEstimations[nTime][listVoxOnThreads[nt][nVo]][0]=estimatedParams[nt][nVo][nTime][0];
+					//if(nTime==tCor)System.out.println("Effectivement à vo="+nVo+" : "+pointsEstimations[nTime][listVoxOnThreads[nt][nVo]][0][8]+
+					//		"\n  Estimated using "+TransformUtils.stringVectorN(dataParams[nt][nVo][nTime][2],""));
+					
+				}
 			}
 		}
-		if(isT1 && nParams==4) {//T1_BICOMP
-			if(estimatedParams[0]<0 || estimatedParams[2]<0 ||  (estimatedParams[0]+estimatedParams[2])>MRUtils.maxAcceptableBionanoM0  
-		    || estimatedParams[1]<MRUtils.minAcceptableBionanoT1 || estimatedParams[1]>MRUtils.maxAcceptableBionanoT1   || estimatedParams[3]<MRUtils.minAcceptableBionanoT1 || estimatedParams[3]>MRUtils.maxAcceptableBionanoT1  )  {
-				jitter=9999;accs[1]=100;//System.out.println("Jitter set in T1 bicomp. Parameters were "+TransformUtils.stringVectorN(estimatedParams, ""));
-			}
-		}
-		if(!isT1 && nParams==2){//T2 MONOCOMP
-			if(estimatedParams[0]<0 || estimatedParams[0]>MRUtils.maxAcceptableBionanoM0 || estimatedParams[1]<MRUtils.minAcceptableBionanoT2 || estimatedParams[1]>MRUtils.maxAcceptableBionanoT2 ) {
-				jitter=9999;accs[1]=100;//System.out.println("Jitter set in T2 monocomp. Parameters were "+TransformUtils.stringVectorN(estimatedParams, ""));
-			}
-		}
-		if(!isT1 && nParams==4){//T2 BICOMP
-			if(estimatedParams[0]<0 || estimatedParams[2]<0 || (estimatedParams[0]+estimatedParams[2])>MRUtils.maxAcceptableBionanoM0 
-			|| estimatedParams[1]<MRUtils.minAcceptableBionanoT2 || estimatedParams[1]>MRUtils.maxAcceptableBionanoT2   || estimatedParams[3]<MRUtils.minAcceptableBionanoT2 || estimatedParams[3]>MRUtils.maxAcceptableBionanoT2) {
-				jitter=9999;accs[1]=100;//System.out.println("Jitter set in T2 bicomp. Parameters were "+TransformUtils.stringVectorN(estimatedParams, ""));
-			}		
-		}
-		return new Object[] {estimatedParams,estimatedSigmas, tabFitten,tabFittenCute,accs[0],accs[1],jitter};
 	}
 	
-	public Object[] fitAndEvaluateT1T2(double[]tabTimesTr,double[]tabTimesTe,double[][][]tabCuteTimesPerCurve,double[]tabData,double sigmaRice,int fitAlgorithm,int fitCurveType,int nbMonteCarloSimulations,int nbPts,boolean niceCurveComputation) {
-		int type=(fitCurveType==MRUtils.T1T2_MONO_RICE ? 0 : (fitCurveType==MRUtils.T1T2_MULTI_RICE ? 1 : 2 ) );
-		int nParams= (type==0) ? 3 : (type==1 ? 5 : 6);
-		if(fitCurveType==MRUtils.T1T2_BIONANO) {nParams=4;type=4;};
+	public void computeEstimationsForAllPointsMultiThreadedT2() {
+		Timer t=new Timer();
+		//Prepare input data and output places for threads
+		int nThreads=VitimageUtils.getNbCores();
+		Thread[]threads=VitimageUtils.newThreadArray(nThreads);
+		int[][]listVoxOnThreads=VitimageUtils.listForThreads(this.nPtsCur, nThreads);
+		AtomicInteger atomNumThread=new AtomicInteger(0);
+		AtomicInteger curProcessedBlock=new AtomicInteger(0);
+		final double[][][][][]dataParams=new double[nThreads][][][][];
+		final double[][][][][]estimatedParams=new double[nThreads][][][][];
+		final int finalFitAlgorithm=this.fitAlgorithm;
+		final int nData=this.nPtsCur;
+		final int nTimes=this.nTimepoints;
+		for(int nt=0;nt<nThreads;nt++) {
+			dataParams[nt]=new double[listVoxOnThreads[nt].length][][][];
+			estimatedParams[nt]=new double[listVoxOnThreads[nt].length][][][];
+			for(int nVo=0;nVo<listVoxOnThreads[nt].length;nVo++) {
+				dataParams[nt][nVo]=new double[this.nTimepoints][][];
+				estimatedParams[nt][nVo]=new double[this.nTimepoints][][];
+				for(int nTime=0;nTime<this.nTimepoints;nTime++) {
+					dataParams[nt][nVo][nTime]=new double[4][];
+					dataParams[nt][nVo][nTime][0]=t2TrTimes[nTime][zCor];
+					dataParams[nt][nVo][nTime][1]=t2TeTimes[nTime][zCor];//TODO : danger at the slice 0 and 1 if crossThick > 0, estimation will be abusive. Cross thick have been prevented acting, thus
+					dataParams[nt][nVo][nTime][2]=dataTimelapseFull[nTime][listVoxOnThreads[nt][nVo]][0];
+					dataParams[nt][nVo][nTime][3]=new double[] {hyperMap.tabSigmasT2Seq[nTime][zCor]};
+				}
+			}
+		}
+
+		//Run threads
+		for (int ithread = 0; ithread < nThreads; ithread++) {  
+			threads[ithread] = new Thread() {  { setPriority(Thread.NORM_PRIORITY); }  
+				public void run() {  
+					try {
+						int numThread=atomNumThread.getAndIncrement();
+						for (int numVo=0;numVo<dataParams[numThread].length;numVo++) {
+							int numBl=curProcessedBlock.getAndIncrement();
+							if(nData>10 && (numBl%(nData/10)==0))IJ.log(" "+VitimageUtils.dou((numBl*100.0)/nData)+"%");
+							if(nData>10 && (numBl%(nData/10)==0))System.out.println(" "+VitimageUtils.dou((numBl*100.0)/nData)+"%");
+							for (int numTime=0;numTime<nTimes;numTime++) {
+								double[][]tempParams=new double[2][17];
+								Object[] obj=null;
+
+								if(true) {
+									//Estimer T2 Monocomp
+						 			obj=fitAndEvaluateT2(dataParams[numThread][numVo][numTime][0],dataParams[numThread][numVo][numTime][1],null,dataParams[numThread][numVo][numTime][2],dataParams[numThread][numVo][numTime][3][0],finalFitAlgorithm,getFitType(MRUtils.T2_MONO_RICE),1,false);
+									for(int n=0;n<((double[])obj[0]).length;n++)tempParams[0][n]=((double[])obj[0])[n];
+									tempParams[0][15]=((double) obj[6])>=9999 ? 0 : 1;
+									double khiT2Mono=(double) obj[4];
+									double pT2Mono=(double) obj[5];
+								}
+	
+								if(true) {
+							 		//Estimer T1MonoT2Bi
+									obj=fitAndEvaluateT2(dataParams[numThread][numVo][numTime][0],dataParams[numThread][numVo][numTime][1],null,dataParams[numThread][numVo][numTime][2],dataParams[numThread][numVo][numTime][3][0],finalFitAlgorithm,getFitType(MRUtils.T2_MULTI_RICE),1,false);
+									for(int n=0;n<((double[])obj[0]).length;n++)tempParams[0][n+6]=((double[])obj[0])[n];
+									tempParams[0][16]=((double) obj[6])>=9999 ? 0 : 1;
+									double khiT1T2Bi=(double) obj[4];
+									double pT1T2Bi=(double) obj[5];
+								}
+								//Select best
+								estimatedParams[numThread][numVo][numTime]=tempParams;
+							}							
+						}
+					} catch(Exception ie) {ie.printStackTrace();}
+				} 
+			};  		
+		}				
+		VitimageUtils.startAndJoin(threads);
+
+		//Gather results
+		if(!hasT1)pointsEstimations=new double[this.nTimepoints][this.nPtsCur][2][17];
+		for(int nt=0;nt<nThreads;nt++) {
+			for(int nVo=0;nVo<listVoxOnThreads[nt].length;nVo++) {
+				for(int nTime=0;nTime<this.nTimepoints;nTime++) {
+					pointsEstimations[nTime][listVoxOnThreads[nt][nVo]][1]=estimatedParams[nt][nVo][nTime][0];
+					//if(nTime==tCor)System.out.println("Effectivement à vo="+nVo+" : "+pointsEstimations[nTime][listVoxOnThreads[nt][nVo]][0][8]+
+					//		"\n  Estimated using "+TransformUtils.stringVectorN(dataParams[nt][nVo][nTime][2],""));
+					
+				}
+			}
+		}
+	}
+
+	
+	
+	
+	
+	
+	
+	public Object[] fitAndEvaluateT1T2(double[]tabTimesTr,double[]tabTimesTe,double[][][]tabCuteTimesPerCurve,double[]tabData,double sigmaRice,int fitAlgorithm,int fitCurveType,int nbPts,boolean niceCurveComputation) {
+		int nParams= MRUtils.getNparams(fitCurveType);//(type==0) ? 3 : (type==1 ? 5 : 6);
 		double []estimatedParams=new double[nParams];
 		double []estimatedSigmas=new double[nParams];	
 
@@ -1894,53 +2238,91 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 			}
 		}
 		double[]accs=MRUtils.fittingAccuracies(tabData,tabTimesTr,tabTimesTe,sigmaRice,estimatedParams,fitCurveType,false,riceEstimator,this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1);
-		if((nParams==6) && (estimatedParams[4]>estimatedParams[5])) {
+		if(((fitCurveType%10)==MRUtils.T2_MULTI) && (estimatedParams[2]>estimatedParams[3])) {
 			double tmp=estimatedParams[0];estimatedParams[0]=estimatedParams[1];estimatedParams[1]=tmp;
 			tmp=estimatedParams[2];estimatedParams[2]=estimatedParams[3];estimatedParams[3]=tmp;
-			tmp=estimatedSigmas[4];estimatedSigmas[4]=estimatedSigmas[5];estimatedSigmas[5]=tmp;
 		}		
 		
-		if((nParams==5) && (estimatedParams[3]>estimatedParams[4])) {
+		if(((fitCurveType%10)==MRUtils.T1T2_MULTI) && (estimatedParams[3]>estimatedParams[4])) {
 			double tmp=estimatedParams[0];estimatedParams[0]=estimatedParams[1];estimatedParams[1]=tmp;
 			tmp=estimatedParams[3];estimatedParams[3]=estimatedParams[4];estimatedParams[4]=tmp;
 		}		
 		
 		double jitter=0;
+		for(int i=0;i<estimatedParams.length;i++) {if(estimatedParams[i]<=0) {jitter=9999;accs[1]=100;}}
 		if(VitimageUtils.max(tabData)<MRUtils.THRESHOLD_RATIO_BETWEEN_MAX_ECHO_AND_SIGMA_RICE*sigmaRice)  {//T2 curve with the first point being very low -> no estimation possible there
 			jitter=9999;accs[1]=100;//System.out.println("Jitter set in T2 computation cause first point is too low : "+tabData[0]+" , "+statsRice[0]+" , "+statsRice[1]);
 		}
-		if(type==0) {
-			if(estimatedParams[0]<=0 || estimatedParams[0]>MRUtils.maxAcceptableBionanoM0  
-			|| estimatedParams[1]<MRUtils.minAcceptableBionanoT1 || estimatedParams[1]>MRUtils.maxAcceptableBionanoT1
-			|| estimatedParams[2]<MRUtils.minAcceptableBionanoT2 || estimatedParams[2]>MRUtils.maxAcceptableBionanoT2)  {
-				jitter=9999;accs[1]=100;//System.out.println("Jitter set in T1 monocomp. Parameters were "+TransformUtils.stringVectorN(estimatedParams, ""));
-			}
-		}
-		else if(type==1) {
-			if(estimatedParams[0]<=0 || estimatedParams[1]<=0 || (estimatedParams[0]+estimatedParams[1])>MRUtils.maxAcceptableBionanoM0 
-			|| estimatedParams[2]<MRUtils.minAcceptableBionanoT1 || estimatedParams[2]>MRUtils.maxAcceptableBionanoT1
-			|| estimatedParams[3]<MRUtils.minAcceptableBionanoT2 || estimatedParams[3]>MRUtils.maxAcceptableBionanoT2   || estimatedParams[4]<MRUtils.minAcceptableBionanoT2 || estimatedParams[4]>MRUtils.maxAcceptableBionanoT2) {
-				jitter=9999;accs[1]=100;//System.out.println("Jitter set in T2 bicomp. Parameters were "+TransformUtils.stringVectorN(estimatedParams, ""));
-			}		
-		}
-		else if(type==2){
-			if(estimatedParams[0]<=0 || estimatedParams[1]<=0 || (estimatedParams[0]+estimatedParams[1])>MRUtils.maxAcceptableBionanoM0 
-			|| estimatedParams[2]<MRUtils.minAcceptableBionanoT1 || estimatedParams[2]>MRUtils.maxAcceptableBionanoT1   || estimatedParams[3]<MRUtils.minAcceptableBionanoT1 || estimatedParams[3]>MRUtils.maxAcceptableBionanoT1
-			|| estimatedParams[4]<MRUtils.minAcceptableBionanoT2 || estimatedParams[4]>MRUtils.maxAcceptableBionanoT2   || estimatedParams[5]<MRUtils.minAcceptableBionanoT2 || estimatedParams[5]>MRUtils.maxAcceptableBionanoT2) {
-				jitter=9999;accs[1]=100;//System.out.println("Jitter set in T2 bicomp. Parameters were "+TransformUtils.stringVectorN(estimatedParams, ""));
-			}		
-		}
-		else {
-			if(estimatedParams[0]<0 || estimatedParams[2]<0 || estimatedParams[1]<=0 || estimatedParams[0]>MRUtils.maxAcceptableBionanoM0 || estimatedParams[3]<=0 || estimatedParams[2]>MRUtils.maxAcceptableBionanoM0 
-			|| estimatedParams[1]<MRUtils.minAcceptableBionanoT1 || estimatedParams[1]>MRUtils.maxAcceptableBionanoT1 
-			|| estimatedParams[3]<MRUtils.minAcceptableBionanoT2 || estimatedParams[3]>MRUtils.maxAcceptableBionanoT2 ) {
-				jitter=9999;accs[1]=100;//System.out.println("Jitter set in T2 bicomp. Parameters were "+TransformUtils.stringVectorN(estimatedParams, ""));
-			}		
-			
-		}
+		
 		return new Object[] {estimatedParams,estimatedSigmas, tabFitten,tabFittenCute,accs[0],accs[1],jitter};
 	}
 		
+	public Object[] fitAndEvaluateT1(double[]tabTimesTr,double[]tabTimesTe,double[][][]tabCuteTimesPerCurve,double[]tabData,double sigmaRice,int fitAlgorithm,int fitCurveType,int nbPts,boolean niceCurveComputation) {
+		int nParams= MRUtils.getNparams(fitCurveType);
+		double []estimatedParams=new double[nParams];
+		double []estimatedSigmas=new double[nParams];	
+
+		double []estimation=(double[]) MRUtils.makeFit(tabTimesTr, tabTimesTe, tabData, fitCurveType, MRUtils.SIMPLEX, MRUtils.N_ITER_T1T2, sigmaRice,false)[0];
+		for(int i=0;i<nParams;i++) {estimatedParams[i]=estimation[i] ;  estimatedSigmas[i]=estimation[i];}
+		double []tabFitten=MRUtils.fittenRelaxationCurve(tabTimesTr,tabTimesTe,estimatedParams,sigmaRice,fitCurveType);
+		double [][]tabFittenCute=null;
+		if(niceCurveComputation) {
+			tabFittenCute=new double[tabCuteTimesPerCurve.length][];
+			for(int fi=0;fi<tabCuteTimesPerCurve.length;fi++) {
+				tabFittenCute[fi]=MRUtils.fittenRelaxationCurve(tabCuteTimesPerCurve[fi][0],tabCuteTimesPerCurve[fi][1],estimatedParams,sigmaRice,fitCurveType);
+			}
+		}
+		double[]accs=MRUtils.fittingAccuracies(tabData,tabTimesTr,tabTimesTe,sigmaRice,estimatedParams,fitCurveType,false,riceEstimator,this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1);
+		
+		double jitter=0;
+		for(int i=0;i<estimatedParams.length;i++) {if(estimatedParams[i]<=0) {jitter=9999;accs[1]=100;}}
+		if(VitimageUtils.max(tabData)<MRUtils.THRESHOLD_RATIO_BETWEEN_MAX_ECHO_AND_SIGMA_RICE*sigmaRice)  {//T2 curve with the first point being very low -> no estimation possible there
+			jitter=9999;accs[1]=100;//System.out.println("Jitter set in T2 computation cause first point is too low : "+tabData[0]+" , "+statsRice[0]+" , "+statsRice[1]);
+		}
+		return new Object[] {estimatedParams,estimatedSigmas, tabFitten,tabFittenCute,accs[0],accs[1],jitter};
+	}
+	
+	public Object[] fitAndEvaluateT2(double[]tabTimesTr,double[]tabTimesTe,double[][][]tabCuteTimesPerCurve,double[]tabData,double sigmaRice,int fitAlgorithm,int fitCurveType,int nbPts,boolean niceCurveComputation) {
+		int nParams= MRUtils.getNparams(fitCurveType);
+		double []estimatedParams=new double[nParams];
+		double []estimatedSigmas=new double[nParams];	
+
+		double []estimation=(double[]) MRUtils.makeFit(tabTimesTr, tabTimesTe, tabData, fitCurveType, MRUtils.SIMPLEX, MRUtils.N_ITER_T1T2, sigmaRice,false)[0];
+		for(int i=0;i<nParams;i++) {estimatedParams[i]=estimation[i] ;  estimatedSigmas[i]=estimation[i];}
+		double []tabFitten=MRUtils.fittenRelaxationCurve(tabTimesTr,tabTimesTe,estimatedParams,sigmaRice,fitCurveType);
+		double [][]tabFittenCute=null;
+		if(niceCurveComputation) {
+			tabFittenCute=new double[tabCuteTimesPerCurve.length][];
+			for(int fi=0;fi<tabCuteTimesPerCurve.length;fi++) {
+				tabFittenCute[fi]=MRUtils.fittenRelaxationCurve(tabCuteTimesPerCurve[fi][0],tabCuteTimesPerCurve[fi][1],estimatedParams,sigmaRice,fitCurveType);
+			}
+		}
+		double[]accs=MRUtils.fittingAccuracies(tabData,tabTimesTr,tabTimesTe,sigmaRice,estimatedParams,fitCurveType,false,riceEstimator,this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1);
+		if(((fitCurveType%10)==MRUtils.T2_MULTI) && (estimatedParams[2]>estimatedParams[3])) {
+			double tmp=estimatedParams[0];estimatedParams[0]=estimatedParams[1];estimatedParams[1]=tmp;
+			tmp=estimatedParams[2];estimatedParams[2]=estimatedParams[3];estimatedParams[3]=tmp;
+		}		
+				
+		double jitter=0;
+		for(int i=0;i<estimatedParams.length;i++) {if(estimatedParams[i]<=0) {jitter=9999;accs[1]=100;}}
+		if(VitimageUtils.max(tabData)<MRUtils.THRESHOLD_RATIO_BETWEEN_MAX_ECHO_AND_SIGMA_RICE*sigmaRice)  {//T2 curve with the first point being very low -> no estimation possible there
+			jitter=9999;accs[1]=100;//System.out.println("Jitter set in T2 computation cause first point is too low : "+tabData[0]+" , "+statsRice[0]+" , "+statsRice[1]);
+		}
+		return new Object[] {estimatedParams,estimatedSigmas, tabFitten,tabFittenCute,accs[0],accs[1],jitter};
+	}
+
+	
+	
+	
+	
+
+	
+	public int getFitType(int fitType) {
+		return ((fitType %10)+10*this.noiseHandling);
+	}
+	
+	
+	
 	public void identifyRangedData() {
 		if(T1T2MixedEstimation) {
 			identifyRangedDataT1T2();return;
@@ -2041,7 +2423,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 	}
 	
-	public double[][] computeSpectrumCurve(int time) {
+/*	public double[][] computeSpectrumCurve(int time) {
 		if(T1T2MixedEstimation) {return computeSpectrumCurveT1T2(time);}
 		int numberBins=150 /(1) ;//over 3 decades it makes every 1.2% or every 10 %
 		final double[]binInf=new double[numberBins];
@@ -2098,16 +2480,70 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		output[2]=binMed;
 		return output;
 	}
+	*/
 		
 	public double[][] computeSpectrumCurveT1T2(int time) {
 		
+		final double[]binInf=new double[numberBins];
+		final double[]binSup=new double[numberBins];
+		binMedT1=new double[numberBins];
+		double[]histoM0T1=new double[numberBins];
+		double[]histoM0T2=new double[numberBins];
+		double [][]output=new double[3][numberBins];
+		double minBin=t0T2;
+		double maxBin=t1T1;
+		double multFromMinToMax=maxBin/minBin;
+		for(int i=0;i<numberBins;i++) {
+			binInf[i]=minBin*Math.pow(multFromMinToMax, i*1.0/numberBins);
+			binSup[i]=minBin*Math.pow(multFromMinToMax, (i+1)*1.0/numberBins);
+			binMedT1[i]=binSup[i]*0.5+binInf[i]*0.5;
+		}
+		for(int p=0;p<this.nPtsCur;p++) {
+		}
+		//Bin results
+		for(int p=0;p<this.nPtsCur;p++) {
+
+			if(switchT1T2==0) {//Fit T1T2 mono is ok
+				//T1 binning
+				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][1]<binSup[bin]) && (pointsEstimations[time][p][0][1]>=binInf[bin])  && (pointsEstimations[time][p][0][15]>=1)) {
+					histoM0T1[bin]+=pointsEstimations[time][p][0][0];
+				}
+				//T2 binning
+				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][2]<binSup[bin]) && (pointsEstimations[time][p][0][2]>=binInf[bin])  && (pointsEstimations[time][p][0][15]>=1)) {
+					histoM0T2[bin]+=pointsEstimations[time][p][0][0];
+				}
+			}
+			else {//Fit T1T2 bicomp is ok
+				//T1 binning
+				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][8]<binSup[bin]) && (pointsEstimations[time][p][0][8]>=binInf[bin])   && (pointsEstimations[time][p][0][16]>=1)) {
+					histoM0T1[bin]+=(pointsEstimations[time][p][0][6]+pointsEstimations[time][p][0][7]);
+				}
+				//T2 binning
+				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][9]<binSup[bin]) && (pointsEstimations[time][p][0][9]>=binInf[bin])  && (pointsEstimations[time][p][0][16]>=1)) {
+					histoM0T2[bin]+=pointsEstimations[time][p][0][6];
+				}
+				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][10]<binSup[bin]) && (pointsEstimations[time][p][0][10]>=binInf[bin])  && (pointsEstimations[time][p][0][16]>=1)) {
+					histoM0T2[bin]+=pointsEstimations[time][p][0][7];
+				}
+			}
+		}
+				
+		//Smooth this histogram with a factor to be defined, maybe depending on the estimation error on parameters
+		output[0]=smoothHisto(histoM0T1,gaussianSpectrum);
+		output[1]=smoothHisto(histoM0T2,gaussianSpectrum);
+		output[2]=binMedT1;
+		return output;
+	}
+
+
+	public double[][] computeSpectrumCurveT1(int time) {
 		final double[]binInf=new double[numberBins];
 		final double[]binSup=new double[numberBins];
 		final double[]binMed=new double[numberBins];
 		double[]histoM0T1=new double[numberBins];
 		double[]histoM0T2=new double[numberBins];
 		double [][]output=new double[3][numberBins];
-		double minBin=t0T2;
+		double minBin=t0T1;
 		double maxBin=t1T1;
 		double multFromMinToMax=maxBin/minBin;
 		for(int i=0;i<numberBins;i++) {
@@ -2119,41 +2555,56 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 		//Bin results
 		for(int p=0;p<this.nPtsCur;p++) {
+			for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][1]<binSup[bin]) && (pointsEstimations[time][p][0][1]>=binInf[bin]) && (pointsEstimations[time][p][0][15]>=1)) {
+				histoM0T1[bin]+=pointsEstimations[time][p][0][0];
+			}
+		}
+	
+		//Smooth this histogram with a factor to be defined, maybe depending on the estimation error on parameters
+		output[0]=smoothHisto(histoM0T1,gaussianSpectrum);
+		output[1]=binMed;
+		return output;
+	}
+	
 
-			if(switchT1T2==0) {//Fit T1T2 mono is ok
-				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][1]<binSup[bin]) && (pointsEstimations[time][p][0][1]>=binInf[bin]) ) {
-					histoM0T1[bin]+=pointsEstimations[time][p][0][0];
+	public double[][] computeSpectrumCurveT2(int time) {		
+		final double[]binInf=new double[numberBins];
+		final double[]binSup=new double[numberBins];
+		final double[]binMed=new double[numberBins];
+		double[]histoM0T1=new double[numberBins];
+		double[]histoM0T2=new double[numberBins];
+		double [][]output=new double[3][numberBins];
+		double minBin=t0T2;
+		double maxBin=t1T2;
+		double multFromMinToMax=maxBin/minBin;
+		for(int i=0;i<numberBins;i++) {
+			binInf[i]=minBin*Math.pow(multFromMinToMax, i*1.0/numberBins);
+			binSup[i]=minBin*Math.pow(multFromMinToMax, (i+1)*1.0/numberBins);
+			binMed[i]=binSup[i]*0.5+binInf[i]*0.5;
+		}
+		for(int p=0;p<this.nPtsCur;p++) {
+		}
+		//Bin results
+		for(int p=0;p<this.nPtsCur;p++) {
+			if(switchT1T2==0) {//Fit T2 mono is ok
+				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][1][1]<binSup[bin]) && (pointsEstimations[time][p][1][1]>=binInf[bin]) && (pointsEstimations[time][p][1][15]>=1) ) {
+					histoM0T2[bin]+=pointsEstimations[time][p][1][0];
 				}
 			}
 			else {//Fit T1T2 bicomp is ok
-				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][6]<binSup[bin]) && (pointsEstimations[time][p][0][6]>=binInf[bin]) ) {
-					histoM0T1[bin]+=(pointsEstimations[time][p][0][4]+pointsEstimations[time][p][0][5]);
+				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][1][8]<binSup[bin]) && (pointsEstimations[time][p][1][8]>=binInf[bin])  && (pointsEstimations[time][p][1][16]>=1)) {
+					histoM0T2[bin]+=pointsEstimations[time][p][1][6];
 				}
-			}
-
-			
-			if(switchT1T2==0) {//Fit T1T2 mono is ok
-				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][2]<binSup[bin]) && (pointsEstimations[time][p][0][2]>=binInf[bin]) ) {
-					histoM0T2[bin]+=pointsEstimations[time][p][0][0];
-				}
-			}
-			else {//Fit T1T2 bicomp is ok
-				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][7]<binSup[bin]) && (pointsEstimations[time][p][0][7]>=binInf[bin]) ) {
-					histoM0T2[bin]+=pointsEstimations[time][p][0][4];
-				}
-				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][8]<binSup[bin]) && (pointsEstimations[time][p][0][8]>=binInf[bin]) ) {
-					histoM0T2[bin]+=pointsEstimations[time][p][0][5];
+				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][1][9]<binSup[bin]) && (pointsEstimations[time][p][1][9]>=binInf[bin])  && (pointsEstimations[time][p][1][16]>=1)) {
+					histoM0T2[bin]+=pointsEstimations[time][p][1][7];
 				}
 			}
 		}
-				
 		//Smooth this histogram with a factor to be defined, maybe depending on the estimation error on parameters
-		output[0]=smoothHisto(histoM0T1,gaussianSpectrum);
-		output[1]=smoothHisto(histoM0T2,gaussianSpectrum);
-		output[2]=binMed;
+		output[0]=smoothHisto(histoM0T2,gaussianSpectrum);
+		output[1]=binMed;
 		return output;
 	}
-
 
 
 	
@@ -2168,6 +2619,12 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	/** Update graphs using new computed results--------------------------------------------------------------------------------*/		
 	public void actualizeFirstPlots() {
 		if(T1T2MixedEstimation) {actualizeFirstPlotsT1T2();return;}
+		else {
+			if(hasT1)actualizeFirstPlotsT1();
+			if(hasT2)actualizeFirstPlotsT2();
+			return;
+		}
+		
 		/*
 		int incrT1=0;
 		int incrT2=0;
@@ -2319,6 +2776,87 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	}
 			
+	
+	public void actualizeFirstPlotsT2() {
+		int incrT2=0;
+		int deltaXt2=0;
+		int bubbleSize=isBionanoDisplay ? 30 : 40;
+
+		if(this.autoSizingTimePlots) maxPlotYT2=VitimageUtils.max(dataTimelapseT2[tCor])*1.6;
+
+		double maxCurve=0;
+		if(switchT1T2==1) maxCurve=VitimageUtils.max(tabFittenT2BicompCute[tCor][0]);
+		if(switchT1T2==0) maxCurve=VitimageUtils.max(tabFittenT2MonoCute[tCor][0]);
+		if(maxCurve>0.98*maxPlotYT1T2)maxPlotYT1T2=maxCurve*1.2;
+		
+		//BUBBLE SHOWING CURRENT ECHO
+		plotT2.setColor(bubbleColor);
+        plotT2.setLineWidth(bubbleSize);
+        plotT2.replace(incrT2++, "line",new double[]{t2Times[tCor][zCor][cEchoes],t2Times[tCor][zCor][cEchoes]},new double[]{dataTimelapseT2[tCor][cEchoes],dataTimelapseT2[tCor][cEchoes]});
+
+		
+        //NOISE
+        plotT2.setLineWidth(1);
+		double[]statsNoise=RiceEstimator.computeSigmaAndMeanBgFromRiceSigmaStatic(hyperMap.tabSigmasT2Seq[tCor][zCor]+deltaSigma);
+		double nSum=statusRoi==2 ? Math.sqrt(this.nPtsCur) : (1+crossWidth);
+		this.meanNoiseT2Cur=statsNoise[0];
+		this.sigmaNoiseT2Cur=statsNoise[1];
+		plotT2.setColor(Color.black);
+        plotT2.setLineWidth(2);
+		plotT2.replace(incrT2++, "line",new double[]{0,maxT2OnPlot},new double[]{statsNoise[0],statsNoise[0]});//Afficher le mean+sigma
+        plotT2.setLineWidth(1);
+		plotT2.replace(incrT2++, "line",new double[]{0,maxT2OnPlot},new double[]{statsNoise[0]+statsNoise[1]/nSum,statsNoise[0]+statsNoise[1]/nSum});//Afficher le mean+sigma
+		plotT2.replace(incrT2++, "line",new double[]{0,maxT2OnPlot},new double[]{statsNoise[0]-statsNoise[1]/nSum,statsNoise[0]-statsNoise[1]/nSum});//Afficher le mean-sigma
+
+
+		//OBSERVATIONS IRM MEAN AND STDEV
+        plotT2.setLineWidth(2);
+		plotT2.setColor(crossColor );
+		plotT2.replace(incrT2++,"x",t2selectCute(t2Times[tCor][zCor],tCor),t2selectCute(dataTimelapseT2[tCor],tCor));//Afficher les points IRM
+        plotT2.setLineWidth(1);
+		for(int t=0;t<t2selectCute(this.t2Times[tCor][zCor],tCor).length;t++)plotT2.replace(incrT2++, "line",new double[]{t2selectCute(this.t2Times[tCor][zCor],tCor)[t]-deltaXt2,t2selectCute(this.t2Times[tCor][zCor],tCor)[t]-deltaXt2},new double[]{t2selectCute(dataTimelapseT2[tCor],tCor)[t]-t2selectCute(dataTimelapseT2Sigmas[tCor],tCor)[t],t2selectCute(dataTimelapseT2[tCor],tCor)[t]+t2selectCute(dataTimelapseT2Sigmas[tCor],tCor)[t]});//Afficher le T2
+
+		
+		if(switchT1T2==0) {	
+	        //FIT T2 Mono
+	        plotT2.setColor(curveT2Bicomp);
+	        plotT2.setLineWidth(1+thickCurve);
+//	        plotT2.setColor((jitterT2Mono[tCor]>=9999) ? Color.gray : curveT2Bicomp);
+	        for(int tran=0;tran<timesT2Cute[tCor][zCor].length;tran++) {
+		        if(true || t2SelectedCurve(tran,tCor))plotT2.replace(incrT2++, "line",timesT2Cute[tCor][zCor][tran][2],tabFittenT2MonoCute[tCor][tran]);//Afficher la courbe Bicomp
+	        }
+		}        
+        
+
+		else  {	
+	        //FIT T2 Mono
+	        plotT2.setColor(curveT2Bicomp);
+	        plotT2.setLineWidth(1+thickCurve);
+//	        plotT2.setColor((jitterT2Bicomp[tCor]>=9999) ? Color.gray : curveT2Bicomp);
+	        for(int tran=0;tran<timesT2Cute[tCor][zCor].length;tran++) {
+		        if(true || t2SelectedCurve(tran,tCor)) {
+		        	System.out.println("IT IS ");
+		        	plotT2.replace(incrT2++, "line",timesT2Cute[tCor][zCor][tran][2],tabFittenT2BicompCute[tCor][tran]);//Afficher la courbe Bicomp
+		        }
+	        }
+		}        
+
+        //LEGENDE
+		plotT2.setLineWidth(1);
+		String strLegendT2="\n\nNoise +-sigma\n\nSpin-echo signal"+"\nData std over Roi\n";
+		
+		plotT2.setLimits(0, maxT2OnPlot, 0,maxPlotYT2);
+		plotT2.setColor(new Color(150,150 ,150) );
+		plotT2.addLegend(strLegendT2,"bottom-up");
+		plotCan2.setPlot(plotT2);
+
+		plotT2.setLineWidth(1);
+		for(int cur=incrT2;cur<lastCountT2;cur++)plotT2.replace(cur, "line", new double[] {-1,-1}, new double[] {-1,-1});
+		plotT2.setLineWidth(1);
+		for(int cur=incrT2;cur<lastCount2;cur++)plotT2.replace(cur, "line", new double[] {-1,-1}, new double[] {-1,-1});
+		lastCountT2=incrT2;
+	}
+
 	public void actualizeFirstPlotsT1T2() {
 		int incrT1T2=0;
 		int deltaXt2=3;
@@ -2327,8 +2865,6 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		if(this.autoSizingTimePlots) maxPlotYT1T2=VitimageUtils.max(dataTimelapseT1T2[tCor])*1.6;
 
 		double maxCurve=0;
-		if(switchT1T2==3) maxCurve=VitimageUtils.max(tabFittenT1T2BionanoCute[tCor][0]);
-		if(switchT1T2==2) maxCurve=VitimageUtils.max(tabFittenT1BiT2BicompCute[tCor][0]);
 		if(switchT1T2==1) maxCurve=VitimageUtils.max(tabFittenT1T2BicompCute[tCor][0]);
 		if(switchT1T2==0) maxCurve=VitimageUtils.max(tabFittenT1T2MonoCute[tCor][0]);
 		if(maxCurve>0.98*maxPlotYT1T2)maxPlotYT1T2=maxCurve*1.2;
@@ -2358,42 +2894,16 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		plotT1T2.setColor(crossColor );
 		plotT1T2.replace(incrT1T2++,"x",t1t2selectCute(t1t2Times[tCor][zCor],tCor),t1t2selectCute(dataTimelapseT1T2[tCor],tCor));//Afficher les points IRM
         plotT1T2.setLineWidth(1);
-		for(int t=0;t<t1t2selectCute(this.t1t2Times[tCor][zCor],tCor).length;t++)plotT1T2.replace(incrT1T2++, "line",new double[]{t1t2selectCute(this.t1t2Times[tCor][zCor],tCor)[t]-deltaXt2,t1t2selectCute(this.t1t2Times[tCor][zCor],tCor)[t]-deltaXt2},new double[]{t1t2selectCute(dataTimelapseT1T2[tCor],tCor)[t]-t1t2selectCute(dataTimelapseT1T2Sigmas[tCor],tCor)[t],t1t2selectCute(dataTimelapseT1T2[tCor],tCor)[t]+t1t2selectCute(dataTimelapseT1T2Sigmas[tCor],tCor)[t]});//Afficher le T2
+		for(int t=0;t<t1t2selectCute(this.t1t2Times[tCor][zCor],tCor).length;t++)plotT1T2.replace(incrT1T2++, "line",new double[]{t1t2selectCute(this.t1t2Times[tCor][zCor],tCor)[t]-deltaXt2,t1t2selectCute(this.t1t2Times[tCor][zCor],tCor)[t]-deltaXt2},new double[]{t1t2selectCute(dataTimelapseT1T2[tCor],tCor)[t]-t1t2selectCute(dataTimelapseT1T2Sigmas[tCor],tCor)[t],t1t2selectCute(dataTimelapseT1T2[tCor],tCor)[t]+t1t2selectCute(dataTimelapseT1T2Sigmas[tCor],tCor)[t]});//Afficher le T1T2
 
 		
-		if(switchT1T2==3) {
-			//FIT T1 Bionano
-	        plotT1T2.setLineWidth(1+thickCurve);
-	        plotT1T2.setColor((jitterT1T2Bionano[tCor]>=9999) ? Color.gray : curveT1Bicomp);        
-	        plotT1T2.replace(incrT1T2++, "line",timesT1T2Cute[tCor][zCor][0][2],tabFittenT1T2BionanoCute[tCor][0]);//Afficher la courbe 
-	           	
-	        //FIT T2 Bionano
-	        plotT1T2.setLineWidth(1+thickCurve);
-	        plotT1T2.setColor((jitterT1T2Bionano[tCor]>=9999) ? Color.gray : curveT2Bicomp);
-	        for(int tran=1;tran<timesT1T2Cute[tCor][zCor].length;tran++) {
-	        	 if(t1t2SelectedCurve(tran,tCor))plotT1T2.replace(incrT1T2++, "line",timesT1T2Cute[tCor][zCor][tran][2],tabFittenT1T2BionanoCute[tCor][tran]);//Afficher la courbe Bicomp
-	        }
-		}
-		else if(switchT1T2==2) {
-			//FIT T1 Bicomp
-	        plotT1T2.setLineWidth(1+thickCurve);
-	        plotT1T2.setColor((jitterT1BiT2Bicomp[tCor]>=9999) ? Color.gray : curveT1Bicomp);        
-	        plotT1T2.replace(incrT1T2++, "line",timesT1T2Cute[tCor][zCor][0][2],tabFittenT1BiT2BicompCute[tCor][0]);//Afficher la courbe 
-	           	
-	        //FIT T2 Bicomp
-	        plotT1T2.setLineWidth(1+thickCurve);
-	        plotT1T2.setColor((jitterT1BiT2Bicomp[tCor]>=9999) ? Color.gray : curveT2Bicomp);
-	        for(int tran=1;tran<timesT1T2Cute[tCor][zCor].length;tran++) {
-	        	 if(t1t2SelectedCurve(tran,tCor))plotT1T2.replace(incrT1T2++, "line",timesT1T2Cute[tCor][zCor][tran][2],tabFittenT1BiT2BicompCute[tCor][tran]);//Afficher la courbe Bicomp
-	        }
-		}
-		else if(switchT1T2==0) {
+		if(switchT1T2==0) {
 	        //FIT T1 Mono
 	        plotT1T2.setLineWidth(1+thickCurve);
 	        plotT1T2.setColor((jitterT1T2Mono[tCor]>=9999) ? Color.gray : curveT1Bicomp);        
 	        plotT1T2.replace(incrT1T2++, "line",timesT1T2Cute[tCor][zCor][0][2],tabFittenT1T2MonoCute[tCor][0]);//Afficher la courbe 
 	
-	        //FIT T2 Mono
+	        //FIT T1T2 Mono
 	        plotT1T2.setColor((jitterT1T2Mono[tCor]>=9999) ? Color.gray : curveT2Bicomp);
 	        for(int tran=1;tran<timesT1T2Cute[tCor][zCor].length;tran++) {
 		        if(t1t2SelectedCurve(tran,tCor))plotT1T2.replace(incrT1T2++, "line",timesT1T2Cute[tCor][zCor][tran][2],tabFittenT1T2MonoCute[tCor][tran]);//Afficher la courbe Bicomp
@@ -2407,7 +2917,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	        plotT1T2.setColor((jitterT1T2Bicomp[tCor]>=9999) ? Color.gray : curveT1Bicomp);        
 	        plotT1T2.replace(incrT1T2++, "line",timesT1T2Cute[tCor][zCor][0][2],tabFittenT1T2BicompCute[tCor][0]);//Afficher la courbe 
 	
-	        //FIT T2 Mono
+	        //FIT T1T2 Mono
 	        plotT1T2.setColor((jitterT1T2Bicomp[tCor]>=9999) ? Color.gray : curveT2Bicomp);
 	        for(int tran=1;tran<timesT1T2Cute[tCor][zCor].length;tran++) {
 		        if(t1t2SelectedCurve(tran,tCor))plotT1T2.replace(incrT1T2++, "line",timesT1T2Cute[tCor][zCor][tran][2],tabFittenT1T2BicompCute[tCor][tran]);//Afficher la courbe Bicomp
@@ -2416,11 +2926,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 
         //LEGENDE
 		plotT1T2.setLineWidth(1);
-		String strLegendT2="\n\nNoise +-sigma\n\nSpin-echo signal"+"\nData std over Roi\n";
+		String strLegendT1T2="\n\nNoise +-sigma\n\nSpin-echo signal"+"\nData std over Roi\n";
 		
 		plotT1T2.setLimits(0, maxT1T2OnPlot, 0,maxPlotYT1T2);
 		plotT1T2.setColor(new Color(150,150 ,150) );
-		plotT1T2.addLegend(strLegendT2,"bottom-up");
+		plotT1T2.addLegend(strLegendT1T2,"bottom-up");
 		plotCanT1T2.setPlot(plotT1T2);
 
 		plotT1T2.setLineWidth(1);
@@ -2429,7 +2939,85 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		for(int cur=incrT1T2;cur<lastCount2;cur++)plotT1T2.replace(cur, "line", new double[] {-1,-1}, new double[] {-1,-1});
 		lastCountT1T2=incrT1T2;
 	}
-			
+
+	public void actualizeFirstPlotsT1() {
+		int incrT1=0;
+		int deltaXt2=3;
+		int bubbleSize=isBionanoDisplay ? 30 : 40;
+
+		if(this.autoSizingTimePlots) maxPlotYT1=VitimageUtils.max(dataTimelapseT1[tCor])*1.6;
+
+		double maxCurve=0;
+		maxCurve=VitimageUtils.max(tabFittenT1MonoCute[tCor][0]);
+		if(maxCurve>0.98*maxPlotYT1)maxPlotYT1=maxCurve*1.2;
+		
+		//BUBBLE SHOWING CURRENT ECHO
+		plotT1.setColor(bubbleColor);
+        plotT1.setLineWidth(bubbleSize);
+        plotT1.replace(incrT1++, "line",new double[]{t1Times[tCor][zCor][cEchoes],t1Times[tCor][zCor][cEchoes]},new double[]{dataTimelapseT1[tCor][cEchoes],dataTimelapseT1[tCor][cEchoes]});
+
+		
+        //NOISE
+        plotT1.setLineWidth(1);
+		double[]statsNoise=RiceEstimator.computeSigmaAndMeanBgFromRiceSigmaStatic(hyperMap.tabSigmasT1Seq[tCor][zCor]+deltaSigma);
+		double nSum=statusRoi==2 ? Math.sqrt(this.nPtsCur) : (1+crossWidth);
+		this.meanNoiseT1Cur=statsNoise[0];
+		this.sigmaNoiseT1Cur=statsNoise[1];
+		plotT1.setColor(Color.black);
+        plotT1.setLineWidth(2);
+		plotT1.replace(incrT1++, "line",new double[]{0,maxT1OnPlot},new double[]{statsNoise[0],statsNoise[0]});//Afficher le mean+sigma
+        plotT1.setLineWidth(1);
+		plotT1.replace(incrT1++, "line",new double[]{0,maxT1OnPlot},new double[]{statsNoise[0]+statsNoise[1]/nSum,statsNoise[0]+statsNoise[1]/nSum});//Afficher le mean+sigma
+		plotT1.replace(incrT1++, "line",new double[]{0,maxT1OnPlot},new double[]{statsNoise[0]-statsNoise[1]/nSum,statsNoise[0]-statsNoise[1]/nSum});//Afficher le mean-sigma
+
+
+		//OBSERVATIONS IRM MEAN AND STDEV
+        plotT1.setLineWidth(2);
+		plotT1.setColor(crossColor );
+		//plotT1.replace(incrT1++,"x",t1selectCute(t1Times[tCor][zCor],tCor),t1selectCute(dataTimelapseT1[tCor],tCor));//Afficher les points IRM
+ 		plotT1.replace(incrT1++,"x",t1Times[tCor][zCor],dataTimelapseT1[tCor]);//Afficher les points IRM
+        plotT1.setLineWidth(1);
+	//	for(int t=0;t<t1selectCute(this.t1Times[tCor][zCor],tCor).length;t++)plotT1.replace(incrT1++, "line",new double[]{t1selectCute(this.t1Times[tCor][zCor],tCor)[t]-deltaXt2,t1selectCute(this.t1Times[tCor][zCor],tCor)[t]-deltaXt2},new double[]{t1selectCute(dataTimelapseT1[tCor],tCor)[t]-t1selectCute(dataTimelapseT1Sigmas[tCor],tCor)[t],t1selectCute(dataTimelapseT1[tCor],tCor)[t]+t1selectCute(dataTimelapseT1Sigmas[tCor],tCor)[t]});//Afficher le T2
+		for(int t=0;t<this.t1Times[tCor][zCor].length;t++)plotT1.replace(incrT1++, "line",new double[]{this.t1Times[tCor][zCor][t]-deltaXt2,this.t1Times[tCor][zCor][t]-deltaXt2},new double[]{dataTimelapseT1[tCor][t]-dataTimelapseT1Sigmas[tCor][t],dataTimelapseT1[tCor][t]+dataTimelapseT1Sigmas[tCor][t]});//Afficher le T2
+
+		
+		if(switchT1T2==0) {
+	        //FIT T1 Mono
+	        plotT1.setLineWidth(1+thickCurve);
+	        plotT1.setColor(curveT1Bicomp);        
+//	        plotT1.setColor((jitterT1Mono[tCor]>=9999) ? Color.gray : curveT1Bicomp);        
+	        plotT1.replace(incrT1++, "line",timesT1Cute[tCor][zCor][0][2],tabFittenT1MonoCute[tCor][0]);//Afficher la courbe 
+	
+		}        
+        
+
+		else  {
+	        //FIT T1 Mono
+	        plotT1.setLineWidth(1+thickCurve);
+	        plotT1.setColor(curveT1Bicomp);        
+//	        plotT1.setColor((jitterT1Bicomp[tCor]>=9999) ? Color.gray : curveT1Bicomp);        
+	        plotT1.replace(incrT1++, "line",timesT1Cute[tCor][zCor][0][2],tabFittenT1BicompCute[tCor][0]);//Afficher la courbe 
+	
+		}        
+
+        //LEGENDE
+		plotT1.setLineWidth(1);
+		String strLegendT2="\n\nNoise +-sigma\n\nSpin-echo signal"+"\nData std over Roi\n";
+		
+		plotT1.setLimits(0, maxT1OnPlot, 0,maxPlotYT1);
+		plotT1.setColor(new Color(150,150 ,150) );
+		plotT1.addLegend(strLegendT2,"bottom-up");
+		plotCan1.setPlot(plotT1);
+
+		plotT1.setLineWidth(1);
+		for(int cur=incrT1;cur<lastCountT1;cur++)plotT1.replace(cur, "line", new double[] {-1,-1}, new double[] {-1,-1});
+		plotT1.setLineWidth(1);
+		for(int cur=incrT1;cur<lastCount2;cur++)plotT1.replace(cur, "line", new double[] {-1,-1}, new double[] {-1,-1});
+		lastCountT1=incrT1;
+	}
+
+	
+	
 	public void actualizeSecondPlots() {
 		int incrT1=0;
 		int incrT2=0;
@@ -2449,24 +3037,31 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
         for(int tt=t0T2;tt<t1T1;tt*=10) {
 	        plotT21.setLineWidth(1);        
 			plotT21.setColor(Color.lightGray);
-        	for(int mul=2;mul<=9;mul++)plotT21.replace(incrT1++, "line",new double[] {tt*mul,tt*mul},new double[] {0,this.nTimepoints});
-			plotT21.setColor(Color.white);
+        	for(int mul=2;mul<=9;mul++) {
+    	        plotT21.setLineWidth(1+(mul-1)%2);        
+        		plotT21.replace(incrT1++, "line",new double[] {tt*mul,tt*mul},new double[] {0,this.nTimepoints});
+        	}
+/*			plotT21.setColor(Color.white);
         	plotT21.replace(incrT1++, "line",new double[] {tt*3,tt*3},new double[] {0,this.nTimepoints});
-	        plotT21.setLineWidth(3);        
+	*/        plotT21.setLineWidth(3);        
+			plotT21.setColor(Color.darkGray);
         	plotT21.replace(incrT1++, "line",new double[] {tt,tt},new double[] {0,this.nTimepoints});
         }
         //VERTICAL GRID T22
         for(int tt=t0T2;tt<t1T1;tt*=10) {
 	        plotT22.setLineWidth(1);        
 			plotT22.setColor(Color.lightGray);
-			for(int mul=2;mul<=9;mul++)plotT22.replace(incrT2++, "line",new double[] {tt*mul,tt*mul},new double[] {0,this.nTimepoints});
-			plotT22.setColor(Color.white);
+        	for(int mul=2;mul<=9;mul++) {
+    	        plotT22.setLineWidth(1+(mul-1)%2);        
+        		plotT22.replace(incrT2++, "line",new double[] {tt*mul,tt*mul},new double[] {0,this.nTimepoints});
+        	}
+			/*			plotT22.setColor(Color.white);
            	plotT22.replace(incrT2++, "line",new double[] {tt*3,tt*3},new double[] {0,this.nTimepoints});
-	        plotT22.setLineWidth(3);        
+*/	        plotT22.setLineWidth(3);        
+			plotT22.setColor(Color.darkGray);
         	plotT22.replace(incrT2++, "line",new double[] {tt,tt},new double[] {0,this.nTimepoints});
         }
-        //TODO : in the range, no switch tNew when zoom
-         //Draw the suns		
+  
 		double x0T1=t0T1*1.15;			double x0T2=t0T2*1.15;
 		plotT21.setLineWidth(bubbleSize);
 		plotT21.setColor(bubbleColor);
@@ -2503,6 +3098,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	 		plotT21.setLineWidth(6);
 	 		plotT22.setLineWidth(6);
 
+/*
 	 		//Draw markers T1
 			plotT21.setColor((jitterT1Bicomp[tim]>=9999) ? Color.lightGray : curveT1Bicomp);
 	 		radius=0.05+0.5*paramsTimelapseT1[tim][2]/MRUtils.maxM0BionanoForNormalization;
@@ -2531,16 +3127,31 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	 		radius=0.05+0.5*paramsTimelapseT2[tim][4]/MRUtils.maxM0BionanoForNormalization;
 	 		radius=Math.min(0.9, Math.max(0.05, radius));
 			plotT22.replace(incrT2++, "line",new double[] {paramsTimelapseT2[tim][5],paramsTimelapseT2[tim][5]},new double[] {tim+0.02,tim+0.02+radius});//Afficher la courbe
-			
+	*/		
 			
 	 		//Draw spectrum curves
-	 		plotT21.setLineWidth(2);
-	 		plotT21.setColor(Color.red);
-	 		plotT21.replace(incrT1++, "line", valsSpectrum[tim][2], valsSpectrum[tim][0]);
-	 		plotT22.setLineWidth(2);
-	 		if(sexyForBioInfo)plotT22.setColor(curveT2Bicomp);
-	 		else plotT22.setColor(Color.green);
-	 		plotT22.replace(incrT2++, "line", valsSpectrum[tim][2], valsSpectrum[tim][1]);
+			if(T1T2MixedEstimation) {
+				plotT21.setLineWidth(2);
+		 		plotT21.setColor(Color.red);
+		 		plotT21.replace(incrT1++, "line", valsSpectrum[tim][2], valsSpectrum[tim][0]);
+		 		plotT22.setLineWidth(2);
+		 		if(sexyForBioInfo)plotT22.setColor(curveT2Bicomp);
+		 		else plotT22.setColor(Color.green);
+		 		plotT22.replace(incrT2++, "line", valsSpectrum[tim][2], valsSpectrum[tim][1]);
+			}
+			else {
+				if(hasT1) {
+					plotT21.setLineWidth(2);
+			 		plotT21.setColor(Color.red);
+			 		plotT21.replace(incrT1++, "line", valsSpectrumT1[tim][1], valsSpectrumT1[tim][0]);
+				}
+				if(hasT2) {
+			 		plotT22.setLineWidth(2);
+			 		if(sexyForBioInfo)plotT22.setColor(curveT2Bicomp);
+			 		else plotT22.setColor(Color.green);
+			 		plotT22.replace(incrT2++, "line", valsSpectrumT2[tim][1], valsSpectrumT2[tim][0]);
+				}
+			}
  
 	 		
 	 		//Draw ranging interval
@@ -2560,7 +3171,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	 		}   		 		
    		}				
 		if(! isFocusActivatedOnSpectrum) {
-			System.out.println("Setting limits in multi mode");
+			System.out.println("Setting limits in multi mode. Update ok at "+initTimer.getTime()+" s\n");
 			plotT21.setLimits(t0T1,t1T1, 0, nTimepoints);
 			plotT22.setLimits(t0T2,t1T2, 0, nTimepoints);
 		}
@@ -2578,19 +3189,17 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		lastCount22=incrT2;
 	}				
 
-	public void actualizeSpectrumCurves() {
+	public void actualizeSpectrumCurvesT1T2() {
 		for(int tim=0;tim<this.nTimepoints;tim++) {
-			this.valsSpectrum[tim]=computeSpectrumCurve(tim);
+			this.valsSpectrum[tim]=computeSpectrumCurveT1T2(tim);
 		}
-		System.out.println("\nENTERING ACTU SPECTRUM");
 		double d1=0;
 		for(int i=0;i<this.valsSpectrum[0][0].length;i++) {d1+=valsSpectrum[0][0][i];}
-		System.out.println("Sum="+d1);
 		if(this.separateNormalizationSpectrumMode==0) {
 			for(int tim=0;tim<this.nTimepoints;tim++) {
 				double maxValT1=VitimageUtils.max(this.valsSpectrum[tim][0]);
-				double maxValT2=VitimageUtils.max(this.valsSpectrum[tim][1]);
 				for(int i=0;i<this.valsSpectrum[tim][0].length;i++)this.valsSpectrum[tim][0][i]=tim+this.valsSpectrum[tim][0][i]/maxValT1*normValueSpectrum;
+				double maxValT2=VitimageUtils.max(this.valsSpectrum[tim][1]);
 				for(int i=0;i<this.valsSpectrum[tim][1].length;i++)this.valsSpectrum[tim][1][i]=tim+this.valsSpectrum[tim][1][i]/maxValT2*normValueSpectrum;
 			}
 		}
@@ -2620,16 +3229,81 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		for(int i=0;i<this.valsSpectrum[0][0].length;i++) {d+=valsSpectrum[0][0][i];}
 	}
 
-	public void actualizeExportSentence() {
-		if(T1T2MixedEstimation)return;
+	public void actualizeSpectrumCurvesT1() {
+		for(int tim=0;tim<this.nTimepoints;tim++) {
+			if(this.valsSpectrumT1==null)this.valsSpectrumT1=new double[this.nTimepoints][][];
+			if(this.valsSpectrumT1[tim]==null)this.valsSpectrumT1[tim]=new double[2][];
+			this.valsSpectrumT1[tim]=computeSpectrumCurveT1(tim);
+		}
+		double d1=0;
+		for(int i=0;i<this.valsSpectrumT1[0][0].length;i++) {d1+=valsSpectrumT1[0][0][i];}
+		if(this.separateNormalizationSpectrumMode==0) {
+			for(int tim=0;tim<this.nTimepoints;tim++) {
+				double maxValT1=VitimageUtils.max(this.valsSpectrumT1[tim][0]);
+				for(int i=0;i<this.valsSpectrumT1[tim][0].length;i++)this.valsSpectrumT1[tim][0][i]=tim+this.valsSpectrumT1[tim][0][i]/maxValT1*normValueSpectrum;
+			}
+		}
+		else if(this.separateNormalizationSpectrumMode==1) {
+			double maxTotT1=0;
+			for(int tim=0;tim<this.nTimepoints;tim++) {
+				double maxValT1=VitimageUtils.max(this.valsSpectrumT1[tim][0]);
+				if(maxTotT1<maxValT1)maxTotT1=maxValT1;
+			}
+			for(int tim=0;tim<this.nTimepoints;tim++) {
+				for(int i=0;i<this.valsSpectrumT1[tim][0].length;i++)this.valsSpectrumT1[tim][0][i]=tim+this.valsSpectrumT1[tim][0][i]/maxTotT1*normValueSpectrum;
+			}
+		}
+		else if(this.separateNormalizationSpectrumMode==2) {
+			for(int tim=0;tim<this.nTimepoints;tim++) {
+				double factorViewHistoT1=5;
+				for(int i=0;i<this.valsSpectrumT1[tim][0].length;i++)this.valsSpectrumT1[tim][0][i]=tim+this.valsSpectrumT1[tim][0][i]*factorViewHistoT1/(this.nPtsCur*MRUtils.maxM0BionanoForNormalization);
+			}
+		}
+	}
+
+	public void actualizeSpectrumCurvesT2() {
+		for(int tim=0;tim<this.nTimepoints;tim++) {
+			if(this.valsSpectrumT2==null)this.valsSpectrumT2=new double[this.nTimepoints][][];
+			if(this.valsSpectrumT2[tim]==null)this.valsSpectrumT2[tim]=new double[2][];
+			this.valsSpectrumT2[tim]=computeSpectrumCurveT2(tim);
+		}
+		double d1=0;
+		for(int i=0;i<this.valsSpectrumT2[0][0].length;i++) {d1+=valsSpectrumT2[0][0][i];}
+		if(this.separateNormalizationSpectrumMode==0) {
+			for(int tim=0;tim<this.nTimepoints;tim++) {
+				double maxValT2=VitimageUtils.max(this.valsSpectrumT2[tim][0]);
+				for(int i=0;i<this.valsSpectrumT2[tim][0].length;i++)this.valsSpectrumT2[tim][0][i]=tim+this.valsSpectrumT2[tim][0][i]/maxValT2*normValueSpectrum;
+			}
+		}
+		else if(this.separateNormalizationSpectrumMode==1) {
+			double maxTotT2=0;
+			for(int tim=0;tim<this.nTimepoints;tim++) {
+				double maxValT2=VitimageUtils.max(this.valsSpectrumT2[tim][0]);
+				if(maxTotT2<maxValT2)maxTotT2=maxValT2;
+			}
+			for(int tim=0;tim<this.nTimepoints;tim++) {
+				for(int i=0;i<this.valsSpectrumT2[tim][0].length;i++)this.valsSpectrumT2[tim][0][i]=tim+this.valsSpectrumT2[tim][0][i]/maxTotT2*normValueSpectrum;
+			}
+		}
+		else if(this.separateNormalizationSpectrumMode==2) {
+			for(int tim=0;tim<this.nTimepoints;tim++) {
+				double factorViewHistoT2=10;
+				for(int i=0;i<this.valsSpectrumT2[tim][0].length;i++)this.valsSpectrumT2[tim][0][i]=tim+this.valsSpectrumT2[tim][0][i]*factorViewHistoT2/(this.nPtsCur*MRUtils.maxM0BionanoForNormalization);
+			}
+		}
+	}
+
+	 
+	
+	
+/*	public void actualizeExportSentence() {
+		if(true)return;
 		rSentence="\n\n#R CODE\n";
 		rSentence+="# * t1TimesAndObservations : \n#      first line = recovery times used for observations\n#      following lines are actual echo spin observations (one line per time-point in case of timelapse)\n";
-		rSentence+="#     Data are normalised : the values have been divided by the last echo value of the capillary in the central slice)\n";
 		rSentence+="# * t2TimesAndObservations : \n#      first line = echo times used for observations\n#      following lines are actual echo spin observations (one line per time-point in case of timelapse)\n";
-		rSentence+="#     Data are normalised : the values have been divided by the estimation of M0 of the capillary in the central slice)\n";
-		rSentence+="# * estimatedParameters : \n#      each line gives estimated parameters (M,T1,T2) obtained for each time point (in case of timelapse)\n";
+		rSentence+="# * estimatedParameters : \n#      each line gives estimated parameters (PD,T1,T2) obtained for each time point (in case of timelapse)\n";
 		rSentence+="#      all parameters are computed using exponential fit, after rice noise estimation and correction\n";
-		rSentence+="#      Params in each line : [ ObservationTime  ,  M0(of T1 relax curve)  ,  T1 ,  M0(of T2 relax curve monocomponent) , \n#                                           T2(mono-exponential), M0-1(first part of bi-exponential) , T2-1 (first T2) ,  M0-2 (second part) , T2-2 (second T2) , \n#                                            Jitter T1 (% error in fit), Jitter T2 mono , Jitter T2 bicomp\n";
+		rSentence+="#      Params in each line : [ ObservationTime  ,  PD(of T1 relax curve)  ,  T1 ,  PD(of T2 relax curve monocomponent) , \n#                                           T2(mono-exponential), PD-1(first part of bi-exponential) , T2-1 (first T2) ,  PD-2 (second part) , T2-2 (second T2) , \n#                                            Jitter T1 (% error in fit), Jitter T2 mono , Jitter T2 bicomp\n";
 		rSentence+="# code begins here\n#\n";
 		rSentence+="t1TimesAndObservations <- data.frame(acquisition_number=c(0,";
 		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(t+1)+",";
@@ -2662,19 +3336,19 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(t+1)+",";
 		rSentence+=""+nTimepoints+"),acquisition_day=c(";
 		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+hyperMap.actualDay[t]+",";
-		rSentence+=""+hyperMap.actualDay[nTimepoints-1]+"), M0T1=c(";
+		rSentence+=""+hyperMap.actualDay[nTimepoints-1]+"), PDT1=c(";
 		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT1[t][0])+",";
 		rSentence+=""+""+(paramsTimelapseT1[nTimepoints-1][0])+"), T1=c(";
 		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT1[t][1])+",";
-		rSentence+=""+""+(paramsTimelapseT1[nTimepoints-1][1])+"), M0T2=c(";
+		rSentence+=""+""+(paramsTimelapseT1[nTimepoints-1][1])+"), PDT2=c(";
 		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT2[t][0])+",";
 		rSentence+=""+""+(paramsTimelapseT2[nTimepoints-1][0])+"), T2=c(";
 		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT2[t][1])+",";
-		rSentence+=""+""+(paramsTimelapseT2[nTimepoints-1][1])+"), M0T21=c(";
+		rSentence+=""+""+(paramsTimelapseT2[nTimepoints-1][1])+"), PDT21=c(";
 		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT2[t][2])+",";
 		rSentence+=""+""+(paramsTimelapseT2[nTimepoints-1][2])+"), T21=c(";
 		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT2[t][3])+",";
-		rSentence+=""+""+(paramsTimelapseT2[nTimepoints-1][3])+"), M0T22=c(";
+		rSentence+=""+""+(paramsTimelapseT2[nTimepoints-1][3])+"), PDT22=c(";
 		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT2[t][4])+",";
 		rSentence+=""+""+(paramsTimelapseT2[nTimepoints-1][4])+"), T22=c(";
 		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT2[t][5])+",";
@@ -2694,10 +3368,10 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		pySentence+="# * t1TimesAndObservations : \n#      first line = recovery times used for observations\n#      following lines are actual echo spin observations (one line per time-point in case of timelapse)\n";
 		pySentence+="#     Data are normalised : the values have been divided by the last echo value of the capillary in the central slice)\n";
 		pySentence+="# * t2TimesAndObservations : \n#      first line = echo times used for observations\n#      following lines are actual echo spin observations (one line per time-point in case of timelapse)\n";
-		pySentence+="#     Data are normalised : the values have been divided by the estimation of M0 of the capillary in the central slice)\n";
+		pySentence+="#     Data are normalised : the values have been divided by the estimation of PD of the capillary in the central slice)\n";
 		pySentence+="# * estimatedParameters : \n#      each line gives estimated parameters (M,T1,T2) obtained for each time point (in case of timelapse)\n";
 		pySentence+="#      all parameters are computed using exponential fit, after rice noise estimation and correction\n";
-		pySentence+="#      Params in each line : [ ObservationTime  ,  M0(of T1 relax curve)  ,  T1 ,  M0(of T2 relax curve monocomponent) , \n#                                  T2(mono-exponential), M0-1(first part of bi-exponential) , T2-1 (first T2) ,  M0-2 (second part) , T2-2 (second T2) , \n#                                   Jitter T1 (% error in fit), Jitter T2 mono , Jitter T2 bicomp\n";
+		pySentence+="#      Params in each line : [ ObservationTime  ,  PD(of T1 relax curve)  ,  T1 ,  PD(of T2 relax curve monocomponent) , \n#                                  T2(mono-exponential), PD-1(first part of bi-exponential) , T2-1 (first T2) ,  PD-2 (second part) , T2-2 (second T2) , \n#                                   Jitter T1 (% error in fit), Jitter T2 mono , Jitter T2 bicomp\n";
 		pySentence+="# code begins here\n#\nimport numpy as np\n";
 		pySentence+="t1TimesAndObservations=np.array([[0,0";
 		for(int ec=0;ec<t1Times.length;ec++)pySentence+=","+t1Times[ec];
@@ -2734,10 +3408,10 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		matSentence+="% * t1TimesAndObservations : \n%      first line = recovery times used for observations\n%      following lines are actual echo spin observations (one line per time-point in case of timelapse)\n";
 		matSentence+="%     Data are normalised : the values have been divided by the last echo value of the capillary in the central slice)\n";
 		matSentence+="% * t2TimesAndObservations : \n%      first line = echo times used for observations\n%      following lines are actual echo spin observations (one line per time-point in case of timelapse)\n";
-		matSentence+="%     Data are normalised : the values have been divided by the estimation of M0 of the capillary in the central slice)\n";
+		matSentence+="%     Data are normalised : the values have been divided by the estimation of PD of the capillary in the central slice)\n";
 		matSentence+="% * estimatedParameters : \n%      each line gives estimated parameters (M,T1,T2) obtained for each time point (in case of timelapse)\n";
 		matSentence+="%      all parameters are computed using exponential fit, after rice noise estimation and correction\n";
-		matSentence+="%      Params in each line : [ ObservationTime  ,  M0(of T1 relax curve)  ,  T1 ,  M0(of T2 relax curve monocomponent) , \n%                                           T2(mono-exponential), M0-1(first part of bi-exponential) , T2-1 (first T2) ,  M0-2 (second part) , T2-2 (second T2) , \n%                                            Jitter T1 (% error in fit), Jitter T2 mono , Jitter T2 bicomp\n";
+		matSentence+="%      Params in each line : [ ObservationTime  ,  PD(of T1 relax curve)  ,  T1 ,  PD(of T2 relax curve monocomponent) , \n%                                           T2(mono-exponential), PD-1(first part of bi-exponential) , T2-1 (first T2) ,  PD-2 (second part) , T2-2 (second T2) , \n%                                            Jitter T1 (% error in fit), Jitter T2 mono , Jitter T2 bicomp\n";
 		matSentence+="% code begins here\n%\n";
 	
 		
@@ -2771,68 +3445,42 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 			matSentence+="]"+(t==nTimepoints-1 ? "\n" : ";\n");
 		}
 		matSentence+="]\n";
-	}
+	}*/
 	
 	public void actualizeDisplayedNumbers() {
 		//Update colors
-		boolean t1MonoActive=T1T2MixedEstimation ? (switchT1T2==0) : (jitterT1Mono[tCor]<9999);
-		boolean t2MonoActive=T1T2MixedEstimation ? (switchT1T2==0) : (jitterT2Mono[tCor]<9999);
-		boolean t1BiActive=T1T2MixedEstimation ? (switchT1T2==1) : (jitterT1Bicomp[tCor]<9999);
-		boolean t2BiActive=T1T2MixedEstimation ? (switchT1T2==1) : (jitterT2Bicomp[tCor]<9999);
-		boolean t1BiBiActive=T1T2MixedEstimation ? (switchT1T2==2) : (jitterT1Bicomp[tCor]<9999);
-		boolean t2BiBiActive=T1T2MixedEstimation ? (switchT1T2==2) : (jitterT2Bicomp[tCor]<9999);
-		boolean t1BionanoActive=T1T2MixedEstimation ? (switchT1T2==3) : (jitterT1T2Bionano[tCor]<9999);
-		boolean t2BionanoActive=T1T2MixedEstimation ? (switchT1T2==3) : (jitterT1T2Bionano[tCor]<9999);
-		if(!T1T2MixedEstimation){
-			if(t1BiActive && t1MonoActive) {
-				if(khi2T1Mono[tCor]>khi2T1Bicomp[tCor])t1MonoActive=false;
-				else t1BiActive=false;
-			}
-			if(t2BiActive && t2MonoActive) {
-				if(khi2T2Mono[tCor]>khi2T2Bicomp[tCor])t2MonoActive=false;
-				else t2BiActive=false;
-			}
-		}
+		boolean t1MonoActive=T1T2MixedEstimation ? (switchT1T2==0) : (hasT1 && (switchT1T2==0));
+		boolean t2MonoActive=T1T2MixedEstimation ? (switchT1T2==0) : (hasT2 && (switchT1T2==0));
+		boolean t1BiActive=T1T2MixedEstimation ? (switchT1T2==1) : (hasT1 && (switchT1T2==1));
+		boolean t2BiActive=T1T2MixedEstimation ? (switchT1T2==1) : (hasT2 && (switchT1T2==1));
 		
 		
 		titles[0].setBackground(t1MonoActive ? paramsT1ActivatedColor : paramsUnactivated);
 		titles[1].setBackground(t1BiActive ? paramsT1ActivatedColor : paramsUnactivated);
-		titles[2].setBackground(t1BiBiActive ? paramsT1ActivatedColor : paramsUnactivated);
-		titles[3].setBackground(t1BionanoActive ? paramsT1ActivatedColor : paramsUnactivated);
 		titles[4].setBackground(t2MonoActive ? paramsT2ActivatedColor : paramsUnactivated);
 		titles[5].setBackground(t2BiActive ? paramsT2ActivatedColor : paramsUnactivated);
-		titles[6].setBackground(t2BiBiActive ? paramsT2ActivatedColor : paramsUnactivated);
-		titles[7].setBackground(t2BionanoActive ? paramsT2ActivatedColor : paramsUnactivated);
 
 		for(int j=0;j<5;j++) {
 			params[0][j].setBackground(t1MonoActive ? paramsT1ActivatedColor : paramsUnactivated);
 			params[1][j].setBackground(t1MonoActive ? paramsT1TextActivatedColor : paramsUnactivated);
 			params[2][j].setBackground(t1BiActive ? paramsT1ActivatedColor : paramsUnactivated);
 			params[3][j].setBackground(t1BiActive ? paramsT1TextActivatedColor : paramsUnactivated);
-			params[4][j].setBackground(t1BiBiActive ? paramsT1ActivatedColor : paramsUnactivated);
-			params[5][j].setBackground(t1BiBiActive ? paramsT1TextActivatedColor : paramsUnactivated);
-			params[6][j].setBackground(t1BionanoActive ? paramsT1ActivatedColor : paramsUnactivated);
-			params[7][j].setBackground(t2BionanoActive ? paramsT1TextActivatedColor : paramsUnactivated);
 
 			params[8][j].setBackground(t2MonoActive ? paramsT2ActivatedColor : paramsUnactivated);
 			params[9][j].setBackground(t2MonoActive ? paramsT2TextActivatedColor : paramsUnactivated);
 			params[10][j].setBackground(t2BiActive ? paramsT2ActivatedColor : paramsUnactivated);
 			params[11][j].setBackground(t2BiActive ? paramsT2TextActivatedColor : paramsUnactivated);
-			params[12][j].setBackground(t2BiBiActive ? paramsT2ActivatedColor : paramsUnactivated);
-			params[13][j].setBackground(t2BiBiActive ? paramsT2TextActivatedColor : paramsUnactivated);
-			params[14][j].setBackground(t1BionanoActive ? paramsT2ActivatedColor : paramsUnactivated);
-			params[15][j].setBackground(t2BionanoActive ? paramsT2TextActivatedColor : paramsUnactivated);
 		}
 		//Update values
 
-		params[1][0].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][0] : paramsTimelapseT1[this.tCor][0])));
+		params[1][0].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][0] : paramsTimelapseT1[this.tCor][0],this.normalizePDInMiddleTab ) ) );
 		params[1][1].setText(String.format("%5.0f",T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][1] : paramsTimelapseT1[this.tCor][1]));
 		params[1][4].setText(String.format("%5.4f",T1T2MixedEstimation ? khi2T1T2Mono[this.tCor] : this.khi2T1Mono[this.tCor]));
 
-		params[3][0].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? (paramsTimelapseT1T2[this.tCor][3]+paramsTimelapseT1T2[this.tCor][4]) : paramsTimelapseT1[this.tCor][0])));
-		params[3][1].setText(String.format("%5.0f",T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][5] : paramsTimelapseT1[this.tCor][1]));
+		params[3][0].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? (paramsTimelapseT1T2[this.tCor][6]+paramsTimelapseT1T2[this.tCor][7]) : paramsTimelapseT1[this.tCor][0],this.normalizePDInMiddleTab)));
+		params[3][1].setText(String.format("%5.0f",T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][8] : paramsTimelapseT1[this.tCor][1]));
 		params[3][4].setText(String.format("%5.4f",T1T2MixedEstimation ? khi2T1T2Bicomp[this.tCor] : this.khi2T1Mono[this.tCor]));
-
+/*
 		params[5][0].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][8] : paramsTimelapseT1[this.tCor][2])));
 		params[5][1].setText(String.format("%5.0f",T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][10] : paramsTimelapseT1[this.tCor][3]));
 		params[5][2].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][9] : paramsTimelapseT1[this.tCor][4])));
@@ -2842,24 +3490,24 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		params[7][0].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][14] : paramsTimelapseT1[this.tCor][2])));
 		params[7][1].setText(String.format("%5.0f",T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][15] : paramsTimelapseT1[this.tCor][3]));
 		params[7][4].setText(String.format("%5.4f",T1T2MixedEstimation ? this.khi2T1T2Bionano[this.tCor] : this.khi2T1T2Bionano[this.tCor]));
-
-		params[9][0].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][0] : paramsTimelapseT2[this.tCor][0])));
+*/
+		params[9][0].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][0] : paramsTimelapseT2[this.tCor][0],this.normalizePDInMiddleTab)));
 		params[9][1].setText(String.format("%5.0f",T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][2] : paramsTimelapseT2[this.tCor][1]));
 		params[9][4].setText(String.format("%5.4f",T1T2MixedEstimation ? khi2T1T2Mono[this.tCor] : this.khi2T2Mono[this.tCor]));
 
-		params[11][0].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][3] : paramsTimelapseT2[this.tCor][2])));
-		params[11][1].setText(String.format("%5.0f",T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][6] : paramsTimelapseT2[this.tCor][3]));
-		params[11][2].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][4] : paramsTimelapseT2[this.tCor][4])));
-		params[11][3].setText(String.format("%5.0f",T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][7] : paramsTimelapseT2[this.tCor][5]));
+		params[11][0].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][6] : paramsTimelapseT2[this.tCor][6],this.normalizePDInMiddleTab)));
+		params[11][1].setText(String.format("%5.0f",T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][9] : paramsTimelapseT2[this.tCor][8]));
+		params[11][2].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][7] : paramsTimelapseT2[this.tCor][7],this.normalizePDInMiddleTab)));
+		params[11][3].setText(String.format("%5.0f",T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][10] : paramsTimelapseT2[this.tCor][9]));
 		params[11][4].setText(String.format("%5.4f",T1T2MixedEstimation ? this.khi2T1T2Bicomp[this.tCor] : this.khi2T2Bicomp[this.tCor]));
-
+		/*
 		params[13][0].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][8] : paramsTimelapseT2[this.tCor][2])));
 		params[13][1].setText(String.format("%5.0f",T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][12] : paramsTimelapseT2[this.tCor][3]));
 		params[13][2].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][9] : paramsTimelapseT2[this.tCor][4])));
 		params[13][3].setText(String.format("%5.0f",T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][13] : paramsTimelapseT2[this.tCor][5]));
 		params[13][4].setText(String.format("%5.4f",T1T2MixedEstimation ? this.khi2T1BiT2Bicomp[this.tCor] : this.khi2T2Bicomp[this.tCor]));
-		
-		params[15][0].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][16] : paramsTimelapseT1[this.tCor][2])));
+*/		
+		params[15][0].setText(String.format("%5.3f",MRUtils.convertBionanoM0InPercentage(T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][16] : paramsTimelapseT1[this.tCor][2],normalizePDInMiddleTab)));
 		params[15][1].setText(String.format("%5.0f",T1T2MixedEstimation ? paramsTimelapseT1T2[this.tCor][17] : paramsTimelapseT1[this.tCor][3]));
 		params[15][4].setText(String.format("%5.4f",T1T2MixedEstimation ? this.khi2T1T2Bionano[this.tCor] : this.khi2T1T2Bionano[this.tCor]));
 
@@ -2869,6 +3517,212 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
     	textSam.setText("       Sample size ("+(1+2*crossWidth)+"x"+(1+2*crossWidth)+"x"+(1+2*crossThick)+")");
 
 	}
+
+	
+	//TODO
+	public void exportDataToCsv(String dirPath,String basename) {
+		String[][]tab;
+		boolean debug=false;
+		if(T1T2MixedEstimation) {
+			//Export T1 T2 data			
+			int maxPts=0;
+			int T=nTimepoints;
+			for(int t=0;t<T;t++) {
+				if(t1t2TrTimes[t][0].length>maxPts)maxPts=t1t2TrTimes[t][0].length;
+			}
+
+			tab=new String[1+3*T][maxPts+1];
+			tab[0][0]="Label ";for(int i=0;i<maxPts;i++)tab[0][1+i]="Value_"+i;
+			for(int t=0;t<T;t++) {
+				int n=t1t2TrTimes[t][0].length;
+				tab[1+3*t][0]="Day "+t+" TR value";for(int i=0;i<n;i++)tab[1+3*t][1+i]=""+t1t2TrTimes[t][0][i];
+				tab[2+3*t][0]="Day "+t+" TE value";for(int i=0;i<n;i++)tab[2+3*t][1+i]=""+t1t2TeTimes[t][0][i];
+				tab[3+3*t][0]="Day "+t+" Magnitude value";for(int i=0;i<n;i++)tab[3+3*t][1+i]=""+dataTimelapseT1T2[t][i];
+			}
+			if(debug) {
+				System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
+			}
+			else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T1T2Seq_magnitude_data.csv");
+			//Line 1 : Day 0 "Nameday" - TR value ; TR1 ;  TR2 ;  TR3 ....
+			//Line 2 : Day 0 "Nameday" - TE value ; TE1 ;  TE2 ;  TE3 ....
+			//Line 3 : Day 0 "Nameday" - Magnitude value ; TE1 ;  TE2 ;  TE3 ....
+			//Line 4 : Day 1 "Nameday" - TR value ; TR1 ;  TR2 ;  TR3 ....
+			//...
+
+			
+			
+			tab=new String[1+T][11];
+			String []labels=new String[] {"Label","PD_tot", "T1", "T2", "Khi2_mono","PD_short", "PD_long","T1", "T2_short", "T2_long", "Khi2_biexp"};
+			for(int i=0;i<labels.length;i++)tab[0][i]=labels[i];
+			for(int t=0;t<T;t++) {
+				labels=new String[] {"Day "+t,""+paramsTimelapseT1T2[t][0],""+paramsTimelapseT1T2[t][1],""+paramsTimelapseT1T2[t][2],""+this.khi2T1T2Mono[t],
+						""+paramsTimelapseT1T2[t][6],""+paramsTimelapseT1T2[t][7],""+paramsTimelapseT1T2[t][8],
+						""+paramsTimelapseT1T2[t][9],""+paramsTimelapseT1T2[t][10],""+this.khi2T1T2Bicomp[t]};
+				for(int l=0;l<labels.length;l++)tab[1+t][l]=labels[l];	
+			}
+
+			if(debug) {
+				System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
+			}
+			else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T1T2Seq_estimated_params.csv");
+			//Export T1 T2 estimated params			
+			//Line 0 : Label  ; PD_tot ; T1 ; T2 ; Khi2_mono ; PD_short ; PD_long ; T1 ; T2_short ; T2_long ; Khi2_biexp 
+			//Line 1 : Day 0 ; val ; val ; val ; val ; val
+			//Line 1 : Day 1 ; val ; val ; val ; val ; val
+
+			
+			
+			tab=new String[1+4*T][this.numberBins+1];
+			labels=new String[] {"Label","Val_i"};
+			for(int i=0;i<labels.length;i++)tab[0][i]=labels[i];
+			for(int t=0;t<T;t++) {
+				tab[1+4*t][0]="Day "+t+" T1_value(x_axis)";for(int i=0;i<this.numberBins;i++)tab[1+4*t][1+i]=""+valsSpectrum[t][2][i];
+				tab[2+4*t][0]="Day "+t+" PD_weighted_T1_distribution(y_axis)";for(int i=0;i<this.numberBins;i++)tab[2+4*t][1+i]=""+(valsSpectrum[t][0][i]-t);
+				tab[3+4*t][0]="Day "+t+" T2_value(x_axis)";for(int i=0;i<this.numberBins;i++)tab[3+4*t][1+i]=""+valsSpectrum[t][2][i];
+				tab[4+4*t][0]="Day "+t+" PD_weighted_T2_distribution(y_axis)";for(int i=0;i<this.numberBins;i++)tab[4+4*t][1+i]=""+(valsSpectrum[t][1][i]-t);
+			}
+			if(debug) {
+				System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
+			}
+			else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T1T2Seq_estimated_T1T2distributions.csv");
+			//Export spectrum		
+			//Line 0 : Label  ; val ; val ; val 
+			//Day 0 T1_value(x_axis) ; 10 ; 11 ; val ; val ; val
+			//Day 0 PD_weighted_T1_distribution(y_axis) ; 0.8 ; 0.9 ; 0.7
+			//Day 0 T2_value(x_axis) ; 10 ; 11 ; val ; val ; val
+			//Day 0 PD_weighted_T2_distribution(y_axis) ; 0.8 ; 0.9 ; 0.7
+		}
+		
+		else {
+			if(hasT1) {
+				//Export T1 data			
+				int maxPts=0;
+				int T=nTimepoints;
+				for(int t=0;t<T;t++) {
+					if(t1TrTimes[t][0].length>maxPts)maxPts=t1TrTimes[t][0].length;
+				}
+
+				tab=new String[1+2*T][maxPts+1];
+				tab[0][0]="Label ";for(int i=0;i<maxPts;i++)tab[0][1+i]="Value_"+i;
+				for(int t=0;t<T;t++) {
+					int n=t1TrTimes[t][0].length;
+					tab[1+2*t][0]="Day "+t+" TR value";for(int i=0;i<n;i++)tab[1+2*t][1+i]=""+t1TrTimes[t][0][i];
+					tab[2+2*t][0]="Day "+t+" Magnitude value";for(int i=0;i<n;i++)tab[2+2*t][1+i]=""+dataTimelapseT1[t][i];
+				}
+				if(debug) {
+					System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
+				}
+				else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T1Seq_magnitude_data.csv");
+				//Line 1 : Day 0 "Nameday" - TR value ; TR1 ;  TR2 ;  TR3 ....
+				//Line 3 : Day 0 "Nameday" - Magnitude value ; TE1 ;  TE2 ;  TE3 ....
+				//...
+
+				
+				
+				tab=new String[1+T][4];
+				String []labels=new String[] {"Label","PD_tot", "T1",  "Khi2_mono"};
+				for(int i=0;i<labels.length;i++)tab[0][i]=labels[i];
+				for(int t=0;t<T;t++) {
+					labels=new String[] {"Day "+t,""+paramsTimelapseT1[t][0],""+paramsTimelapseT1[t][1],""+this.khi2T1Mono[t]};
+					for(int l=0;l<labels.length;l++)tab[1+t][l]=labels[l];	
+				}
+				if(debug) {
+					System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
+				}
+				else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T1Seq_estimated_params.csv");
+				//Export T1 T2 estimated params			
+				//Line 0 : Label  ; PD_tot ; T1 ; T2 ; Khi2_mono ; PD_short ; PD_long ; T1 ; T2_short ; T2_long ; Khi2_biexp 
+				//Line 1 : Day 0 ; val ; val ; val ; val ; val
+				//Line 1 : Day 1 ; val ; val ; val ; val ; val
+
+				
+				
+				tab=new String[1+2*T][this.numberBins+1];
+				labels=new String[] {"Label","Val_i"};
+				for(int i=0;i<labels.length;i++)tab[0][i]=labels[i];
+				for(int t=0;t<T;t++) {
+					tab[1+2*t][0]="Day "+t+" T1_value(x_axis)";for(int i=0;i<this.numberBins;i++)tab[1+2*t][1+i]=""+valsSpectrumT1[t][1][i];
+					tab[2+2*t][0]="Day "+t+" PD_weighted_T1_distribution(y_axis)";for(int i=0;i<this.numberBins;i++)tab[2+4*t][1+i]=""+(valsSpectrumT1[t][0][i]-t);
+				}
+				if(debug) {
+					System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
+				}
+				else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T1Seq_estimated_T1distributions.csv");
+				//Export spectrum		
+				//Line 0 : Label  ; val ; val ; val 
+				//Day 0 T1_value(x_axis) ; 10 ; 11 ; val ; val ; val
+				//Day 0 PD_weighted_T1_distribution(y_axis) ; 0.8 ; 0.9 ; 0.7
+			}
+
+			
+			
+			if(hasT2) {
+				//Export T1 data			
+				int maxPts=0;
+				int T=nTimepoints;
+				for(int t=0;t<T;t++) {
+					if(t2TeTimes[t][0].length>maxPts)maxPts=t2TeTimes[t][0].length;
+				}
+				System.out.println("Maxpts="+maxPts);
+				tab=new String[1+2*T][maxPts+1];
+				tab[0][0]="Label ";for(int i=0;i<maxPts;i++)tab[0][1+i]="Value_"+i;
+				for(int t=0;t<T;t++) {
+					int n=t2TeTimes[t][0].length;
+					System.out.println("n="+n);
+					tab[1+2*t][0]="Day "+t+" TE value";for(int i=0;i<n;i++)tab[1+2*t][1+i]=""+t2TeTimes[t][0][i];
+					tab[2+2*t][0]="Day "+t+" Magnitude value";for(int i=0;i<n;i++)tab[2+2*t][1+i]=""+dataTimelapseT2[t][i];
+				}
+				if(debug) {
+					System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
+				}
+				else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T2Seq_magnitude_data.csv");
+				//Line 1 : Day 0 "Nameday" - TR value ; TR1 ;  TR2 ;  TR3 ....
+				//Line 3 : Day 0 "Nameday" - Magnitude value ; TE1 ;  TE2 ;  TE3 ....
+				//...
+
+				
+				
+				tab=new String[1+T][9];
+				String []labels=new String[] {"Label","PD_tot", "T2",  "Khi2_mono","PD_short","PD_long", "T2_short", "T2_long",  "Khi2_biexp"};
+				for(int i=0;i<labels.length;i++)tab[0][i]=labels[i];
+				for(int t=0;t<T;t++) {
+					labels=new String[] {"Day "+t,""+paramsTimelapseT2[t][0],""+paramsTimelapseT2[t][1],""+this.khi2T2Mono[t],
+							""+paramsTimelapseT2[t][6],""+paramsTimelapseT2[t][7],""+paramsTimelapseT2[t][8],""+paramsTimelapseT2[t][9],""+this.khi2T2Bicomp[t]};
+					for(int l=0;l<labels.length;l++)tab[1+t][l]=labels[l];	
+				}
+				if(debug) {
+					System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
+				}
+				else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T2Seq_estimated_params.csv");
+				//Export T1 T2 estimated params			
+				//Line 0 : Label  ; PD_tot ; T1 ; T2 ; Khi2_mono ; PD_short ; PD_long ; T1 ; T2_short ; T2_long ; Khi2_biexp 
+				//Line 1 : Day 0 ; val ; val ; val ; val ; val
+				//Line 1 : Day 1 ; val ; val ; val ; val ; val
+
+				
+				
+				tab=new String[1+2*T][this.numberBins+1];
+				labels=new String[] {"Label","Val_i"};
+				for(int i=0;i<labels.length;i++)tab[0][i]=labels[i];
+				for(int t=0;t<T;t++) {
+					tab[1+2*t][0]="Day "+t+" T2_value(x_axis)";for(int i=0;i<this.numberBins;i++)tab[1+2*t][1+i]=""+valsSpectrumT2[t][1][i];
+					tab[2+2*t][0]="Day "+t+" PD_weighted_T2_distribution(y_axis)";for(int i=0;i<this.numberBins;i++)tab[2+4*t][1+i]=""+(valsSpectrumT2[t][0][i]-t);
+				}
+				if(debug) {
+					System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
+				}
+				else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T2Seq_estimated_T2distributions.csv");
+				//Export spectrum		
+				//Line 0 : Label  ; val ; val ; val 
+				//Day 0 T1_value(x_axis) ; 10 ; 11 ; val ; val ; val
+				//Day 0 PD_weighted_T1_distribution(y_axis) ; 0.8 ; 0.9 ; 0.7
+			}
+			
+			
+		}
+		IJ.showMessage("CSV data is now exported in "+new File(dirPath,basename).getAbsolutePath());
+	}
+
 
 	public void displayResultsAgain() {
 		imgCan1.getImage().setPosition(cMaps+1,zCor+1,tCor+1);
@@ -2883,6 +3737,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		actualizeSecondPlots();
 		actualizeDisplayedNumbers();
 		actualizeCursor();
+		//actualizeExportSentence();
 		repaintAll();
 	}
 	
@@ -2908,6 +3763,12 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 			computeResultsAgain();
 			displayResultsAgain();
 		}
+		if (e.getKeyChar()=='y') {
+			this.imgCan1.getImage().setDisplayRange(0, 500);
+			computeResultsAgain();
+			displayResultsAgain();
+		}
+
 		if (e.getKeyChar()=='z' && statusRoi!=2) {
 			if(this.crossThick<dims[2] && statusRoi!=2)this.crossThick++;
 			actualizeMriObservationsBasedOnData();
@@ -2928,21 +3789,6 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 		if (e.getKeyChar()=='q' && statusRoi!=2) {
 			if(this.crossWidth>0)this.crossWidth--;
-			actualizeMriObservationsBasedOnData();
-			computeResultsAgain();
-			displayResultsAgain();
-		}
-		if (e.getKeyChar()=='e') {
-			this.nRepetMonteCarlo+=20;
-			IJ.log("Monte carlo go to N="+this.nRepetMonteCarlo+" repetitions");
-			actualizeMriObservationsBasedOnData();
-			computeResultsAgain();
-			displayResultsAgain();
-		}
-		if (e.getKeyChar()=='d') {
-			this.nRepetMonteCarlo-=20;
-			if(this.nRepetMonteCarlo<0)this.nRepetMonteCarlo=0;
-			IJ.log("Monte carlo go to N="+this.nRepetMonteCarlo+" repetitions");
 			actualizeMriObservationsBasedOnData();
 			computeResultsAgain();
 			displayResultsAgain();
@@ -3052,19 +3898,55 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 			VitiDialogs.getYesNoUI("Curve explorer help",
 			getHelpString());
 		}
+		if (e.getKeyChar()=='n') {
+			normalizePDInMiddleTab=!normalizePDInMiddleTab;
+			displayResultsAgain();						
+		}
 		if (e.getKeyChar()=='e') {
-			IJ.log("\n\nExporting data for imporation in R, Python, or Matlab/Octave");
-			IJ.log(" --------- R EXPORT ------");
-			IJ.log(rSentence);
-			IJ.log(" --------- PYTHON EXPORT ------");
-			IJ.log(pySentence);
-			IJ.log(" --------- MATLAB/OCTAVE EXPORT ------");
-			IJ.log(matSentence);
-			IJ.log(" ---------------");
+			IJ.log("\n\nExporting data in CSV files for importation in R, Python, or Matlab/Octave");
+			String dirPath=null;
+			String basename=null;
+			if(true) {
+				IJ.showMessage("Export data in CSV files. You will select a directory and a basename.");
+				dirPath=VitiDialogs.chooseDirectoryUI("Choose directory for results export", "Directory chosen");
+				basename=VitiDialogs.getStringUI("Choose basename (without extension)", "Basename :","my_fijirelax_csv" , false);
+			}
+			if((basename==null) || (dirPath==null) || (!new File(dirPath).exists())) {int a=1;} 
+			else exportDataToCsv(dirPath,basename);
 		}		
 		System.out.println("Key pressed !");
 		repaintAll();
 	}
+	
+	
+	public void updateSwitchButtons() {
+		
+		if(this.noiseHandling==0) {
+			buttonExp.setForeground(Color.red);
+			buttonOff.setForeground(Color.black);
+			buttonRice.setForeground(Color.black);		
+		}
+		if(this.noiseHandling==1) {
+			buttonExp.setForeground(Color.black);
+			buttonOff.setForeground(Color.red);
+			buttonRice.setForeground(Color.black);		
+		}
+		if(this.noiseHandling==2) {
+			buttonExp.setForeground(Color.black);
+			buttonOff.setForeground(Color.black);
+			buttonRice.setForeground(Color.red);		
+		}
+		if(this.switchT1T2==0) {
+			buttonSwitchMono.setForeground(Color.red);
+			buttonSwitchBi.setForeground(Color.black);
+		}
+		if(this.switchT1T2==1) {
+			buttonSwitchMono.setForeground(Color.black);
+			buttonSwitchBi.setForeground(Color.red);
+		}
+	}
+	
+	
 	
 	public void changeTr(boolean up) {
 		double globalIndex=cEchoes;
@@ -3156,8 +4038,40 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource()==switchButton) {
-			switchT1T2=1-switchT1T2;System.out.println("Changing to "+switchT1T2);actualizeSpectrumCurves();displayResultsAgain();return;
+		if(e.getSource()==buttonSwitchMono) {
+			switchT1T2=0;System.out.println("Changing to "+switchT1T2);updateSwitchButtons();actualizeSpectrumCurves();		actualizeDisplayedNumbers();
+			displayResultsAgain();return;
+		}
+		if(e.getSource()==buttonSwitchBi) {
+			switchT1T2=1;System.out.println("Changing to "+switchT1T2);updateSwitchButtons();actualizeSpectrumCurves();		actualizeDisplayedNumbers();
+			displayResultsAgain();return;
+		}
+		if(e.getSource()==buttonExp) {
+			this.noiseHandling=0;
+			updateSwitchButtons();this.computeResultsAgain();actualizeSpectrumCurves();		actualizeDisplayedNumbers();
+			displayResultsAgain();return;
+		}
+		if(e.getSource()==buttonExport) {
+			IJ.log("\n\nExporting data in CSV files for importation in R, Python, or Matlab/Octave");
+			String dirPath=null;
+			String basename=null;
+			if(true) {
+				IJ.showMessage("Export data in CSV files. You will select a directory and a basename.");
+				dirPath=VitiDialogs.chooseDirectoryUI("Choose directory for results export", "Directory chosen");
+				basename=VitiDialogs.getStringUI("Choose basename (without extension)", "Basename :","my_fijirelax_csv" , false);
+			}
+			if((basename==null) || (dirPath==null) || (!new File(dirPath).exists())) {int a=1;} 
+			else exportDataToCsv(dirPath,basename);
+		}
+		if(e.getSource()==buttonOff) {
+			this.noiseHandling=1;
+			updateSwitchButtons();this.computeResultsAgain();actualizeSpectrumCurves();		actualizeDisplayedNumbers();
+			displayResultsAgain();return;
+		}
+		if(e.getSource()==buttonRice) {
+			this.noiseHandling=2;
+			updateSwitchButtons();this.computeResultsAgain();actualizeSpectrumCurves();		actualizeDisplayedNumbers();
+			displayResultsAgain();return;
 		}
 		if(e.getSource()==butAllCurves) {
 			switchAllCurves=!switchAllCurves;
@@ -3316,66 +4230,37 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 
 	public String getHelpString() {
 		return (
-		"Curve explorer is a java plugin dedicated to T1 and T2 caracterization in plant tissue from packed hyperimage 5D (X-Y-Z-Time-Echo).\nType the 'h' key at any time to display this help"+
+		"Curve explorer is a java interface dedicated to T1 and T2 characterization in tissues from packed 4D or 5D HyperMaps (X-Y-Z-Echo-Times).\nType the 'h' key at any time to display this help"+
 		" \n"+
 		" \n\n"+
 		"* Click on T1 / T2 image to set the center of the area of interest. \n"+
 		"     - The area center is showed as a cross.\n"+
-		"     - This area is a 3D cube, centered around the cross. Its size is ( (1+2*radiusXY) x (1+2*radiusXY) x (1+2*radiusZ))\n"+
+		"     - This area is a 2D square, centered around the cross. Its size is ( (1+2*radiusXY) x (1+2*radiusXY))\n"+
 		"     - Data from the whole cube is used for T1 / T2 estimation : the MRI spin-echo values are averaged over this area. \n"+
-		"     - Use '+' or '-' to zoom in / out\n"+
+		"     - Use '+' or '-' or the mouse scroll to zoom in / out\n"+
 		" \n\n"+
 		"* The data can also be gathered from a user-defined Roi.\n"+
-		"     - hit 'r' to enter in roi (region of interest) mode.\n"+
-		"     - Select your roi using the Opener and load your custom roi._\n"+
-		"	  - Hit 'r' again to quit the roi mode and bring back the cross\n"+
+		"     - Use the button 'Custom ROI' to load a ROI.\n"+
+		"     - Click elsewhere to go back to square ROI mode_\n"+
 		" \n\n"+					
-		"* The plots display the current data from the area of interest, and the estimated exponential curves and parameters\n"+
+		"* The plots display the current data from the area of interest : \nand the associated estimated parameters, in mono-T2 or bi-T2 (tabs in the middle)\n"+
 		"     - The parameters are computed using an exponential fit with correction of the rice noise (sigma rice estimation is handled automatically)\n"+
-		"     - Default fit optimization use Simplex. Hit 'l' to toggle to / from the Levenberg-Marquard optimization\n"+
-		"     - White plots :\n"+
-		"         .White left is T1 recovery data from the successive recovery time, and the mono-exponential estimated T1 curve\n"+
-		"         .White right is T2 relaxation plot from the successive echoes, with mono-exponential and bi-exponential estimated T2 curve\n"+
+		"     - Default estimation is bi-exponential (short T2 and long T2). Clik on the tabs or the switch button to switch the model.\n"+
+		"     - Upper :\n"+
+		"         .T1/T2 recovery data from the successive recovery time end echo time\n"+
 		"         .Use 't' to switch between thick-curves-mode and thin-curves-mode to check visually the estimation accuracy\n"+
-		"     - Black plots :\n"+
-		"         .Black left is the estimated T1 time from the successive timepoints (if any).\n"+
-		"         .Black right is the estimated T2 time(s) in mono- and bi-exponential modes from the successive timepoints (if any)\n"+
-		"         .The thicker a ray, the greater is the estimated Proton density.\n"+
-		"     	  .If estimation parameters confidence is low (jitter > 30 %), rays are shown in grey\n"+
+		"         .Use the mouse scroll or click on a cross to navigate echoes (see the yellow bubble running onto the curves)\n"+
+		"     - Lower plots :\n"+
+		"         .Left : estimated PD-weighted distrinbution of the T1 times in the region of interest from the successive timepoints (if any).\n"+
+		"         .Right : estimated PD-weighted distrinbution of the T2 times in the region of interest from the successive timepoints (if any).\n"+
+		"         .Use the mouse scroll or click on a curve to navigate observation times. Use the button 'show rangin' to range data and explore the pixels associated to values of T1 or T2\n"+
 		"  \n\n"+
 		" \n"+
-		"* Use 'a','q','z','s' 'g' keys to change the size and type of interest area) : \n"+
-		"     - 'a' -> remove 1 to radiusXY (area becoming smaller, the MRI signal is noisier and T1/T2 estimation is less significant) \n"+
-		"     - 'q' -> add 1 to radiusXY (area becoming bigger, many various tissues are merged during estimation) \n"+
-		"     - 'z' -> remove 1 to radiusZ (area becoming smaller, the MRI signal is noisier and T1/T2 estimation is less significant) \n"+
-		"     - 's' -> add 1 to radiusZ (area becoming bigger, many various tissues are merged during estimation) \n"+
-		"     - 'g' -> Switch to/from uniform averaging to/from gaussian averaging. With gaussian, the central point have more ponderation than the ones in the border\n"+
+		"* Use the right button panel to move into the data and to change the shape of the ROI\n"+
 		" \n"+
-		"* Use '4','6','8','2' keys to change current observation time or depth in the stack : \n"+
-		"     - '4' -> Change to previous slice (Z-)\n"+
-		"     - '6' -> Change to next slice (Z+)\n"+
-		"     - '8' -> Change to next time (T+)\n"+
-		"     - '2' -> Change to previous time (T+)\n"+
-		" \n"+					
 		"* Export data and computed parameters : hit 'e' to export current data in matlab/octave/python/r format in the ImageJ log window\n"+
 		" \n"+
-		" \n"+
-		"* The top text fields display continuously precious data :\n"+
-		"     - First bar :\n"+
-		"	      . M0 : Proton density estimated from the T1 recovery curve\n"+
-		"	      . T1 : T1 time estimated from the T1 recovery curve\n"+
-		"	      . Jitter : Root mean square error between MRI data and estimated curve, in % of the mean MRI data \n"+
-		"	      . Area : dX-dY-dZ-Type display the dimensions of the interest area around the cross, and the type of averaging (Gauss or Uni)\n"+
-		"	      . #Points : displays the number of points used for averaging, in cross mode or in roi mode\n"+ 
-		"     - Second bar :\n"+
-		"	      . M0 : Proton density estimated from the T2 relaxation mono-exponential\n"+
-		"	      . M01 : Proton density associated with the first component of the bi-exponential fit\n"+
-		"	      . M02 : Proton density associated with the second component of the bi-exponential fit\n"+
-		"	      . T2 : T2 time estimated from the T2 relaxation mono-exponential\n"+
-		"	      . T21 : T2 time associated with the first component of the bi-exponential fit\n"+
-		"	      . T22 : T2 time associated with the second component of the bi-exponential fit\n"+
-		"	      . JitMono : Root mean square error between MRI data and estimated mono-exponential curve, in % of the mean MRI data \n"+
-		"	      . JitBi : Root mean square error between MRI data and estimated bi-exponential curve, in % of the mean MRI data \n"+					
+		"* The tabs in the middle display continuously precious data associated to each model, computed on the mean magnitude values over the ROI:\n"+
 		" \n");
 	}
 
@@ -3464,13 +4349,13 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		
 		System.out.println("Give : "+paramsTimelapseT1T2[tCor][0]+" , "+paramsTimelapseT1T2[tCor][1]+" , "+paramsTimelapseT1T2[tCor][2]+" , " +this.deltaT2);
 		
-		double []tabFitten=MRUtils.fittenRelaxationCurve(t1t2TrTimes[tCor][zCor],t1t2TeTimes[tCor][zCor],new double[] {paramsTimelapseT1T2[tCor][0],paramsTimelapseT1T2[tCor][1],paramsTimelapseT1T2[tCor][2]},hyperMap.tabSigmasT1T2Seq[tCor][zCor]+deltaSigma,MRUtils.T1T2_MONO_RICE);
-		double[]accs=MRUtils.fittingAccuracies(dataTimelapseT1T2[tCor],t1t2TrTimes[tCor][zCor],t1t2TeTimes[tCor][zCor],hyperMap.tabSigmasT1T2Seq[tCor][zCor]+deltaSigma,new double[] {paramsTimelapseT1T2[tCor][0],paramsTimelapseT1T2[tCor][1],paramsTimelapseT1T2[tCor][2]},MRUtils.T1T2_MONO_RICE,false,riceEstimator,this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1);		
+		double []tabFitten=MRUtils.fittenRelaxationCurve(t1t2TrTimes[tCor][zCor],t1t2TeTimes[tCor][zCor],new double[] {paramsTimelapseT1T2[tCor][0],paramsTimelapseT1T2[tCor][1],paramsTimelapseT1T2[tCor][2]},hyperMap.tabSigmasT1T2Seq[tCor][zCor]+deltaSigma,getFitType(MRUtils.T1T2_MONO_RICE));
+		double[]accs=MRUtils.fittingAccuracies(dataTimelapseT1T2[tCor],t1t2TrTimes[tCor][zCor],t1t2TeTimes[tCor][zCor],hyperMap.tabSigmasT1T2Seq[tCor][zCor]+deltaSigma,new double[] {paramsTimelapseT1T2[tCor][0],paramsTimelapseT1T2[tCor][1],paramsTimelapseT1T2[tCor][2]},getFitType(MRUtils.T1T2_MONO_RICE),false,riceEstimator,this.sigmaKhi2WeightedByNumberPoints ? this.nPtsCur : 1);		
 		double [][]tabFittenCute=null;
 		
 		tabFittenCute=new double[this.timesT1T2Cute[tCor][zCor].length][];
 		for(int fi=0;fi<this.timesT1T2Cute[tCor][zCor].length;fi++) {
-			tabFittenCute[fi]=MRUtils.fittenRelaxationCurve(this.timesT1T2Cute[tCor][zCor][fi][0],this.timesT1T2Cute[tCor][zCor][fi][1],new double[] {paramsTimelapseT1T2[tCor][0],paramsTimelapseT1T2[tCor][1],paramsTimelapseT1T2[tCor][2]},hyperMap.tabSigmasT1T2Seq[tCor][zCor]+deltaSigma,MRUtils.T1T2_MONO_RICE);
+			tabFittenCute[fi]=MRUtils.fittenRelaxationCurve(this.timesT1T2Cute[tCor][zCor][fi][0],this.timesT1T2Cute[tCor][zCor][fi][1],new double[] {paramsTimelapseT1T2[tCor][0],paramsTimelapseT1T2[tCor][1],paramsTimelapseT1T2[tCor][2]},hyperMap.tabSigmasT1T2Seq[tCor][zCor]+deltaSigma,getFitType(MRUtils.T1T2_MONO_RICE));
 		}
     	
    		tabFittenT1T2Mono[tCor]=tabFitten;
@@ -3704,4 +4589,3 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 
 	
 }
-

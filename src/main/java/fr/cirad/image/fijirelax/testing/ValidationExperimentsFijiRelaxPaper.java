@@ -1,4 +1,4 @@
-package com.vitimage.fijirelax.testing;
+package fr.cirad.image.fijirelax.testing;
 
 /*
 t2Init_dif = xData(1) - xData(end-1);
@@ -15,18 +15,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.phenomen.common.Timer;
-import com.phenomen.common.TransformUtils;
-import com.phenomen.common.VitimageUtils;
-import com.phenomen.fijiyama.RegistrationAction;
-import com.vitimage.fijirelax.mrialgo.HyperMap;
-import com.vitimage.fijirelax.mrialgo.MRDataType;
-import com.vitimage.fijirelax.mrialgo.MRUtils;
-import com.vitimage.fijirelax.mrialgo.NoiseManagement;
-import com.vitimage.fijirelax.mrialgo.RiceEstimator;
-import com.phenomen.registration.BlockMatchingRegistration;
-import com.phenomen.registration.ItkTransform;
+import fr.cirad.image.common.Timer;
+import fr.cirad.image.common.TransformUtils;
+import fr.cirad.image.common.VitimageUtils;
+import fr.cirad.image.fijiyama.RegistrationAction;
+import fr.cirad.image.registration.BlockMatchingRegistration;
+import fr.cirad.image.registration.ItkTransform;
 
+import fr.cirad.image.fijirelax.mrialgo.HyperMap;
+import fr.cirad.image.fijirelax.mrialgo.MRDataType;
+import fr.cirad.image.fijirelax.mrialgo.MRUtils;
+import fr.cirad.image.fijirelax.mrialgo.NoiseManagement;
+import fr.cirad.image.fijirelax.mrialgo.RiceEstimator;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;

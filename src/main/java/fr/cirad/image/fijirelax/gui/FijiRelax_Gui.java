@@ -1,4 +1,4 @@
-package com.vitimage.fijirelax.gui;
+package fr.cirad.image.fijirelax.gui;
 
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -29,14 +29,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 
-import com.phenomen.common.VitiDialogs;
-import com.phenomen.common.VitimageUtils;
-import com.vitimage.fijirelax.mrialgo.HyperMap;
-import com.phenomen.fijiyama.RegistrationAction;
-import com.phenomen.fijiyama.RegistrationManager;
-import com.phenomen.registration.OptimizerType;
-import com.phenomen.registration.Transform3DType;
+import fr.cirad.image.common.VitiDialogs;
+import fr.cirad.image.common.VitimageUtils;
+import fr.cirad.image.fijiyama.RegistrationAction;
+import fr.cirad.image.fijiyama.RegistrationManager;
+import fr.cirad.image.registration.OptimizerType;
+import fr.cirad.image.registration.Transform3DType;
 
+import fr.cirad.image.fijirelax.mrialgo.HyperMap;
+import fr.cirad.image.fijirelax.mrialgo.NoiseManagement;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -59,6 +60,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	//Registration Frame buttons
 	public JButton importButton=new JButton("Import Nifti / Dicom data");
 	private JButton openButton=new JButton("Open existing hypermap");
+	private JButton exportButton=new JButton("Export current hypermap");
 	private JButton registerButton=new JButton("Register sequences");
 	private JButton computeButton=new JButton("Compute maps");
 	private JButton sosButton = new JButton("About FijiRelax...");
@@ -83,7 +85,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	private Font mySurvivalFontForLittleDisplays=null;
 
 	public String versionName="Handsome honeysuckle";
-	public String timeVersionFlag="  Release time : 2020-02-12 - 08:35 PM";
+	public String timeVersionFlag="  Release time : 2020-02-22 - 11:49 PM";
 	public String versionFlag=versionName+timeVersionFlag;
 	public ImagePlus imgView;
 	private Color colorStdActivatedButton;
@@ -105,13 +107,13 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	private static final int STRESS=98;
 	private static final int UNDO=99;
 	private static final int OUTLIERS=100;
+	
 
 	private volatile boolean actionAborted=false;
 	boolean developerMode=false;
+	private boolean debugMode=true;
 	String spaces="                                                                                                                                   ";
 	public int viewSlice;
-
-	private boolean debugMode=true;
 	private boolean isSurvivorVncTunnelLittleDisplay=false;
 	private int nbCpu;
 	private int jvmMemory;
@@ -131,10 +133,21 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		fj.run("");
 		fj.automaticTest();
 	}
+	
+	//BM1_TR{TR}.tif
 
+	public static void test() {
+		ImagePlus img=IJ.openImage("/home/fernandr/Bureau/Traitements/Sorgho/Series_temporelles/All_timeseries/BM1_Timeseries.tif");
+		img.show();
+		
+	}
+	
+	
 	public void automaticTest() {
+		//startFromTestImage("/home/fernandr/Bureau/test.tif");
+		//startFromTestImage("/home/fernandr/Bureau/test.tif");
 //		startFromTestImage("/home/fernandr/Bureau/test.tif");
-		startFromTestImage("/home/fernandr/Bureau/Traitements/Sorgho/Series_temporelles/All_timeseries/BM1_Timeseries.tif");
+		//startFromTestImage("/home/fernandr/Bureau/Traitements/Sorgho/Series_temporelles/All_timeseries/BM1_Timeseries.tif");
 		//startFromTestImage("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Tests_Refactoring/3_Computed_Maps/hyper.tif");
 //		startFromTestImage("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Tests_Refactoring/1_Imported/hyper.tif");
 	}
@@ -151,6 +164,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 			this.isSurvivorVncTunnelLittleDisplay=true;
 			IJ.showMessage("Detected Bionano server. \nSurvival display, but numerous cores");
 		}
+		IJ.log(versionFlag);
 		startFijiRelaxInterface();
 		welcomeAndInformAboutComputerCapabilities();
 		
@@ -182,6 +196,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 			mySurvivalFontForLittleDisplays=new Font(name,Font.BOLD,11);
 			importButton.setFont(mySurvivalFontForLittleDisplays);
 			openButton.setFont(mySurvivalFontForLittleDisplays);
+			exportButton.setFont(mySurvivalFontForLittleDisplays);
 			registerButton.setFont(mySurvivalFontForLittleDisplays);
 			computeButton.setFont(mySurvivalFontForLittleDisplays);
 			sosButton.setFont(mySurvivalFontForLittleDisplays);
@@ -205,9 +220,10 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 				buttonsPanel[pan].setBorder(BorderFactory.createEmptyBorder(25,25,25,25));
 			}
 		}
-		buttonsPanel[0].setLayout(new GridLayout(1,2,70,5));		
+		buttonsPanel[0].setLayout(new GridLayout(1,3,30,5));		
 		buttonsPanel[0].add(importButton);
 		buttonsPanel[0].add(openButton);
+		buttonsPanel[0].add(exportButton);
 
 		buttonsPanel[1].setLayout(new GridLayout(1,3,30,5));
 		buttonsPanel[1].add(registerButton);
@@ -219,7 +235,8 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		
 		buttonsPanel[3].setLayout(new GridLayout(3,2,70,5));
 		buttonsPanel[3].add(undoButton);
-		buttonsPanel[3].add(abortButton);
+		buttonsPanel[3].add(new JLabel(""));
+//		buttonsPanel[3].add(abortButton);
 		buttonsPanel[3].add(new JLabel(""));
 		buttonsPanel[3].add(new JLabel(""));
 		buttonsPanel[3].add(sosButton);
@@ -232,6 +249,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		importButton.addActionListener(this);
 		explorerButton.addActionListener(this);
 		openButton.addActionListener(this);
+		exportButton.addActionListener(this);
 		registerButton.addActionListener(this);
 		computeButton.addActionListener(this);
 		sosButton.addActionListener(this);
@@ -250,13 +268,14 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		sosButton.setToolTipText("<html><p width=\"500\">" +	"Display Sos window"+"</p></html>");
 		stressButton.setToolTipText("<html><p width=\"500\">" +	"Feeling stressed with FijiRelax ?"+"</p></html>");
 		outliersButton.setToolTipText("<html><p width=\"500\">" +	"Detect and process outliers in maps"+"</p></html>");
+		exportButton.setToolTipText("<html><p width=\"500\">" +	"Export current hypermap to Nifti or Tif file"+"</p></html>");
 
 		JPanel registrationPanelGlobal=new JPanel();
 		if(isSurvivorVncTunnelLittleDisplay )registrationPanelGlobal.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 		else registrationPanelGlobal.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 		
 		registrationPanelGlobal.setLayout(new BoxLayout(registrationPanelGlobal, BoxLayout.Y_AXIS));
-		String[]panelText=new String[] {"Open data","Process data","Graphical explorer","Need help ?"};
+		String[]panelText=new String[] {"Open / import / export data","Process data","Graphical explorer","Need help ?"};
 		for(int pan=0;pan<4;pan++) {
 			registrationPanelGlobal.add(new JSeparator());
 			JPanel tmpPanel=new JPanel();
@@ -308,6 +327,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		if(e.getSource()==this.stressButton)runActionStress();
 		if(lock)return;
 		if(e.getSource()==this.importButton)runActionImport();
+		if(e.getSource()==this.exportButton)runActionExport();
 		if(e.getSource()==this.openButton)runActionOpen();
 		if(e.getSource()==this.registerButton)runActionRegistration();
 		if(e.getSource()==this.computeButton)runActionCompute();
@@ -316,10 +336,78 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		if(e.getSource()==this.outliersButton)runActionOutliers();
 	}
 	
+	public void runActionExport() {
+		this.addLog("Export image.", 1);
+//try
+		String path=VitiDialogs.saveImageUIPath("Export current Hypermap to tif or nifti file", "hyperMap");
+		if(path.endsWith("tif")){
+			IJ.saveAsTiff(this.currentHypermap.getAsImagePlus(),path);
+		}
+		else if(path.endsWith("nii.gz") || path.endsWith("nii")){
+			ImagePlus img=this.currentHypermap.getAsImagePlus();
+			img=VitimageUtils.hyperStackChannelToHyperStackFrame(img);
+			IJ.run(img, "NIfTI-1", "save="+path);
+		}
+		else {
+			IJ.showMessage("Unrecognized file format for exportation : "+path);
+		}
+//	}catch(Exception e) {IJ.showMessage("Sorry, it seems that the importation does not went well. Please, contact our support : romain.fernandez@cirad.fr");e.printStackTrace();}
+	}
+	
 	public void runActionImport() {		
 		this.addLog("Import image.", 1);
-		VitiDialogs.notYet("runActionImport");		
-		if(this.currentHypermap.T>1)disable(REGISTER);
+		try {
+			GenericDialog gd=new GenericDialog("Choose data type");
+			String []choices=new String[] {"Dicom dir with one directory per (TR/TE), and 2D dcm slices",
+											"Single Nifti 4D file of a T2-sequence with multiple TE)",
+											"A directory with custom data format files (*.tif or dcm), one 2D/3D image per (TR/TE)"};
+			gd.addChoice("Choose data type", choices, choices[0]);
+			gd.showDialog();
+			if (gd.wasCanceled()) return;      
+	        int choice=gd.getNextChoiceIndex(); 
+	        String path=null;
+	        HyperMap hyp=null;
+	        if(choice==1) {
+	        	path=VitiDialogs.chooseOneImageUIPath("Choose a Nifti 4D file", ".nii or .nii.gz");
+	        	IJ.log("Selected path for 4D nifti import : "+path);
+	        	hyp=HyperMap.importHyperMapFromNifti4DUnknownSequence(path,"New_data");
+	        	IJ.log("HyperMap opened \n"+hyp);
+	    		if(hyp==null) return;
+	    		this.addLog("Import Hypermap from Nifti 4D.", 1);
+	        }
+
+	        if(choice==0) {//Dicom 2D
+	        	IJ.showMessage("The guessed structure is : \n"+
+	        			"Directories named TRxxxxx (ex : TR0010000 or TR10)\n"
+	        			+"With subdirectories named TExxxx with 2D dicom slices in it");
+		        path=VitiDialogs.chooseDirectoryUI("Choose data directory", "Approve directory");
+		        if(path==null)return;
+		        hyp=HyperMap.importHyperMapFromRawDicomData(path, "New_data");
+	        }
+	        if(choice==2) {//custom
+		        path=VitiDialogs.chooseDirectoryUI("Choose data directory", "Approve directory");
+		        String pattern=VitiDialogs.getStringUI("Pattern to match (use {TR} and {TE} for recovery and echo time)", "Pattern", 
+		        		"myData_{TR}_{TE}.tif",false);
+        		hyp=HyperMap.importHyperMapFromCustomData(path,pattern);
+	        }
+	        
+	        
+	        this.currentHypermap=hyp;
+			this.hypermapList.add(this.currentHypermap);
+    		this.addLog(VitimageUtils.imageResume(hyp.getAsImagePlus()), 0);
+       		step=0;
+    		updateView();
+    		enable(new int[] {REGISTER,COMPUTE,OUTLIERS,ABORT,UNDO,EXPLORER,SOS,STRESS} );
+    		if(this.currentHypermap.T>1)disable(REGISTER);
+        	return;
+	     
+	        
+	        
+	        
+	        
+	        
+	        
+		}catch(Exception e) {IJ.showMessage("Sorry, it seems that the importation does not went well. \nOur support can help you fixing issues, and updating the software \nin order that you can use FijiRelax with your data.\n Contact: romain.fernandez@cirad.fr");e.printStackTrace();}
 	}
 
 	public void runActionRegistration() {
@@ -338,18 +426,38 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
  		if(currentHypermap==null)return;
 		this.addLog("Compute maps.", 1);
 		HyperMap tmp=HyperMap.hyperMapFactory(this.currentHypermap);
+   		/*if(VitiDialogs.getYesNoUI("Simulate ?", "Do you want to simulate parameters influence on an image crop ?")) {
+   			final ExecutorService exec = Executors.newFixedThreadPool(1);
+   			exec.submit(new Runnable() {
+   				public void run()  {	
+   					lock();
+   					int cropRad=50;
+		   			int cropX=tmp.X/2;
+		   			int cropY=tmp.Y/2;
+		       		ImagePlus res=tmp.simulateMapComputation(cropX-cropRad,cropY-cropRad,cropX+cropRad,cropY+cropRad,viewSlice,viewSlice);
+		       		IJ.showMessage("Computation results with various parameters (Z slicer to change parameters)\nParameters are written in the image label (top line)");
+		       		res.show();
+		       		res.setTitle("Computation simulation");
+		       		res.setPosition(VitimageUtils.getCorrespondingSliceInHyperImage(res, 0, 1, 0));
+		       		VitimageUtils.setImageWindowSizeTo(res,500);
+		       		unlock();
+   		   		}
+   			});
+   			return;
+   		}*///TODO : simulate computation parameters effects
+		Object[]dialogPrm=	openComputeDialog();
+   		if(dialogPrm[0]==null){addLog("Maps computation cancelled", 0);return;}
+   		double[]params=(double[]) dialogPrm[0];
+   		ImagePlus imgMask=(ImagePlus) dialogPrm[1];
 		final ExecutorService exec = Executors.newFixedThreadPool(1);
 		exec.submit(new Runnable() {
-			public void run()  {lock();tmp.computeMaps();	  		step++; 	hypermapList.add(tmp);	   		currentHypermap=tmp;		updateView();unlock();}
+			public void run()  {lock();tmp.computeMaps(params,imgMask);	  		step++; 	hypermapList.add(tmp);	   		currentHypermap=tmp;		updateView();unlock();}
 		});
 	}
 	
 	public void runActionOutliers() {
 		if(currentHypermap==null)return;
 		this.addLog("Removing outliers.", 1);
-		int oneForTukeyFenceTwoForMADe=2;
-   		double nStdDev=5;
-   		int blockHalfSize=4;
    		HyperMap tmp=HyperMap.hyperMapFactory(currentHypermap);
    		if(VitiDialogs.getYesNoUI("Simulate ?", "Do you want to simulate on an image crop ?")) {
    			final ExecutorService exec = Executors.newFixedThreadPool(1);
@@ -414,23 +522,20 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 		
 	public void runActionStress(){
-		VitimageUtils.getRelaxingPopup("Feeling stressed with FijiRelax ?",true);
+		VitimageUtils.getRelaxingPopup("",true);
 	}
 	
 	public void runActionSos(){
 		String textToDisplay="<html>"+saut;
-		String basicFijiText="<b> </b>FijiRelax is a tool for.....,"+
-				" (texte 2 ........) ";
-		String mainWindowText=basicFijiText+
-				"Texte3 ........ :"+startPar+
-				" <b>1)   Texte4........ "+nextPar+
-				" <b>2-a) Texte5 ........ ."+nextPar+
-				"automatic algorithms settings can be modified using the settings dialog ( <b>\"Advanced settings\"</b> button )."+saut+saut; 
+		textToDisplay+="<b> </b>FijiRelax is a tool for computing maps from spin-echo multi-echo sequences,"+
+				" More informations : check the official page http://imagej.github.io/FijiRelax";
+		textToDisplay+=
+				""+startPar+saut; 
 
 		
 	
 		disable(SOS);
-		textToDisplay+="<b>Citing this work :</b> R. Fernandez and C. Moisy, <i>FijiRelax : fast and noise-corrected estimation of NMR relaxation maps in 3D+t</i> (under review)"+saut+
+		textToDisplay+="<b>Citing this work :</b> R. Fernandez and C. Moisy, <i>FijiRelax : fast and noise-corrected estimation of MRI relaxation maps in 3D+t</i> (under review)"+saut+
 				"<b>Credits :</b> this work was supported by the \"Plan deperissement du vignoble\" and \"Aplim\" flagship project  </p>";
 		IJ.showMessage("FijiRelax help", textToDisplay);
 		enable(SOS);
@@ -469,15 +574,6 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	
 	
 	/** Helpers --------------------------------------------------------------------------------*/	
-	public int getRelativeOptimalPositionFor2DView() {
-		java.awt.Dimension currentScreen = Toolkit.getDefaultToolkit().getScreenSize();
-        int screenX=(int)Math.round(currentScreen.width);
-        if(screenX>1920)screenX/=2;        
-		if(registrationFrame.getLocationOnScreen().x+registrationFrame.getSize().getWidth()/2 > screenX/2) return 0;
-		else return 2;
-	}
-
-	
 	public RegistrationAction openRegistrationSettingsDialog() {
 		RegistrationAction regAct=this.currentHypermap.getDefaultRegistrationSettings();
  		
@@ -491,6 +587,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		GenericDialog gd= new GenericDialog("Registration settings for Blockmatching of successive echoes");
 		String[]levelsMax=new String[4];
 		String[]schemes=new String[] {"Rigid","Deformations","Rigid, then deformations"};
+		String[]views=new String[] {"View everything","Run in stealth mode (faster)"};
 		int indCurMin=0;
 		int indCurMax=0;
 		int indCurScheme=0;
@@ -501,6 +598,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
         }
         gd.addMessage("Registration scheme and target resolutions");
         gd.addChoice("Registration scheme",schemes, schemes[indCurScheme]);
+        gd.addChoice("Display mode",views, views[0]);
         gd.addChoice("Max subsampling factor (high=fast)",levelsMax, levelsMax[indCurMax]);
         gd.addChoice("Min subsampling factor (low=slow)",levelsMax, levelsMax[indCurMin]);
         gd.addChoice("Higher accuracy (subpixellic level)", new String[] {"Yes","No"},regAct.higherAcc==1 ? "Yes":"No");
@@ -531,6 +629,8 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
         gd.showDialog();
         if (gd.wasCanceled()) return null;	        
         int scheme=gd.getNextChoiceIndex(); 
+        int typeView=gd.getNextChoiceIndex();
+        regAct.typeAutoDisplay=(typeView==0 ? 2 : 0);
         int a=gd.getNextChoiceIndex()+1; regAct.setLevelMaxLinear(a);regAct.setLevelMaxNonLinear(a);
         int b=gd.getNextChoiceIndex()+1; 
 
@@ -586,7 +686,55 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
         if(params[2]<0)params[2]=HyperMap.defaultOutlierNeighbourXY;
        	return params;
 	}
+
+	public Object[] openComputeDialog() {
+		ImagePlus imgMask=null;
+		double[]params=new double[6];
+		boolean fitChoice=(this.currentHypermap.hasT1sequence && this.currentHypermap.hasT2sequence);
+		//Parameters for automatic registration
+		GenericDialog gd= new GenericDialog("Settings for maps computation");
+		String[]algo=new String[] {"Simplex","Levenberg"};
+		String[]scheme=new String[] {"Joint T1-T2 fit","Separated T1/T2 fit"};
+		String[]noise=new String[] {"Rice fit","Offset fit","No noise correction"};
+		String[]first=new String[] {"Use all echoes","Forget first echo"};
+		String[]mask=new String[] {"Automatic mask building","I will provide a mask image"};
+
+			
+		gd.addChoice("Fitting algorithm",algo, algo[HyperMap.defaultAlgoChoice]);
+		gd.addChoice("Noise correction model",noise, noise[HyperMap.defaultNoiseChoice]);
+		gd.addChoice("First echo handling",first, first[HyperMap.defaultFirstChoice]);
+		gd.addChoice("Who provides the mask ?",mask, mask[HyperMap.defaultMaskChoice]);
+        gd.addNumericField("For automatic mask : Nb stddev for threshold", HyperMap.defaultStdDevMask, 0, 3, "sigma");
+		if(fitChoice) gd.addChoice("Combination of T1w and T2w data ?",scheme, scheme[HyperMap.defaultJointSchemeChoice]);
+        if(this.isSurvivorVncTunnelLittleDisplay)gd.setFont(mySurvivalFontForLittleDisplays);
+
+        gd.showDialog();
+        if (gd.wasCanceled()) return new Object[] {null,null};	        
+        params[0]=gd.getNextChoiceIndex();//algo
+        params[1]=gd.getNextChoiceIndex();//noise
+        params[2]=gd.getNextChoiceIndex();//first
+        params[3]=gd.getNextChoiceIndex();//mask
+        params[4]=gd.getNextNumber();//sigma
+        if(fitChoice) params[5]=gd.getNextChoiceIndex();//joint
+        if(params[4]<0)params[4]=HyperMap.defaultStdDevMask;
+        if(params[3]>0) {
+        	imgMask=VitiDialogs.chooseOneImageUI("Choose a 2D or 3D image as a mask", "Here is my mask");
+        	if(imgMask==null) params[3]=0;
+        } 
+       	return new Object[] {params,imgMask};
+	}
+
+	public void welcomeAndInformAboutComputerCapabilities() {		
+		String[]str=checkComputerCapacity(true);
+		addLog(str[0],0);
+		addLog(str[1],0);		
+	}
 	
+	public void addLog(String t,int level) {
+		logArea.append((level==0 ? "\n > ": (level==1) ? "\n\n > " : " ")+t);
+		logArea.setCaretPosition(logArea.getDocument().getLength());
+	}
+
 	public void updateView() {
 		this.addLog("Updating view", 0);
 		if(this.hypermapList.size()==0)return;
@@ -642,17 +790,6 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		for(ImagePlus img : imgShowedList) {if(img!=null)img.close();};
 	}	
 
-	public void welcomeAndInformAboutComputerCapabilities() {		
-		String[]str=checkComputerCapacity(true);
-		addLog(str[0],0);
-		addLog(str[1],0);		
-	}
-	
-	public void addLog(String t,int level) {
-		logArea.append((level==0 ? "\n > ": (level==1) ? "\n\n > " : " ")+t);
-		logArea.setCaretPosition(logArea.getDocument().getLength());
-	}
-
 	@SuppressWarnings("restriction")
 	public String []checkComputerCapacity(boolean verbose) {
 		this.nbCpu=Runtime.getRuntime().availableProcessors();
@@ -660,7 +797,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		this.memoryFullSize=0;
 		String []str=new String[] {"",""};
 
-		str[0]="Welcome to FijiRelax "+versionFlag+" ! \nFirst trial ? Click on \"Contextual help\" to get started. \n User requests, issues ? Contact : romain.fernandezATcirad.fr\n";
+		str[0]="Welcome to FijiRelax "+versionFlag+" ! \nFirst trial ? Watch the tutorials online : https://imagej.github.io/FijiRelax  \n User requests, issues ? Contact : romain.fernandezATcirad.fr\n";
 		str[1]="System check. Available memory in JVM="+this.jvmMemory+" MB. #Available processor cores="+this.nbCpu+".";
 		try {
 			this.memoryFullSize =  (( ((com.sun.management.OperatingSystemMXBean) ManagementFactory
@@ -676,6 +813,14 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		else return new String[] {"",""};
 	}
 	
+	public int getRelativeOptimalPositionFor2DView() {
+		java.awt.Dimension currentScreen = Toolkit.getDefaultToolkit().getScreenSize();
+        int screenX=(int)Math.round(currentScreen.width);
+        if(screenX>1920)screenX/=2;        
+		if(registrationFrame.getLocationOnScreen().x+registrationFrame.getSize().getWidth()/2 > screenX/2) return 0;
+		else return 2;
+	}
+
 	
 	
 	
@@ -688,7 +833,6 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	public void lock() {
 		this.lock=true;
 	}
-
 	public void unlock() {
 		this.lock=false;
 	}

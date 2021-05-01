@@ -1,11 +1,11 @@
-package com.vitimage.fijirelax.testing;
-import com.phenomen.common.VitiDialogs;
-import com.phenomen.common.VitimageUtils;
-import com.vitimage.fijirelax.mrialgo.HyperMap;
-import com.vitimage.fijirelax.mrialgo.MRUtils;
-import com.vitimage.fijirelax.mrialgo.NoiseManagement;
-import com.phenomen.fijiyama.RegistrationAction;
+package fr.cirad.image.fijirelax.testing;
+import fr.cirad.image.common.VitiDialogs;
+import fr.cirad.image.common.VitimageUtils;
+import fr.cirad.image.fijiyama.RegistrationAction;
 
+import fr.cirad.image.fijirelax.mrialgo.HyperMap;
+import fr.cirad.image.fijirelax.mrialgo.MRUtils;
+import fr.cirad.image.fijirelax.mrialgo.NoiseManagement;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;

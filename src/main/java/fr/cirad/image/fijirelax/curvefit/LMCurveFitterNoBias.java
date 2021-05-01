@@ -1,7 +1,7 @@
-package com.vitimage.fijirelax.curvefit;
-import com.phenomen.common.VitimageUtils;
-import com.vitimage.fijirelax.mrialgo.MRUtils;
+package fr.cirad.image.fijirelax.curvefit;
+import fr.cirad.image.common.VitimageUtils;
 
+import fr.cirad.image.fijirelax.mrialgo.MRUtils;
 import lma.LMAFunction;
 import lma.LMAMatrix.InvertException;
 import lma.implementations.LMA;

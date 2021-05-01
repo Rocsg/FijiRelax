@@ -1,17 +1,17 @@
-package com.vitimage.fijirelax.gui;
+package fr.cirad.image.fijirelax.gui;
 
 import java.io.File;
 import java.util.ArrayList;
-import com.phenomen.common.Timer;
-import com.phenomen.common.VitiDialogs;
-import com.phenomen.common.VitimageUtils;
-import com.vitimage.fijirelax.mrialgo.HyperMap;
-import com.vitimage.fijirelax.mrialgo.MRUtils;
-import com.phenomen.fijiyama.RegistrationAction;
-import com.phenomen.registration.BlockMatchingRegistration;
-import com.phenomen.registration.ItkTransform;
-import com.phenomen.registration.Transform3DType;
+import fr.cirad.image.common.Timer;
+import fr.cirad.image.common.VitiDialogs;
+import fr.cirad.image.common.VitimageUtils;
+import fr.cirad.image.fijiyama.RegistrationAction;
+import fr.cirad.image.registration.BlockMatchingRegistration;
+import fr.cirad.image.registration.ItkTransform;
+import fr.cirad.image.registration.Transform3DType;
 
+import fr.cirad.image.fijirelax.mrialgo.HyperMap;
+import fr.cirad.image.fijirelax.mrialgo.MRUtils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.Concatenator;
@@ -195,10 +195,10 @@ public class Custom_Format_Importer{
 	public boolean detectSorgho(ImagePlus img) {
 		String patientName=VitimageUtils.getPatientName(img);
 		if( patientName.contains("BM") || patientName.contains("SSM")) {
-			IJ.log("Detected experience : Sorgho\nSettings : "+
+			/*IJ.log("Detected experience : Sorgho\nSettings : "+
 					"\nForget early reps = false (dismiss TR<=1000 ms)"+
 					"\nNormalize before computation = true (correct uneven normalization issues before maps computation)"+
-					"\nMake sorgho trick = true (set all images in a common geometry to help analysis)\n\n");
+					"\nMake sorgho trick = true (set all images in a common geometry to help analysis)\n\n");*/
 			makeSorghoTrick=true;
 			return true;
 		}
@@ -226,7 +226,7 @@ public class Custom_Format_Importer{
 		VitimageUtils.printImageResume(imgMaskCap,"imgMaskCap2");
 
 		//In case of sorgho data, set them all to the same voxel size
-		if(makeSorghoTrick) {
+		if(makeSorghoTrick && false) {
 			System.out.println("Sorgho detect !");
 			double targetVZ=0.5;
 			double targetVoxVolume=1E-3;

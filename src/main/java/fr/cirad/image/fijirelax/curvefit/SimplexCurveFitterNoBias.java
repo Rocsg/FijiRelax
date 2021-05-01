@@ -1,8 +1,8 @@
-package com.vitimage.fijirelax.curvefit;
+package fr.cirad.image.fijirelax.curvefit;
 
-import com.phenomen.common.VitimageUtils;
-import com.vitimage.fijirelax.mrialgo.MRUtils;
+import fr.cirad.image.common.VitimageUtils;
 
+import fr.cirad.image.fijirelax.mrialgo.MRUtils;
 import ij.macro.Interpreter;
 import ij.macro.Program;
 import ij.macro.Tokenizer;

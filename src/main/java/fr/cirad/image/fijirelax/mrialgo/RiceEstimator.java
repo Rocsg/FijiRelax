@@ -1,10 +1,10 @@
-package com.vitimage.fijirelax.mrialgo;
+package fr.cirad.image.fijirelax.mrialgo;
 
 import java.util.Random;
 
-import com.phenomen.common.Timer;
-import com.phenomen.common.TransformUtils;
-import com.phenomen.common.VitimageUtils;
+import fr.cirad.image.common.Timer;
+import fr.cirad.image.common.TransformUtils;
+import fr.cirad.image.common.VitimageUtils;
 
 import ij.IJ;
 import ij.ImageJ;

@@ -1,4 +1,4 @@
-package com.vitimage.fijirelax.curvefit;
+package fr.cirad.image.fijirelax.curvefit;
 import java.util.Arrays;
 
 import lma.ArrayConverter;

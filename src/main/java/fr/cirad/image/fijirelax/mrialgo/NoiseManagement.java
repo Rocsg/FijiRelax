@@ -1,4 +1,4 @@
-package com.vitimage.fijirelax.mrialgo;
+package fr.cirad.image.fijirelax.mrialgo;
 
 public enum NoiseManagement {
 	NOTHING,

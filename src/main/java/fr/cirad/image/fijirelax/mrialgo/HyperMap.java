@@ -1,48 +1,50 @@
-package com.vitimage.fijirelax.mrialgo;
+package fr.cirad.image.fijirelax.mrialgo;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
-import com.vitimage.fijirelax.gui.Custom_Format_Importer;
-import com.vitimage.fijirelax.testing.ValidationExperimentsFijiRelaxPaper;
-import com.phenomen.common.Timer;
-import com.phenomen.common.TransformUtils;
-import com.phenomen.common.VitiDialogs;
-import com.phenomen.common.VitimageUtils;
-import com.phenomen.fijiyama.RegistrationAction;
-import com.phenomen.registration.BlockMatchingRegistration;
-import com.phenomen.registration.ItkTransform;
-import com.phenomen.registration.Transform3DType;
+import fr.cirad.image.common.Timer;
+import fr.cirad.image.common.TransformUtils;
+import fr.cirad.image.common.VitimageUtils;
+import fr.cirad.image.fijiyama.RegistrationAction;
+import fr.cirad.image.registration.BlockMatchingRegistration;
+import fr.cirad.image.registration.ItkTransform;
+import fr.cirad.image.registration.Transform3DType;
 
+import fr.cirad.image.fijirelax.gui.Custom_Format_Importer;
+import fr.cirad.image.fijirelax.testing.ValidationExperimentsFijiRelaxPaper;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
-import ij.WindowManager;
+import ij.gui.GenericDialog;
 import ij.plugin.Concatenator;
 import ij.plugin.Duplicator;
 import ij.plugin.HyperStackConverter;
-import ij.plugin.filter.Convolver;
 import ij.process.ImageProcessor;
-import voltex.Mask;
-/* Macro beanshell
- * String dataRep="/home/fernandr/Bureau/FijiRelax_PrepaDOI/Source_data/Sorghum/SSM1_Day0_RawDicom"
- * HyperMap hyp=new HyperMap(img);
- */
-
-
+import ij.process.ImageStatistics;
+import no.uib.cipr.matrix.sparse.SSOR;
 
 
 public class HyperMap {
 	public static int defaultOutlierAlgorithm=1;//1=Tukey fences, 2=double-sided MADe
 	public static double defaultOutlierStdDev=3;
 	public static int defaultOutlierNeighbourXY=3;
-	public String name="JOHN-DOE";
-	public double sigmaInUse=0;
-	public ImagePlus hyperImg;
-	public ImagePlus hyperMaps;
-	public ImagePlus hyperEchoes;
+	public static int defaultAlgoChoice=0;//0=Simplexe, 1=Levenberg
+	public static int defaultNoiseChoice =0;//0=Rice , 1=Offset, 2=nothing
+	public static int defaultFirstChoice =0;//0=Yes , 1=No (weird)
+	public static int defaultMaskChoice =0;//0=Auto , 1=provided
+	public static double defaultStdDevMask =4;//Threshold for significant points is = mean Rice noise + n * sigma rice noise
+	public static int defaultJointSchemeChoice =0;//0=Joint , 1=Separated
+	public static double factorViewNormalisation=1.2;
+	public static double percentageKeepNormalisation=99;
+
+	public int[]dims;
+	public double[]voxs;
 	public int T;
 	public int C;
 	public int X;
@@ -57,8 +59,9 @@ public class HyperMap {
 	public boolean hasT1sequence=false;
 	public boolean hasT1T2sequence=false;
 	public boolean hasMaps=false;
-	public int[]dims;
-	public double[]voxs;
+	public ImagePlus hyperImg;
+	public ImagePlus hyperMaps;
+	public ImagePlus hyperEchoes;
 	public double[][][]Te;
 	public double[][][]Tr;
 	public double [][][]sigmaRice;
@@ -67,11 +70,14 @@ public class HyperMap {
 	public double[][]tabSigmasT1Seq;
 	public double[][]tabSigmasT2Seq;
 	public double[][]tabSigmasT1T2Seq;
-	private double TR_ALPHA=0;
-	private double TE_ALPHA=0;
+	public String name="JOHN-DOE";
+	public double sigmaInUse=0;
+	private double defaultContrastSat=0.35;
+/*	private double TR_ALPHA=0;
+	private double TE_ALPHA=0;*/
 
 	
-	
+
 	
 	/** Main entry points : Main, Instance constructor and static factory ---------------------------------------------------------*/
 	public HyperMap() {}
@@ -79,29 +85,219 @@ public class HyperMap {
 	public HyperMap(ImagePlus hyperImg) {
 		this.hyperImg=hyperImg;
 		setup();
+		adjustContrast();
+	}
+	
+	
+	
+	public String getRangeInfos() {
+		String s="";
+		if(this.hyperMaps!=null) {
+			for(int c=0; c<this.hyperMaps.getNChannels();c++) {
+				s+="Maps channel "+c+" = "+hyperMaps.getStack().getSliceLabel(VitimageUtils.getCorrespondingSliceInHyperImage(hyperMaps, c, 0, 0));
+				int cTemp=hyperMaps.getC();
+				hyperMaps.setC(c+1);
+				s+=" Range=["+hyperMaps.getDisplayRangeMin()+" , "+hyperMaps.getDisplayRangeMax()+"]\n";
+				hyperMaps.setC(cTemp);
+			}
+		}
+		for(int c=0;(this.hyperEchoes!=null) && ((c<2) && (c<this.hyperEchoes.getNChannels()));c++) {
+			int cTemp=hyperEchoes.getC();
+			hyperEchoes.setC(c+1);
+			//s+="\nEchoes channel "+c+" = "+hyperEchoes.getStack().getSliceLabel(VitimageUtils.getCorrespondingSliceInHyperImage(hyperEchoes, c, 0, 0))+"\n";
+			//s+="Range=["+hyperEchoes.getDisplayRangeMin()+" , "+hyperEchoes.getDisplayRangeMax()+"]\n";
+			hyperEchoes.setC(cTemp);
+		}
+		if(this.hyperMaps!=null) {
+			for(int c=0; c<this.hyperMaps.getNChannels()+1;c++) {
+				s+="HyperImg channel "+c+" = "+hyperImg.getStack().getSliceLabel(VitimageUtils.getCorrespondingSliceInHyperImage(hyperImg, c, 0, 0));
+				int cTemp=hyperImg.getC();
+				hyperImg.setC(c+1);
+				s+=" Range=["+hyperImg.getDisplayRangeMin()+" , "+hyperImg.getDisplayRangeMax()+"]\n";
+				hyperImg.setC(cTemp);
+			}
+		}
+		return s;
 	}
 	
 	public static HyperMap hyperMapFactory(HyperMap hyp) {
 		return new HyperMap(hyp.getAsImagePlus());
 	}
 	
-	public ImagePlus getHyperEcho(int c,int t) {
-		if (c>=this.C)return getHyperEcho(this.C-1,t);
-		if(c<0)return getHyperEcho(0,t);
-		if (t>=this.T)return getHyperEcho(c,this.T-1);
-		if(t<0)return getHyperEcho(c,0);
-		return new Duplicator().run(hyperEchoes,c+1,c+1,1,Z,t,t);				
+	public static HyperMap importHyperMapFromRawDicomData(String inputDir,String nameSpecimen) {
+		IJ.log("Starting importation with : \ninputDir="+inputDir+"\nnameSpecimen="+nameSpecimen);
+		Custom_Format_Importer t1t2=new Custom_Format_Importer(inputDir,nameSpecimen);
+		HyperMap hyp=t1t2.importHyperMap();
+		ImagePlus img=hyp.getAsImagePlus();
+		IJ.run(img,"Fire","");
+		HyperMap hyperNew=new HyperMap(img);
+		return hyp;
+	}
+
+
+	
+	public static HyperMap importHyperMapFromCustomData(String path,String pattern) {
+		int TR=1000;
+		int TE=10;
+		boolean hasTR=false;
+		boolean hasTE=false;
+		if( (! pattern.contains("{TE}")) && (!pattern.contains("{TR}")) ){
+			IJ.showMessage("Wrong pattern for a T1 and/or T2 sequence : "+pattern);
+			return null;
+		}
+		if (pattern.contains("{TE}"))hasTE=true;
+		if (pattern.contains("{TR}"))hasTR=true;		
+		System.out.println("Importing from pattern with TE ? "+hasTE+" with TR ?"+hasTR);
+		
+		//Build an arrayList with fileNames
+		String[]files=new File(path).list();
+		for(int i=0;i<files.length;i++) System.out.println(files[i]);
+		System.out.println("Import from custom : arrayList ok");
+
+		
+		
+		//Read corresponding TR / TE
+		String sep="SEPARATOR";
+		ArrayList<double[]>paramList=new ArrayList<double[]>();
+		for(int i=0;i<files.length;i++) {
+			System.out.print("At "+i+" : add ");
+			if(hasTE && hasTR){
+				//Guess that 1) File names does not begin or end by a parameter such as 000010imgtruc.tif or imgdsdsd.tif.000010
+				//And guess that TR and TE params are not concatenated such as img00010050000.tif
+				//And guess that file names does not contain "SEPARATOR"
+				//And guess that file names does not repeat TR and TE values
+				String pat0=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[0];
+				String pat1=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[1];
+				String pat2=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[2];
+				System.out.println("Pat0="+pat0);
+				System.out.println("Pat1="+pat1);
+				System.out.println("Pat2="+pat2);
+				String str=files[i].replace(pat0,sep).replace(pat1, sep).replace(pat2, sep);
+				double val0=Double.parseDouble(str.split(sep)[1]);
+				double val1=Double.parseDouble(str.split(sep)[2]);
+				if(pattern.indexOf("{TR}")<pattern.indexOf("{TE}")){				
+					paramList.add(new double[] {i,val0,val1});
+					System.out.println(""+i+","+val0+","+val1);
+				}
+				else {
+					paramList.add(new double[] {i,val1,val0});
+					System.out.println(""+i+","+val1+","+val0);
+				}
+			}			
+			else if(hasTE){
+				//Guess that 1) File names does not begin or end by a parameter such as 000010imgtruc.tif or imgdsdsd.tif.000010
+				//And guess that file names does not contain "SEPARATOR"
+				//And guess that file names does not repeat TR and TE values
+				String pat0=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[0];
+				String pat1=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[1];
+				System.out.println("Pat0="+pat0);
+				System.out.println("Pat1="+pat1);
+				String str=files[i].replace(pat0,sep).replace(pat1, sep);
+				double val0=Double.parseDouble(str.split(sep)[1]);
+				paramList.add(new double[] {i,TR,val0});
+				System.out.println(""+i+","+TR+","+val0);
+			}			
+			else if(hasTR){
+				//Guess that 1) File names does not begin or end by a parameter such as 000010imgtruc.tif or imgdsdsd.tif.000010
+				//And guess that file names does not contain "SEPARATOR"
+				//And guess that file names does not repeat TR and TE values
+				String pat0=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[0];
+				String pat1=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[1];
+				System.out.println("Pat0="+pat0);
+				System.out.println("Pat1="+pat1);
+				String str=files[i].replace(pat0,sep).replace(pat1, sep);
+				System.out.println(str);
+				double val0=Double.parseDouble(str.split(sep)[1]);
+				paramList.add(new double[] {i,val0,TE});
+				System.out.println(""+i+","+val0+","+TE);
+			}			
+			else {
+				IJ.showMessage("No TR / TE data here : "+files[i]);
+			}			
+		}
+		System.out.println("Import from custom : paramList ok");
+		for(int i=0;i<files.length;i++) {
+			System.out.println(TransformUtils.stringVector(paramList.get(i)," List["+i+"]"));
+		}
+		
+		//Sort the array
+		Collections.sort(paramList, new Comparator<double[]>() {
+			@Override
+			public int compare(double[] o1, double[] o2) {
+				return Double.compare(o1[1]*100000+o1[2],o2[1]*100000+o2[2]);
+			}
+		});
+		System.out.println("Import from custom : sort ok");
+		for(int i=0;i<files.length;i++) {
+			System.out.println(TransformUtils.stringVector(paramList.get(i)," List["+i+"]"));
+		}
+
+		//Stack the data
+		ImagePlus[]imgs=new ImagePlus[files.length];
+		for(int i=0;i<files.length;i++) {
+			imgs[i]=IJ.openImage(new File(path,files[(int)Math.round(paramList.get(i)[0]) ] ).getAbsolutePath() );
+			if(! VitimageUtils.dimensionsMatch(imgs[i],imgs[0])){
+				IJ.showMessage("Warning : dimensions does not match between "+files[(int)Math.round(paramList.get(0)[0])]+" and "+files[(int)Math.round(paramList.get(0)[0])]);
+				return null;
+			}
+		}
+		ImagePlus img=VitimageUtils.hyperStackingChannels(imgs);
+		System.out.println("Import from custom : stacking ok "+VitimageUtils.imageResume(img));
+
+		
+		//Determine type of data
+		boolean hasT1Seq=false;
+		boolean hasT2Seq=false;
+		boolean hasT1T2Seq=false;
+		for(int i=0;i<files.length;i++) {
+			if(paramList.get(i)[1]!=paramList.get(0)[1])hasT1Seq=true;
+			if(paramList.get(i)[2]!=paramList.get(0)[2])hasT2Seq=true;
+		}
+		if(hasT1Seq && hasT2Seq)hasT1T2Seq=true;
+		String seq=(hasT1T2Seq ? "T1T2SEQ" : (hasT1Seq ? "T1SEQ" : "T2SEQ"));
+		System.out.println("Import from custom : type of data ok : "+seq);
+
+		
+		//Write seq parameters in metadata
+		for(int c=0;c<img.getNChannels();c++) {
+			for(int z=0;z<img.getNSlices();z++) {
+				int sli=VitimageUtils.getCorrespondingSliceInHyperImage(img,c, z, 0);
+				ImageProcessor imgP=img.getStack().getProcessor(sli);
+				double[]stats=MRUtils.getBackgroundStatsFromProcessorTight(imgP);
+				double sigmaRice=RiceEstimator.computeRiceSigmaFromBackgroundValuesStatic(stats[0],stats[1]);
+				double tr=paramList.get(c)[1];
+				double te=paramList.get(c)[2];
+				String chain=seq+"_CUSTOM_TR="+VitimageUtils.dou(tr)+"_TE="+VitimageUtils.dou(te)+"_SIGMARICE="+VitimageUtils.dou(sigmaRice);
+				img.getStack().setSliceLabel(chain,VitimageUtils.getCorrespondingSliceInHyperImage(img,c, z, 0) );
+			}		
+		}
+		
+		return  new HyperMap(img);
 	}
 	
-	public static HyperMap importHyperMapFromNifti4D(String path,String imageName,double Tr, double TeSpacing) {
+	
+	//TODO : use more features of nifti metadata (radiologic convention for example) in more handsome functions, in a specific class NiftiImporter
+	/** Main entry points : Nifti handling ---------------------------------------------------------*/
+	public static HyperMap importHyperMapFromNifti4DT2Sequence(String path,String imageName,double Tr, double TeSpacing) {
 		ImagePlus img2=IJ.openImage(path);
-//		img2.show();
-		img2.setTitle("Readen Nifti");
+		boolean isOldBioImage=false;
+		if(img2==null) {
+			isOldBioImage=true;
+			img2=IJ.getImage();
+		}
+		IJ.run(img2, "Flip Vertically", "stack");
+		
+		if(isOldBioImage) {
+			String s=img2.getTitle();
+			img2.setTitle("Readen Nifti");
+			ImagePlus tmp=ij.WindowManager.getImage(new File(path).getName());
+			if(tmp != null)tmp.close();
+			if(img2!=null)img2.hide();
+		}
+		
 		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
-		//		tab[0].show();
 		tab[0].setTitle("Readen tab0");
 		ImagePlus img=VitimageUtils.hyperStackingChannels(tab);
-		//img.show();
 		img.setTitle("Stacken Nifti");
 		
 		for(int c=0;c<img.getNChannels();c++) {
@@ -118,22 +314,195 @@ public class HyperMap {
 		}
 		
 		HyperMap hyper=new HyperMap(img);
+		hyper.adjustContrast();
 		return hyper;
 	}
+
+	public static HyperMap importHyperMapFromNifti4DT2Sequence(String path,String imageName,double Tr, double Tes[]) {
+		ImagePlus img2=IJ.openImage(path);
+		img2.setTitle("Readen Nifti");
+		IJ.run(img2, "Flip Vertically", "stack");
+		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
+		tab[0].setTitle("Readen tab0");
+		ImagePlus img=VitimageUtils.hyperStackingChannels(tab);
+		img.setTitle("Stacken Nifti");
 		
-	public static HyperMap importHyperMapFromRawDicomData(String inputDir,String nameSpecimen) {
-		Custom_Format_Importer t1t2=new Custom_Format_Importer(inputDir,nameSpecimen);
-		return t1t2.importHyperMap();
+		for(int c=0;c<img.getNChannels();c++) {
+			for(int z=0;z<img.getNSlices();z++) {
+				int sli=VitimageUtils.getCorrespondingSliceInHyperImage(img,c, z, 0);
+				ImageProcessor imgP=img.getStack().getProcessor(sli);
+				double[]stats=MRUtils.getBackgroundStatsFromProcessorTight(imgP);
+				double sigmaRice=RiceEstimator.computeRiceSigmaFromBackgroundValuesStatic(stats[0],stats[1]);
+				double tr=Tr;
+				double te=Tes[c];
+				String chain="T2SEQ_NIFTI_TR="+VitimageUtils.dou(tr)+"_TE="+VitimageUtils.dou(te)+"_SIGMARICE="+VitimageUtils.dou(sigmaRice);
+				img.getStack().setSliceLabel(chain,VitimageUtils.getCorrespondingSliceInHyperImage(img,c, z, 0) );
+			}		
+		}
+		
+		HyperMap hyper=new HyperMap(img);
+		hyper.adjustContrast();
+		return hyper;
 	}
+
+	public static HyperMap importHyperMapFromNifti4DSequence(String path,String imageName,Object[]niftiInfos) {
+		ImagePlus img2=IJ.openImage(path);
+		IJ.run(img2, "Flip Vertically", "stack");
+		img2.setTitle("Readen Nifti");
+		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
+		tab[0].setTitle("Readen tab0");
+		ImagePlus img=VitimageUtils.hyperStackingChannels(tab);
+		img.setTitle("Stacken Nifti");
+		
+		for(int c=0;c<img.getNChannels();c++) {
+			for(int z=0;z<img.getNSlices();z++) {
+				int sli=VitimageUtils.getCorrespondingSliceInHyperImage(img,c, z, 0);
+				ImageProcessor imgP=img.getStack().getProcessor(sli);
+				double[]stats=MRUtils.getBackgroundStatsFromProcessorTight(imgP);
+				double sigmaRice=RiceEstimator.computeRiceSigmaFromBackgroundValuesStatic(stats[0],stats[1]);
+				MRDataType mr=((MRDataType[])niftiInfos[0])[c];
+				double tr=((double[])(niftiInfos[1]))[c];
+				double te=((double[])(niftiInfos[2]))[c];
+				String chain=""+mr+"_NIFTI_TR="+VitimageUtils.dou(tr)+"_TE="+VitimageUtils.dou(te)+"_SIGMARICE="+VitimageUtils.dou(sigmaRice);
+				img.getStack().setSliceLabel(chain,VitimageUtils.getCorrespondingSliceInHyperImage(img,c, z, 0) );
+			}		
+		}
+		
+		HyperMap hyper=new HyperMap(img);
+		hyper.adjustContrast();
+		return hyper;
+	}
+
+	public static HyperMap importHyperMapFromNifti4DT1Sequence(String path,String imageName,double []Tr, double TeSpacing) {
+		ImagePlus img2=IJ.openImage(path);
+		img2.setTitle("Readen Nifti");
+		IJ.run(img2, "Flip Vertically", "stack");
+		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
+		tab[0].setTitle("Readen tab0");
+		ImagePlus img=VitimageUtils.hyperStackingChannels(tab);
+		img.setTitle("Stacken Nifti");
+		if(img.getNChannels()!=Tr.length) {
+			IJ.showMessage("Sorry, but the number of channels in Nifti image : "+img.getNChannels()+" differs from the number of provided Tr : "+Tr.length);
+			return null;
+		}
+		
+		for(int c=0;c<img.getNChannels();c++) {
+			for(int z=0;z<img.getNSlices();z++) {
+				int sli=VitimageUtils.getCorrespondingSliceInHyperImage(img,c, z, 0);
+				ImageProcessor imgP=img.getStack().getProcessor(sli);
+				double[]stats=MRUtils.getBackgroundStatsFromProcessorTight(imgP);
+				double sigmaRice=RiceEstimator.computeRiceSigmaFromBackgroundValuesStatic(stats[0],stats[1]);
+				double tr=Tr[c];
+				double te=TeSpacing;
+				String chain="T1SEQ_NIFTI_TR="+VitimageUtils.dou(tr)+"_TE="+VitimageUtils.dou(te)+"_SIGMARICE="+VitimageUtils.dou(sigmaRice);
+				img.getStack().setSliceLabel(chain,VitimageUtils.getCorrespondingSliceInHyperImage(img,c, z, 0) );
+			}		
+		}
+		
+		HyperMap hyper=new HyperMap(img);
+		hyper.adjustContrast();
+		return hyper;
+	}
+
+	public static HyperMap importHyperMapFromNifti4DUnknownSequence(String path,String imageName) {
+		ImagePlus img2=IJ.openImage(path);
+		System.out.println("Opening image from "+path);
+		IJ.run(img2, "Flip Vertically", "stack");
+		IJ.log(VitimageUtils.imageResume(img2));
+		IJ.log("Readen Nifti");
+		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
+		ImagePlus img=VitimageUtils.hyperStackingChannels(tab);
+
+		IJ.log("GetNiftinInfos");
+		Object[] objs=getNiftiInfos(img.getNChannels());
+		IJ.log("GotNiftinInfos");
+		if(objs==null) {
+			IJ.log("Niftin infos were null");
+			return null;
+		}
+		return importHyperMapFromNifti4DSequence(path, imageName, objs);
+	}		
+
+	public static Object[] getNiftiInfos(int nChannels) {	
+		IJ.log("Entering GetNiftinInfos");
+		
+		//Parameters for automatic registration
+		GenericDialog gd= new GenericDialog("Nifti importer");
+		String[]choice=new String[] {"It is a series of T1-weighted image","It is a series of T2-weighted image", "It is a series where both recovery and echo times varies"};
+		gd.addChoice("Choose data type",choice,choice[1]);
+        gd.showDialog();    if (gd.wasCanceled()) return null;	        
+		
+        int choi=gd.getNextChoiceIndex();
+        
+        if(choi==1) {//T2 series
+    		IJ.log("GetNiftinInfos --> T2 series");
+    		GenericDialog gd2= new GenericDialog("Populate channel informations");
+    		gd2.addNumericField("Recovery time ", 1000, 0, 4, "ms");
+    		gd2.addNumericField("First echo ", 10, 0, 4, "ms");
+    		gd2.addNumericField("Echo spacing ", 10, 0, 4, "ms");
+            gd2.showDialog();    if (gd2.wasCanceled()) return null;	        
+            double tr=gd2.getNextNumber();
+            double te0=gd2.getNextNumber();
+            double tedelta=gd2.getNextNumber();
+
+            MRDataType[]mr=new MRDataType[nChannels];
+        	double[]trs=new double[nChannels];
+        	double[]tes=new double[nChannels];
+        	
+        	for(int c=0;c<nChannels;c++) {
+        		mr[c]=MRDataType.T2SEQ;
+        		trs[c]=tr;
+        		tes[c]=te0+c*tedelta;
+        	}
+    		IJ.log("GetNiftinInfos --> End T2 series");
+        	return new Object[] {mr,trs,tes,new Boolean[]{true,false,false}};
+        }
+        if(choi==0) {//T1 series
+    		GenericDialog gd2= new GenericDialog("Populate channel informations");
+    		gd2.addNumericField("Echo time ", 10, 0, 4, "ms");
+    		gd2.addStringField("Recovery times (use ; as a separator)=", "600 ; 1200 ; 2400", 100);
+            gd.showDialog();    if (gd.wasCanceled()) return null;	        
+            double te=gd2.getNextNumber();
+            String  stringTr=gd2.getNextString();
+            String[]strInt=stringTr.replace(" ","").split(";");
+            double[]trints=new double[strInt.length];
+        	for(int d=0;d<trints.length;d++) {
+                try{
+        		trints[d]=Double.parseDouble(strInt[d]);
+                }catch(Exception e) {IJ.showMessage("Wrong Double read : "+strInt[d]+" in string "+stringTr);return null;}
+        	}
+
+            MRDataType[]mr=new MRDataType[nChannels];
+        	double[]trs=new double[nChannels];
+        	double[]tes=new double[nChannels];
+        	
+        	for(int c=0;c<nChannels;c++) {
+        		mr[c]=MRDataType.T1SEQ;
+        		trs[c]=trints[c];
+        		tes[c]=te;
+        	}
+        	return new Object[] {mr,trs,tes,new Boolean[]{true,false,false}};
+        }
+        
+        if(choi==2) {//Both
+        	IJ.showMessage("Sorry, it seems that this functionality is not yet implemented for this kind of data. Please, contact our support : romain.fernandez@cirad.fr");
+        	return null;
+        }
+    	return null;
+ 	}
 
 	public ImagePlus getAsImagePlus() {
 		return hyperImg.duplicate();
 	}
 	
 	public static void main(String[]args) {
-	   		ImageJ ij=new ImageJ();
+   		@SuppressWarnings("unused")
+		ImageJ ij=new ImageJ();
+   		runDebugTest();
+	}
 
-	   		ImagePlus imgTest=IJ.openImage("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Tests_Refactoring/3_Computed_Maps/hyper.tif");
+	public static void runDebugTest() {
+		ImagePlus imgTest=IJ.openImage("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Tests_Refactoring/3_Computed_Maps/hyper.tif");
 		imgTest.show();
 		HyperMap hypTest=new HyperMap(imgTest);
 		ImagePlus res=hypTest.simulateOutlierRemoval(150,150,250,250,0,0);
@@ -165,6 +534,7 @@ public class HyperMap {
 	   		}
 	   	}
 
+	
 
 	
 	
@@ -328,83 +698,6 @@ public class HyperMap {
 	
 	
 	
-	
-	
-	/** Helpers for capillary measurements and hypermap normalization--------------------------------------------------------- */	
-	public static double measureMeanCapillaryValueAlongZ(ImagePlus imgM0) {
-		//Find capillary in the central slice
-		ImagePlus img=new Duplicator().run(imgM0,1,1,imgM0.getNSlices()/2+1,imgM0.getNSlices()/2+1,1,1);
-		int []coordsCentral=VitimageUtils.findCapillaryCenterInSlice(img,VitimageUtils.bionanoCapillaryRadius);
-		
-		//Find best match for the capillary in other slices, in a neighbourhood around, and measure its value
-		double[]vals=VitimageUtils.capillaryValuesAlongZStatic(imgM0,coordsCentral,VitimageUtils.bionanoCapillaryRadius);
-		System.out.println("Mean capillary values="+TransformUtils.stringVectorN(vals, ""));
-		return VitimageUtils.statistics1D(vals)[0];
-	}
-		
-	public double[]measureCapillaryValuesInM0Map(int time){
-		//Find capillary in the central slice
-		ImagePlus img=new Duplicator().run(hyperImg,1,1,Z/2+1,Z/2+1,time+1,time+1);
-		int []coordsCentral=VitimageUtils.findCapillaryCenterInSlice(img,VitimageUtils.bionanoCapillaryRadius);
-		
-		//Find best match for the capillary in other slices, in a neighbourhood around, and measure its value
-		return capillaryValuesAlongZ(time,coordsCentral,VitimageUtils.bionanoCapillaryRadius);
-	}
-
-	public double[]capillaryValuesAlongZ(int time,int[]coords,double capillaryRadius){
-		IJ.log("\nCapillary detection at time="+time+".\nStarting from coordinates :"+coords[0]+", "+coords[1]);
-		Duplicator dup=new Duplicator();
-		int rayPix=(int)Math.round(capillaryRadius/(voxs[0]));
-		int semiRayPix=rayPix/2;
-		int lookupRadius=(int)Math.round(1.5*rayPix);
-
-		int xMed=coords[0];int yMed=coords[1];int zMed=dims[2]/2;
-		double[]capVals=new double[dims[2]];
-		ImagePlus imgTemp,img3D;
-		int xLast=xMed,yLast=yMed;
-		long t0= System.currentTimeMillis();
-
-		img3D=dup.run(hyperMaps,1,1,1,Z,time+1,time+1);
-		for(int z=zMed;z>=0;z--) {
-			//Extract a patch around the finding of upside
-			imgTemp=VitimageUtils.cropImageFloat(img3D,xLast-lookupRadius,yLast-lookupRadius,z, lookupRadius*2,lookupRadius*2,1);
-			//Find cap center in it
-			int[]coordsNew=VitimageUtils.findCapillaryCenterInSlice(imgTemp,VitimageUtils.bionanoCapillaryRadius);
-			
-			//Update coordinates of last
-			xLast=xLast-lookupRadius+coordsNew[0];
-			yLast=yLast-lookupRadius+coordsNew[1];
-
-			//Gather information of M0 value
-			double[]stats=VitimageUtils.statistics1D(VitimageUtils.valuesOfBlock(img3D,xLast-semiRayPix, yLast-semiRayPix, z-1,xLast+semiRayPix, yLast+semiRayPix, z+1));
-			IJ.log("Capillary detected at z="+z+" at coordinates "+xLast+", "+yLast+" with M0="+stats[0]+" std="+stats[1]);
-			capVals[z]=stats[0];
-		}
-		xLast=xMed;
-		yLast=yMed;
-		for(int z=zMed;z<dims[2];z++) {
-			//Extract a patch around the finding of upside
-			imgTemp=VitimageUtils.cropImageFloat(img3D,xLast-lookupRadius,yLast-lookupRadius, z, lookupRadius*2,lookupRadius*2,1);
-			
-			//Find cap center in it
-			int[]coordsNew=VitimageUtils.findCapillaryCenterInSlice(imgTemp,VitimageUtils.bionanoCapillaryRadius);
-			
-			//Update coordinates of last
-			xLast=xLast-lookupRadius+coordsNew[0];
-			yLast=yLast-lookupRadius+coordsNew[1];
-			
-			//Gather information of M0 value
-			double[]stats=VitimageUtils.statistics1D(VitimageUtils.valuesOfBlock(img3D,xLast-semiRayPix, yLast-semiRayPix, z-1,xLast+semiRayPix, yLast+semiRayPix, z+1));
-			System.out.println("Capillary detected at z="+z+" at coordinates "+xLast+", "+yLast+" with M0="+stats[0]+" std="+stats[1]);
-			capVals[z]=stats[0];
-		}
-		return capVals;
-	}
-
-
-
-	
-	
     
     
 	/** Helpers for accessing to data subparts ---------------------------------------------------------*/	
@@ -438,18 +731,49 @@ public class HyperMap {
 	}
 
 	public ImagePlus getT2EchoesImage(int t) {
-		int nbT1=getT1SeqNumberReps(t);
 		int nbT2=getT2SeqNumberReps(t);		
-		IJ.log("Effectivement : nbT2="+nbT2);
 		if(!hasT1sequence) {
-			IJ.log("Effectivement : alt1");
 			return new Duplicator().run(hyperEchoes,1,nbT2,1,Z,1,T);
 		}
-		IJ.log("Effectivement : alt2");
 		return new Duplicator().run(hyperEchoes,getT1SeqNumberReps(t)+1,getT1SeqNumberReps(t)+getT2SeqNumberReps(t),1,Z,1,T);
 	}
 
+	public ImagePlus getHyperEcho(int c,int t) {
+		if (c>=this.C)return getHyperEcho(this.C-1,t);
+		if(c<0)return getHyperEcho(0,t);
+		if (t>=this.T)return getHyperEcho(c,this.T-1);
+		if(t<0)return getHyperEcho(c,0);
+		return new Duplicator().run(hyperEchoes,c+1,c+1,1,Z,t,t);				
+	}
+
+
+	public String toString() {
+		String s="";
+		s+="HyperMap "+this.name+"\n X Y Z = "+this.X+" x "+this.Y+" x "+this.Z+"\n";
+		s+=" C Ctot T = "+this.C+" , "+this.Ctot+" , "+this.T;
+		s+="\nVoxel sizes"+TransformUtils.stringVector(this.voxs,"");
+		s+="\n\nHas T1 data ? "+this.hasT1sequence;
+		s+="\nHas T2 data ? "+this.hasT2sequence;
+		s+="\nHas T1T2 data ? "+this.hasT1T2sequence;
+		s+="\nHas built maps ? "+this.hasMaps+"\n\n";
+		
+		for(int t=0; t<T ; t++) {
+			s+="\n";
+			s+="\n";
+			for(int c=0; c<mrDataType[t].length;c++) {
+				s+="\n";
+				s+="MRdataType["+t+"]["+c+"]="+mrDataType[t][c];
+			}
+			s+="\n";
+			for(int c=0; c<Te[t][0].length;c++) {
+				s+="\n";
+				s+="TrTe["+t+"]["+c+"]="+Tr[t][0][c]+" , "+Te[t][0][c];
+			}
+		}
+		return s;
+	}
 	
+
 
 	
 	
@@ -597,20 +921,13 @@ public class HyperMap {
 	public double[][][]getT1T2TrTeTimes(int t){
 		int incr=0;
 		double[][][]ret=new double[dims[2]][getT1T2SeqNumberReps(t)][2];
-		System.out.println("DEB IN HYPERMAP We are here");
-		System.out.println("HasMaps ?"+hasMaps);
-		System.out.println("Nmaps="+nMaps);
-		System.out.println("C="+C);
-		System.out.println("Ctot="+Ctot);
-		for(int c=0;c<this.Ctot;c++) {
-			System.out.print("Running c="+c+" "+mrDataType[t][c]+" index="+(c-((hasMaps||true) ? nMaps : 0)+" size="+this.Tr[t][0].length)+" incr="+incr);
-			if((mrDataType[t][c]==MRDataType.T1SEQ) || (mrDataType[t][c]==MRDataType.T2SEQ)) {
-				System.out.println("IN");
-				for(int z=0;z<dims[2];z++)ret[z][incr]=new double[] {this.Tr[t][z][c-((hasMaps||true) ? nMaps : 0)],this.Te[t][z][c-((hasMaps||true) ? nMaps : 0)]};
+		for(int c : getT1T2Indices(t)) {
+	//	for(int c=0;c<this.Ctot;c++) {
+			//if((mrDataType[t][c]==MRDataType.T1SEQ) || (mrDataType[t][c]==MRDataType.T2SEQ)) {
+//			for(int z=0;z<dims[2];z++)ret[z][incr]=new double[] {this.Tr[t][z][c-((hasMaps||true) ? nMaps : 0)],this.Te[t][z][c-((hasMaps||true) ? nMaps : 0)]};
+				for(int z=0;z<dims[2];z++)ret[z][incr]=new double[] {this.Tr[t][z][c],this.Te[t][z][c]};
 				incr++;
-			}
-			else 				System.out.println("OUT");
-
+			//}
 		}
 		return ret;
 	}
@@ -618,11 +935,14 @@ public class HyperMap {
 	public double[][][]getT1TrTeTimes(int t){
 		int incr=0;
 		double[][][]ret=new double[dims[2]][getT1SeqNumberReps(t)][2];
-		for(int c=0;c<this.Ctot;c++) {
-			if(mrDataType[t][c]==MRDataType.T1SEQ) {
-				for(int z=0;z<dims[2];z++) ret[z][incr]=new double[] {this.Tr[t][z][c-(hasMaps ? nMaps : 0)],this.Te[t][z][c-(hasMaps ? nMaps : 0)]};
+		for(int c : getT1Indices(t)) {
+//			if(mrDataType[t][c]==MRDataType.T1SEQ) {
+				for(int z=0;z<dims[2];z++) {
+					ret[z][incr]=new double[] {this.Tr[t][z][c],this.Te[t][z][c]};
+					//ret[z][incr]=new double[] {this.Tr[t][z][c-(hasMaps ? nMaps : 0)],this.Te[t][z][c-(hasMaps ? nMaps : 0)]};
+				}
 				incr++;
-			}
+	//		}
 		}
 		return ret;
 	}
@@ -630,11 +950,13 @@ public class HyperMap {
 	public double[][][]getT2TrTeTimes(int t){
 		int incr=0;
 		double[][][]ret=new double[dims[2]][getT2SeqNumberReps(t)][2];
-		for(int c=0;c<this.Ctot;c++) {
-			if(mrDataType[t][c]==MRDataType.T2SEQ) {
-				for(int z=0;z<dims[2];z++) ret[z][incr]=new double[] {this.Tr[t][z][c-(hasMaps ? nMaps : 0)],this.Te[t][z][c-(hasMaps ? nMaps : 0)]};
+//		for(int c=0;c<this.Ctot;c++) {
+		for(int c : getT2Indices(t)) {
+//			if(mrDataType[t][c]==MRDataType.T2SEQ) {
+						for(int z=0;z<dims[2];z++) ret[z][incr]=new double[] {this.Tr[t][z][c],this.Te[t][z][c]};
+	//			for(int z=0;z<dims[2];z++) ret[z][incr]=new double[] {this.Tr[t][z][c-(hasMaps ? nMaps : 0)],this.Te[t][z][c-(hasMaps ? nMaps : 0)]};
 				incr++;
-			}
+	//		}
 		}
 		return ret;
 	}
@@ -675,20 +997,17 @@ public class HyperMap {
 		zm=Math.max(0, z-crossThick);
 		zM=Math.min(Z-1, z+crossThick);
 
-		int xm2,ym2,xM2,yM2,zm2,zM2;
+		int xm2,ym2,xM2,yM2;
 		xm2=Math.max(0, x-crossWidth-5);
 		xM2=Math.min(X-1, x+crossWidth+5);
 		ym2=Math.max(0, y-crossWidth-5);
 		yM2=Math.min(Y-1, y+crossWidth+5);
 
-		int deltaX=xm-xm2;
-		int deltaY=ym-ym2;
 		
 		int[][]t1t2Indices=this.getT1T2Indices();
 		int nHits=(xM-xm+1)*(yM-ym+1)*(zM-zm+1);
 		double[][][][]data= new double[T][nHits][1][];//[times][vox][Seq][echos]
 		
-		float[]pixels;
 		int currentChan;
 		int index;
 		
@@ -735,7 +1054,7 @@ public class HyperMap {
 		temp=VitimageUtils.gaussianFilteringMultiChannel(temp,sigmaXYInVoxels,sigmaXYInVoxels,0);//It's no error : no "big smootphrahing" over Z, due to misalignment
 		double[][][][]data= new double[t1t2Indices.length][nHits][1][];//[times][vox][Seq][echos]		
 		int currentChan;
-		int index,xx,yy;	
+		int xx,yy;	
 		for(int t=0;t<this.T;t++) {			
 			for(int vo=0;vo<nHits;vo++) {
 				xx=coordinates[vo][0]-bboxX0;
@@ -774,10 +1093,96 @@ public class HyperMap {
 	}	
 	
 	
-	
-	
-	
-	
+/*
+	public static double getMaxValueForContrastIntelligent(ImagePlus img,int channel,int time,int z,double percentageKeep,double factor) {
+		int nBins=256;
+		int cOld=img.getC();
+		int tOld=img.getT();
+		int zOld=img.getZ();
+		img.setC(channel);
+		img.setT(time);
+		img.setZ(z);
+		ImageStatistics stats = img.getStatistics(ImagePlus.AREA+ImagePlus.MEAN+ImagePlus.MODE+ImagePlus.MIN_MAX, nBins);
+		double[] y = stats.histogram();
+		double wid=stats.binSize;
+		double sum=0;for(double yy : y)sum+=yy;
+		double cum=0;int indexFin=0;
+		while(cum<sum*(percentageKeep/100.0)){cum+=y[indexFin++];if(false && cum>sum*0.95)System.out.println("Trying threshold index "+indexFin+" = "+(indexFin*wid)+" : cum="+cum+"/"+sum);}
+		return (factor*(wid*indexFin));
+	}
+	*/
+	public static double getMaxValueForContrastMoreIntelligent(ImagePlus img2,int channel,int time,int z,double percentageKeep,double factor) {
+		Timer t=new Timer();
+		int nBins=256;
+		int X=img2.getWidth();
+		int Y=img2.getHeight();
+		ImagePlus img=new Duplicator().run(img2,channel+1,channel+1,z+1,z+1,time+1,time+1);
+		double []d=VitimageUtils.valuesOfBlock(img, 0, 0, 0, X-1, Y-1, 0);
+		Arrays.sort(d);
+		int index=(int)Math.round(d.length*percentageKeep/100.0);
+		//System.out.println("Setting with index="+index+"/"+d.length+" . Val0="+d[0]+" valindex="+d[index]+" valfinale="+d[d.length-1]);
+		t.print("After sorting");
+		return (d[index]*factor);
+	}
+
+
+
+	public void adjustContrast() {
+		ImagePlus echoes2=this.getEchoesImage();
+		ImagePlus echoes=new Duplicator().run(echoes2,1,echoes2.getNChannels(),1,echoes2.getNSlices(),1,1);
+		if(hasMaps) {
+			ImagePlus maps2=this.getMapsImage();
+			ImagePlus maps=new Duplicator().run(maps2,1,maps2.getNChannels(),1,maps2.getNSlices(),1,1);
+			double[][]rangesMaps=new double[maps.getNChannels()][2];
+			for(int c=0;c<maps.getNChannels();c++) {
+				ImagePlus mapTemp=new Duplicator().run(maps,c+1,c+1,maps.getNSlices()/2+1,maps.getNSlices()/2+1,1,1);
+				rangesMaps[c]=new double[] {0,getMaxValueForContrastMoreIntelligent(mapTemp,1,1,1,percentageKeepNormalisation,factorViewNormalisation)};
+			}
+			maps=this.hyperMaps;
+			for(int t=0;t<T;t++) {
+				maps.setT(t+1);
+				this.hyperImg.setT(t+1);
+				for(int c=0;c<nMaps;c++) {
+					maps.setC(c+1);
+					maps.setDisplayRange(rangesMaps[c][0], rangesMaps[c][1]);
+					this.hyperImg.setC(c+1);
+					this.hyperImg.setDisplayRange(rangesMaps[c][0], rangesMaps[c][1]);
+					//System.out.println("Setting at "+t+" , "+c+" : |"+rangesMaps[c][0]+","+rangesMaps[c][1]+"|");
+				}
+			}
+			maps.updateAndDraw();
+		}
+		
+		
+		ImagePlus maxEcho=VitimageUtils.maxOfImageArray(VitimageUtils.stacksFromHyperstackFastBis(echoes));
+		maxEcho.setZ(maxEcho.getNSlices()/2+1);
+		double[]rangesEchoes=new double[] {0,getMaxValueForContrastMoreIntelligent(maxEcho,1,1,1,percentageKeepNormalisation,factorViewNormalisation)};
+
+		
+		echoes=this.hyperEchoes;
+		for(int t=0;t<T;t++) {
+			echoes.setT(t+1);
+			this.hyperImg.setT(t+1);
+			for(int c=0;c<echoes.getNChannels();c++) {
+				echoes.setC(c+1);
+				echoes.setDisplayRange(rangesEchoes[0], rangesEchoes[1]);
+				this.hyperImg.setC(c+1+(hasMaps ? nMaps : 0));
+				this.hyperImg.setDisplayRange(rangesEchoes[0], rangesEchoes[1]);
+				IJ.run(echoes,"Fire","");
+				IJ.run(hyperImg,"Fire","");
+			}
+		}
+		echoes.setT(1);
+		echoes.setC(1);
+		echoes.setZ(1);
+		hyperImg.setT(1);
+		hyperImg.setC(1);
+		hyperImg.setZ(1);
+		echoes.updateAndDraw();
+		hyperImg.updateAndDraw();
+	}
+
+
 	
 	
 	/** Maps computation routine---------------------------------------------------------*/	
@@ -789,7 +1194,15 @@ public class HyperMap {
 		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,noise,false,null,4);
 	}
 
+	public ImagePlus computeMapsNoJoint() {
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,true,NoiseManagement.RICE,false,null,4);
+	}
 	
+	public ImagePlus computeMapsNoJoint(NoiseManagement noi) {
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,true,noi,false,null,4);
+	}
+
+
 	public ImagePlus computeMapsWithMask(ImagePlus mask) {
 		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,mask,4);
 	}
@@ -799,9 +1212,20 @@ public class HyperMap {
 		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,nStdDevForMask);
 	}
 
+	public ImagePlus computeMaps(double[]paramsGUI,ImagePlus imgMask) {
+		int algType=(paramsGUI[0]==0) ? MRUtils.SIMPLEX : MRUtils.LM;
+		NoiseManagement noi=null;
+		boolean separated=(paramsGUI[5]!=0);
+		boolean forgetFistEcho=(paramsGUI[2]!=0);
+		if(paramsGUI[1]==0)noi=NoiseManagement.RICE;
+		else noi=(paramsGUI[1]==1 ? NoiseManagement.OFFSET : NoiseManagement.NOTHING);
+		double nbStd=paramsGUI[4];
+		return computeMapsAgainAndMask(algType,separated ,noi,forgetFistEcho,imgMask,nbStd);
+	}
 
 	public ImagePlus computeMapsAgainAndMask(int algType,boolean separated,NoiseManagement noise,boolean forgetFirstEcho,ImagePlus imgMaskUser,double nbStdNoiseAroundMeanForSelection) {
 		if(T>1) {
+			
 			ImagePlus []imgTab=new ImagePlus[T];
 			for(int t=0;t<T;t++) {
 				ImagePlus imgTemp=new Duplicator().run(this.hyperImg,1,hasMaps ? Ctot : C,1,Z,t+1,t+1);
@@ -818,7 +1242,11 @@ public class HyperMap {
 				img.setC(c+1);
 				img.setDisplayRange(ranges[c][0],ranges[c][1]);
 			}
+			this.hasMaps=true;
 			this.updateBothFromNewHyperImg(img);
+//			System.out.println("Just before adjust at the end\n"+this.getRangeInfos()+"\n\n");
+			adjustContrast();
+//			System.out.println("Just after adjust at the end\n"+this.getRangeInfos()+"\n\n");
 			return this.hyperImg;
 		}
 
@@ -842,7 +1270,6 @@ public class HyperMap {
 		else {
 			int index=0;
 			if(hasT2sequence) {
-				System.out.println(TransformUtils.stringVectorN(getT2Indices()[0], ""));
 				index=getT2Indices()[0][forgetFirstEcho ? 1 : 0];
 			}
 			else index=getT1Indices()[0][getT1Indices()[0].length-1];
@@ -867,17 +1294,15 @@ public class HyperMap {
 		//Compute the needed fits
 		Timer t;
 		t=new Timer();
-		t.print("\nStarting fitting with "+algType);		
 		if(!hasT1T2sequence) {
-			//Si only T1 compute PD T1 et les stack dans l'hypermap
+			//If only T1 compute PD T1 and stack it into hypermap
 			if(hasT1sequence) {
 				if(noise==NoiseManagement.OFFSET || noise==NoiseManagement.NOTHING) {
 					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1_MONO,algType,false,false);		
 				}
 				else maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1_MONO_RICE,algType,false,false);	
-				//typeMaps=new MRDataType[] {MRDataType.PDMAP,MRDataType.T1MAP};
 			}
-			//Si only T2 compute PD T1 et les stack dans l'hypermap
+			//if only T2 compute PD T1 and stack it into hypermap
 			if(hasT2sequence) {
 				if(noise==NoiseManagement.NOTHING) {
 					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T2_MONO,algType,false,false);		
@@ -922,18 +1347,18 @@ public class HyperMap {
 				}
 			}
 		}
-		t.print("End fitting");
-		VitimageUtils.waitFor(200);
-		System.out.println("Time per voxel = "+(VitimageUtils.dou(t.getTime()*1000.0/nVox))) ;
+		t.print("End fitting, time per voxel = "+(VitimageUtils.dou(t.getTime()*1000.0/nVox)));
+		VitimageUtils.waitFor(20);
 		
 		//Handle image range for viewing
 		double maxPD=VitimageUtils.maxOfImage(VitimageUtils.maxOfImageArray(imgT1T2Line))*MRUtils.maxDisplayedPDratio;
-		double maxT1=VitimageUtils.max(getT1T2TrTimes()[0][0])*MRUtils.maxDisplayedT1ratio;
+		double maxT1=VitimageUtils.max(getT1TrTimes()[0][0])*MRUtils.maxDisplayedT1ratio;
+		if(maxT1<3500)maxT1=MRUtils.minPossibleMaxT1;
 		double maxT2=VitimageUtils.max(getT1T2TeTimes()[0][0])*MRUtils.maxDisplayedT2ratio;
 
 
 		//In case of a computed mask, also apply the threshold routine to the PD results to compose a single excluding mask
-		if(!maskGiven) {
+		if(!maskGiven) {			
 			ImagePlus imgMask2=VitimageUtils.getFloatBinaryMask(maps[0],(1.2+nbStdNoiseAroundMeanForSelection)*meanRice,1E10);			
 			imgMask=VitimageUtils.makeOperationBetweenTwoImages(imgMask,imgMask2,2,true);
 		}
@@ -952,18 +1377,14 @@ public class HyperMap {
 		}
 
 		ImagePlus []tempRes=new ImagePlus[C+nMaps];
-		System.out.println("C="+C);
-		System.out.println("nMaps="+nMaps);
 		for(int m=0;m<nMaps-1;m++) {
 			tempRes[m]=maps[m];
 		}
 		tempRes[nMaps-1]=imgMask;
 		for(int c=0;c<imgT1T2Line.length;c++) {
-		//	System.out.println("Copie de "+(c)+" vers le canal "+(c+nMaps));
 			tempRes[c+nMaps]=imgT1T2Line[c];
 		}
 		
-		//for(int i=0;i<tempRes.length;i++)VitimageUtils.printImageResume(tempRes[i],""+i);
 		ImagePlus newHyperImg=Concatenator.run(tempRes);
 		VitimageUtils.printImageResume(newHyperImg,"New hyperMap");
 
@@ -973,20 +1394,11 @@ public class HyperMap {
 		hyperMaps=new Duplicator().run(hyperImg,1,nMaps,1,Z,1,T);
 		hyperEchoes=new Duplicator().run(hyperImg,nMaps+1,Ctot,1,Z,1,T);
 
-		//Update ranges and luts
-		for(int c=0;c<Ctot;c++) {
-			if(c<nMaps && (mrDataType[0][c]==MRDataType.PDMAP)) {hyperImg.setC(c+1);hyperImg.setDisplayRange(0, maxPD);System.out.println(c+" "+maxPD);}
-			else if(c<nMaps && (mrDataType[0][c]==MRDataType.T1MAP)) {hyperImg.setC(c+1);hyperImg.setDisplayRange(0, maxT1);System.out.println(c+" "+maxT1);}
-			else if(c<nMaps && (mrDataType[0][c]==MRDataType.T2MAP)) {hyperImg.setC(c+1);hyperImg.setDisplayRange(0, maxT2);System.out.println(c+" "+maxT2);}
-			else if(c==nMaps-1) {hyperImg.setC(c+1);hyperImg.setDisplayRange(0, 2);}
-			else {hyperImg.setC(c+1);hyperImg.setDisplayRange(0, maxPD);}
-			IJ.run(hyperImg,"Fire","");
-		}
 		if(!maskGiven) {
-			System.out.println("Mean sigma rice="+meanRice);
-			System.out.println("Object threshold="+(1.2+nbStdNoiseAroundMeanForSelection)*meanRice);
+			System.out.println("Mean sigma rice="+meanRice+", object threshold="+(1.2+nbStdNoiseAroundMeanForSelection)*meanRice);
 		}
-		System.out.println("Update ok.");
+		hasMaps=true;
+		adjustContrast();
 		return hyperImg;
 	}
 	
@@ -1057,6 +1469,7 @@ public class HyperMap {
 			this.hyperImg=this.hyperEchoes;
 			this.setDisplayRange();
 		}
+		adjustContrast();
 	}
 		
 	public RegistrationAction getDefaultRegistrationSettings() {
@@ -1075,11 +1488,33 @@ public class HyperMap {
 
 	
 	
-	
-	
+
+
 	
 	/** HyperMap global update when a part of it changed ---------------------------------------------------------*/	
 	public void updateHyperImgFromEchoesAndMaps() {
+		ImagePlus []tab=new ImagePlus[Ctot*T];
+		ImagePlus[]maps=VitimageUtils.stacksFromHyperstackFastBis(hyperMaps);
+		ImagePlus[]echoes=VitimageUtils.stacksFromHyperstackFastBis(hyperEchoes);
+		for(int n=0;n<maps.length;n++) {
+			tab[n]=maps[n];
+		}
+		for(int n=maps.length;n<maps.length+echoes.length;n++) {
+			tab[n]=echoes[n-maps.length];
+		}
+
+		Concatenator con=new Concatenator();
+		con.setIm5D(true);
+		ImagePlus hypTemp=con.concatenate(tab,true);
+		String codeStacking="xyztc";
+		ImagePlus hyperNew=HyperStackConverter.toHyperStack(hypTemp, Ctot, Z,T,codeStacking,"Grayscale");
+		hyperImg=hyperNew;
+		for(int c=Ctot-1;c>=0;c--)for(int t=T-1;t>=0;t--) {hyperImg.setC(c+1);hyperImg.setT(t+1);IJ.run(hyperImg,"Fire","");}
+		adjustContrast();
+	}
+	
+	/** HyperMap global update when a part of it changed ---------------------------------------------------------*/	
+	public void updateHyperImgFromEchoesAndMapsOld() {
 		ImagePlus []tab=new ImagePlus[Ctot];
 		ImagePlus[]maps=VitimageUtils.stacksFromHyperstackFastBis(hyperMaps);
 		ImagePlus[]echoes=VitimageUtils.stacksFromHyperstackFastBis(hyperEchoes);
@@ -1097,14 +1532,18 @@ public class HyperMap {
 		if(hasMaps) {
 			hyperMaps=new Duplicator().run(hyperImg,1,nMaps,1,Z,1,T);
 			hyperEchoes=new Duplicator().run(hyperImg,nMaps+1,Ctot,1,Z,1,T);
+			VitimageUtils.printImageResume(hyperMaps,"hypMa after update");
+			VitimageUtils.printImageResume(hyperEchoes,"hypEc after update");
 		}
 		else hyperEchoes=hyperImg.duplicate();
+		adjustContrast();
 	}
 	
 	public void updateBothFromNewHyperImg(ImagePlus hyperImgNew) {
 		this.hyperImg=hyperImgNew.duplicate();
 		updateEchoesAndMaps();
 		this.setDisplayRange();
+		adjustContrast();
 	}
 	
 	public void setDisplayRange() {
@@ -1158,7 +1597,7 @@ public class HyperMap {
 		VitimageUtils.printImageResume(newHyperImg,"Hyper");
 		System.out.println("4");
 
-		newHyperImg=HyperStackConverter.toHyperStack(newHyperImg, incr,ZZ,1,"xyztc","Grayscale");		
+		newHyperImg=HyperStackConverter.toHyperStack(newHyperImg, incr,ZZ,1,"xyztc","Grayscale");	
 		return new HyperMap(newHyperImg);
 	}
 
@@ -1423,6 +1862,85 @@ public class HyperMap {
 	
 	
 	
+	
+	
+	
+	
+	/** Helpers for capillary measurements and hypermap normalization--------------------------------------------------------- */	
+	public static double measureMeanCapillaryValueAlongZ(ImagePlus imgM0) {
+		//Find capillary in the central slice
+		ImagePlus img=new Duplicator().run(imgM0,1,1,imgM0.getNSlices()/2+1,imgM0.getNSlices()/2+1,1,1);
+		int []coordsCentral=VitimageUtils.findCapillaryCenterInSlice(img,VitimageUtils.bionanoCapillaryRadius);
+		
+		//Find best match for the capillary in other slices, in a neighbourhood around, and measure its value
+		double[]vals=VitimageUtils.capillaryValuesAlongZStatic(imgM0,coordsCentral,VitimageUtils.bionanoCapillaryRadius);
+		System.out.println("Mean capillary values="+TransformUtils.stringVectorN(vals, ""));
+		return VitimageUtils.statistics1D(vals)[0];
+	}
+		
+	public double[]measureCapillaryValuesInM0Map(int time){
+		//Find capillary in the central slice
+		ImagePlus img=new Duplicator().run(hyperImg,1,1,Z/2+1,Z/2+1,time+1,time+1);
+		int []coordsCentral=VitimageUtils.findCapillaryCenterInSlice(img,VitimageUtils.bionanoCapillaryRadius);
+		
+		//Find best match for the capillary in other slices, in a neighbourhood around, and measure its value
+		return capillaryValuesAlongZ(time,coordsCentral,VitimageUtils.bionanoCapillaryRadius);
+	}
+
+	public double[]capillaryValuesAlongZ(int time,int[]coords,double capillaryRadius){
+		IJ.log("\nCapillary detection at time="+time+".\nStarting from coordinates :"+coords[0]+", "+coords[1]);
+		Duplicator dup=new Duplicator();
+		int rayPix=(int)Math.round(capillaryRadius/(voxs[0]));
+		int semiRayPix=rayPix/2;
+		int lookupRadius=(int)Math.round(1.5*rayPix);
+
+		int xMed=coords[0];int yMed=coords[1];int zMed=dims[2]/2;
+		double[]capVals=new double[dims[2]];
+		ImagePlus imgTemp,img3D;
+		int xLast=xMed,yLast=yMed;
+		long t0= System.currentTimeMillis();
+
+		img3D=dup.run(hyperMaps,1,1,1,Z,time+1,time+1);
+		for(int z=zMed;z>=0;z--) {
+			//Extract a patch around the finding of upside
+			imgTemp=VitimageUtils.cropImageFloat(img3D,xLast-lookupRadius,yLast-lookupRadius,z, lookupRadius*2,lookupRadius*2,1);
+			//Find cap center in it
+			int[]coordsNew=VitimageUtils.findCapillaryCenterInSlice(imgTemp,VitimageUtils.bionanoCapillaryRadius);
+			
+			//Update coordinates of last
+			xLast=xLast-lookupRadius+coordsNew[0];
+			yLast=yLast-lookupRadius+coordsNew[1];
+
+			//Gather information of M0 value
+			double[]stats=VitimageUtils.statistics1D(VitimageUtils.valuesOfBlock(img3D,xLast-semiRayPix, yLast-semiRayPix, z-1,xLast+semiRayPix, yLast+semiRayPix, z+1));
+			IJ.log("Capillary detected at z="+z+" at coordinates "+xLast+", "+yLast+" with M0="+stats[0]+" std="+stats[1]);
+			capVals[z]=stats[0];
+		}
+		xLast=xMed;
+		yLast=yMed;
+		for(int z=zMed;z<dims[2];z++) {
+			//Extract a patch around the finding of upside
+			imgTemp=VitimageUtils.cropImageFloat(img3D,xLast-lookupRadius,yLast-lookupRadius, z, lookupRadius*2,lookupRadius*2,1);
+			
+			//Find cap center in it
+			int[]coordsNew=VitimageUtils.findCapillaryCenterInSlice(imgTemp,VitimageUtils.bionanoCapillaryRadius);
+			
+			//Update coordinates of last
+			xLast=xLast-lookupRadius+coordsNew[0];
+			yLast=yLast-lookupRadius+coordsNew[1];
+			
+			//Gather information of M0 value
+			double[]stats=VitimageUtils.statistics1D(VitimageUtils.valuesOfBlock(img3D,xLast-semiRayPix, yLast-semiRayPix, z-1,xLast+semiRayPix, yLast+semiRayPix, z+1));
+			System.out.println("Capillary detected at z="+z+" at coordinates "+xLast+", "+yLast+" with M0="+stats[0]+" std="+stats[1]);
+			capVals[z]=stats[0];
+		}
+		return capVals;
+	}
+
+
+
+	
+
 	
 	
 	/** Tidy needed below ---------------------------------------------------------*/

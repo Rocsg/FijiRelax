@@ -1,13 +1,13 @@
-package com.vitimage.fijirelax.testing;
+package fr.cirad.image.fijirelax.testing;
 
 import java.io.File;
 
 //import com.vitimage.fijirelax.MRI_HyperCurvesExplorer;
-import com.phenomen.common.VitimageUtils;
-import com.phenomen.fijiyama.Fijiyama_GUI;
-import com.phenomen.fijiyama.RegistrationAction;
-import com.phenomen.registration.ItkTransform;
-import com.phenomen.registration.Transform3DType;
+import fr.cirad.image.common.VitimageUtils;
+import fr.cirad.image.fijiyama.Fijiyama_GUI;
+import fr.cirad.image.fijiyama.RegistrationAction;
+import fr.cirad.image.registration.ItkTransform;
+import fr.cirad.image.registration.Transform3DType;
 
 import ij.IJ;
 import ij.ImageJ;

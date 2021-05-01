@@ -1,4 +1,4 @@
-package com.vitimage.fijirelax.mrialgo;
+package fr.cirad.image.fijirelax.mrialgo;
 
 public enum MRDataType {
 	T1SEQ,
@@ -17,4 +17,3 @@ public enum MRDataType {
 	MASKMAP,
 	OTHER
 }
-

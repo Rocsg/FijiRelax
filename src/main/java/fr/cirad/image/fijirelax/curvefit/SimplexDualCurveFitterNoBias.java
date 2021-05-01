@@ -1,18 +1,18 @@
-package com.vitimage.fijirelax.curvefit;
+package fr.cirad.image.fijirelax.curvefit;
 
 import java.util.ArrayList;
 
-import com.phenomen.common.TransformUtils;
-import com.phenomen.common.VitimageUtils;
-import com.vitimage.fijirelax.mrialgo.MRUtils;
+import fr.cirad.image.common.TransformUtils;
+import fr.cirad.image.common.VitimageUtils;
 
+import fr.cirad.image.fijirelax.mrialgo.MRUtils;
 import ij.macro.Interpreter;
 import ij.macro.Program;
 import ij.macro.Tokenizer;
 
 public class SimplexDualCurveFitterNoBias{
 	public boolean iterationsBreak=false;
-	private boolean debug=false;
+	private boolean debug=true;
 	public boolean estimateDeltaTe=false;
 	public static final boolean debugBionano=false;
 	public static  int iterFactor = 1000;
@@ -179,7 +179,12 @@ public class SimplexDualCurveFitterNoBias{
         fitType = saveFitType;
     }
         
-
+    public double[][] getDefaultParametersBoundaries(int fitType) {
+    	double[][]parametersBoundaries=new double[MRUtils.getNparams(fitType)+1][2];
+    	for(int i=0;i<parametersBoundaries.length;i++)parametersBoundaries[i]=new double[] {-MRUtils.infinity,MRUtils.infinity};
+    	return parametersBoundaries;
+    }
+    
     public void setMinDeltaChi2(double delta) {minDeltaChi2 = delta;}
 
 
@@ -189,7 +194,7 @@ public class SimplexDualCurveFitterNoBias{
         numParams = MRUtils.getNparams(fitType);
         numVertices = numParams + 1;      // need 1 more vertice than parametres,
 		parametersBoundaries=new double[numVertices][2];
-		parametersBoundaries[numVertices-1]=new double[] {-MRUtils.infinity,-MRUtils.infinity};
+		parametersBoundaries[numVertices-1]=new double[] {-MRUtils.infinity,MRUtils.infinity};
         simp = new double[numVertices][numVertices];
         next = new double[numVertices];        
         double minTr = VitimageUtils.min(trData);
@@ -200,7 +205,7 @@ public class SimplexDualCurveFitterNoBias{
         double medTe=minTe/2+maxTe/2;
         double maxMag=VitimageUtils.max(magData);
         double medMag=maxMag/2;
-        double minMag=0;
+        double minMag=VitimageUtils.min(magData);
         if(magData.length<2)minMag= magData[magData.length-1];
         else if(magData.length<3)minMag= (magData[magData.length-1]+magData[magData.length-2])/2;
         else minMag= (magData[magData.length-1]+magData[magData.length-2]+magData[magData.length-3])/3;
@@ -208,7 +213,115 @@ public class SimplexDualCurveFitterNoBias{
         restarts = defaultRestarts;
         nRestarts = 0;
         switch (fit) {
-           case MRUtils.T1T2_MONO_RICE:
+
+        case MRUtils.T1_MONO:
+     	   simp[0][0] = maxMag;
+     	   simp[0][1] = medTr;
+           if(MRUtils.useBoundaries) {
+					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT1M0MaxRatio};
+					parametersBoundaries[1]=new double[] {minTr*MRUtils.factorT1MinRatio,maxTr*MRUtils.factorT1MaxRatio};
+           }
+		   else parametersBoundaries=getDefaultParametersBoundaries(fitType);
+           break;
+        case MRUtils.T1_MONO_BIAS:
+     	   simp[0][0] = maxMag;
+     	   simp[0][1] = medTr;
+     	   simp[0][2] = 0;
+            if(MRUtils.useBoundaries) {
+					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT1M0MaxRatio};
+					parametersBoundaries[1]=new double[] {minTr*MRUtils.factorT1MinRatio,maxTr*MRUtils.factorT1MaxRatio};
+					parametersBoundaries[2]=new double[] {0,maxMag};
+            }
+			else parametersBoundaries=getDefaultParametersBoundaries(fitType);
+            break;
+        case MRUtils.T1_MONO_RICE:
+     	   simp[0][0] = maxMag;
+     	   simp[0][1] = medTr;
+            if(MRUtils.useBoundaries) {
+					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT1M0MaxRatio};
+					parametersBoundaries[1]=new double[] {minTr*MRUtils.factorT1MinRatio,maxTr*MRUtils.factorT1MaxRatio};
+            }
+			else parametersBoundaries=getDefaultParametersBoundaries(fitType);
+            break;
+
+
+            
+       case MRUtils.T2_MONO:
+      	   simp[0][0] = maxMag;
+      	   simp[0][1] = medTe;
+             if(MRUtils.useBoundaries) {
+ 					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
+ 					parametersBoundaries[1]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+             }
+ 			 else parametersBoundaries=getDefaultParametersBoundaries(fitType);
+             break;
+       case MRUtils.T2_MONO_BIAS:
+     	   simp[0][0] = maxMag;
+     	   simp[0][1] = medTe;
+     	   simp[0][2] = minMag;
+            if(MRUtils.useBoundaries) {
+					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
+					parametersBoundaries[1]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+					parametersBoundaries[2]=new double[] {0,maxMag};
+            }
+			   else parametersBoundaries=getDefaultParametersBoundaries(fitType);
+            break;
+       case MRUtils.T2_MONO_RICE:
+     	   simp[0][0] = maxMag;
+     	   simp[0][1] = medTe;
+            if(MRUtils.useBoundaries) {
+					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
+					parametersBoundaries[1]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+            }
+			else parametersBoundaries=getDefaultParametersBoundaries(fitType);
+            break;
+
+            
+            
+       case MRUtils.T2_MULTI:
+    	   simp[0][0] = medMag*1.6;
+    	   simp[0][1] = maxMag*0.6;
+    	   simp[0][2] = medTe*0.4;
+    	   simp[0][3] = medTe*1.3;
+           if(MRUtils.useBoundaries) {
+				parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
+				parametersBoundaries[1]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
+				parametersBoundaries[2]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+				parametersBoundaries[3]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+           }
+		   else parametersBoundaries=getDefaultParametersBoundaries(fitType);
+           break;
+       case MRUtils.T2_MULTI_BIAS:
+    	   simp[0][0] = medMag*1.6;
+    	   simp[0][1] = maxMag*0.6;
+    	   simp[0][2] = medTe*0.4;
+    	   simp[0][3] = medTe*1.3;
+    	   simp[0][4] = minMag;
+           if(MRUtils.useBoundaries) {
+				parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
+				parametersBoundaries[1]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
+				parametersBoundaries[2]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+				parametersBoundaries[3]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+				parametersBoundaries[4]=new double[] {0,maxMag};
+           }
+		   else parametersBoundaries=getDefaultParametersBoundaries(fitType);
+           break;
+       case MRUtils.T2_MULTI_RICE:
+    	   simp[0][0] = medMag*1.6;
+    	   simp[0][1] = maxMag*0.6;
+    	   simp[0][2] = medTe*0.4;
+    	   simp[0][3] = medTe*1.3;
+           if(MRUtils.useBoundaries) {
+				parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
+				parametersBoundaries[1]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
+				parametersBoundaries[2]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+				parametersBoundaries[3]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+           }
+		   else parametersBoundaries=getDefaultParametersBoundaries(fitType);
+           break;
+            
+        
+        case MRUtils.T1T2_MONO:
         	   simp[0][0] = maxMag;
         	   simp[0][1] = medTr;
         	   simp[0][2] = medTe;
@@ -217,9 +330,37 @@ public class SimplexDualCurveFitterNoBias{
 					parametersBoundaries[1]=new double[] {minTr*MRUtils.factorT1MinRatio,maxTr*MRUtils.factorT1MaxRatio};
 					parametersBoundaries[2]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
                }
-			   else parametersBoundaries=new double[][] {{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity}};
+			   else parametersBoundaries=getDefaultParametersBoundaries(fitType);
                break;
-           case MRUtils.T1T2_MULTI_RICE:
+        case MRUtils.T1T2_MONO_BIAS:
+     	   simp[0][0] = maxMag;
+     	   simp[0][1] = medTr;
+     	   simp[0][2] = medTe;
+     	   simp[0][3] = minMag;
+            if(MRUtils.useBoundaries) {
+					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
+					parametersBoundaries[1]=new double[] {minTr*MRUtils.factorT1MinRatio,maxTr*MRUtils.factorT1MaxRatio};
+					parametersBoundaries[2]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+					parametersBoundaries[2]=new double[] {0,maxMag};
+            }
+			   else parametersBoundaries=getDefaultParametersBoundaries(fitType);
+            break;
+        case MRUtils.T1T2_MONO_RICE:
+     	   simp[0][0] = maxMag;
+     	   simp[0][1] = medTr;
+     	   simp[0][2] = medTe;
+            if(MRUtils.useBoundaries) {
+					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
+					parametersBoundaries[1]=new double[] {minTr*MRUtils.factorT1MinRatio,maxTr*MRUtils.factorT1MaxRatio};
+					parametersBoundaries[2]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+            }
+			   else parametersBoundaries=getDefaultParametersBoundaries(fitType);
+            break;
+
+        
+        
+        
+        case MRUtils.T1T2_MULTI:
         	   simp[0][0] = medMag*1.6;
         	   simp[0][1] = medMag*0.6;
         	   simp[0][2] = medTr;//T1
@@ -232,60 +373,43 @@ public class SimplexDualCurveFitterNoBias{
 					parametersBoundaries[3]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
 					parametersBoundaries[4]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
                }
-			   else parametersBoundaries=new double[][] {{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity}};
+			   else parametersBoundaries=getDefaultParametersBoundaries(fitType);
                break;
-           case MRUtils.T1_MONO_RICE:
-        	   simp[0][0] = maxMag;
-        	   simp[0][1] = medTr;
-               if(MRUtils.useBoundaries) {
-					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT1M0MaxRatio};
-					parametersBoundaries[1]=new double[] {minTr*MRUtils.factorT1MinRatio,maxTr*MRUtils.factorT1MaxRatio};
-               }
-			   else parametersBoundaries=new double[][] {{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},};
-               break;
-           case MRUtils.T2_MONO_RICE:
-        	   simp[0][0] = maxMag;
-        	   simp[0][1] = medTe;
-               if(MRUtils.useBoundaries) {
-					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
-					parametersBoundaries[1]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
-               }
-			   else parametersBoundaries=new double[][] {{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},};
-               break;
-           case MRUtils.T2_MONO_BIAS:
-        	   simp[0][0] = maxMag;
-        	   simp[0][1] = medTe;
-        	   simp[0][2] = minMag;
-               if(MRUtils.useBoundaries) {
-					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
-					parametersBoundaries[1]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
-					parametersBoundaries[2]=new double[] {0,maxMag};
-               }
-			   else parametersBoundaries=new double[][] {{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},};
-               break;
-           case MRUtils.T2_MONO:
-        	   simp[0][0] = maxMag;
-        	   simp[0][1] = medTe;
-               if(MRUtils.useBoundaries) {
-					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
-					parametersBoundaries[1]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
-               }
-			   else parametersBoundaries=new double[][] {{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},};
-               break;
-           case MRUtils.T2_MULTI_RICE:
-        	   simp[0][0] = medMag*1.6;
-        	   simp[0][1] = maxMag*0.6;
-        	   simp[0][2] = medTe*0.4;
-        	   simp[0][3] = medTr*1.3;
-               if(MRUtils.useBoundaries) {
+        case MRUtils.T1T2_MULTI_BIAS:
+     	   simp[0][0] = medMag*1.6;
+     	   simp[0][1] = medMag*0.6;
+     	   simp[0][2] = medTr;//T1
+     	   simp[0][3] = medTe*0.4;//T2
+     	   simp[0][4] = medTe*1.3;//T2
+     	   simp[0][5] = minMag;//Bias
+            if(MRUtils.useBoundaries) {
 					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
 					parametersBoundaries[1]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
-					parametersBoundaries[2]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+					parametersBoundaries[2]=new double[] {minTr*MRUtils.factorT1MinRatio,maxTr*MRUtils.factorT1MaxRatio};
 					parametersBoundaries[3]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
-               }
-			   else parametersBoundaries=new double[][] {{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},};
-               break;
-          case MRUtils.T1T2_DEFAULT_T2_MONO_RICE:
+					parametersBoundaries[4]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+					parametersBoundaries[5]=new double[] {0,maxMag};
+            }
+			   else parametersBoundaries=getDefaultParametersBoundaries(fitType);
+            break;
+        case MRUtils.T1T2_MULTI_RICE:
+     	   simp[0][0] = medMag*1.6;
+     	   simp[0][1] = medMag*0.6;
+     	   simp[0][2] = medTr;//T1
+     	   simp[0][3] = medTe*0.4;//T2
+     	   simp[0][4] = medTe*1.3;//T2
+            if(MRUtils.useBoundaries) {
+					parametersBoundaries[0]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
+					parametersBoundaries[1]=new double[] {MRUtils.epsilon,maxMag*MRUtils.factorT2M0MaxRatio};
+					parametersBoundaries[2]=new double[] {minTr*MRUtils.factorT1MinRatio,maxTr*MRUtils.factorT1MaxRatio};
+					parametersBoundaries[3]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+					parametersBoundaries[4]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
+            }
+			   else parametersBoundaries=getDefaultParametersBoundaries(fitType);
+            break;
+
+        
+        case MRUtils.T1T2_DEFAULT_T2_MONO_RICE:
         	   simp[0][0] = maxMag;
         	   simp[0][1] = medTr;//T1
         	   simp[0][2] = medTe;//T2
@@ -296,7 +420,7 @@ public class SimplexDualCurveFitterNoBias{
 					parametersBoundaries[2]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
 					parametersBoundaries[3]=new double[] {0,maxTe*MRUtils.factorT2MaxRatio};
                }
-			   else parametersBoundaries=new double[][] {{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity}};
+			   else parametersBoundaries=getDefaultParametersBoundaries(fitType);
                break;
            case MRUtils.T1T2_DEFAULT_T2_MULTI_RICE:
         	   simp[0][0] = medMag;
@@ -313,7 +437,7 @@ public class SimplexDualCurveFitterNoBias{
 					parametersBoundaries[4]=new double[] {minTe*MRUtils.factorT2MinRatio,maxTe*MRUtils.factorT2MaxRatio};
 					parametersBoundaries[5]=new double[] {0,maxTe*MRUtils.factorT2MaxRatio};
                }
-			   else parametersBoundaries=new double[][] {{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},{ -MRUtils.infinity,MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity},{ -MRUtils.infinity, MRUtils.infinity}};
+			   else parametersBoundaries=getDefaultParametersBoundaries(fitType);
                break;
                default:break;
         }
@@ -341,13 +465,16 @@ public class SimplexDualCurveFitterNoBias{
         }
         // Create the other simplex vertices by modifing previous one.
         for (int i = 1; i < numVertices; i++) {
+        	if(debug)System.out.println("Testing boundaries of vertices : ");
+        	if(debug)System.out.println(TransformUtils.stringVectorN(simp[i], " "));  
             for (int j = 0; j < numParams; j++) {
                 simp[i][j] = simp[i-1][j] + q[j];
             }
             simp[i][i-1] = simp[i][i-1] + p[i-1];
             for (int j = 0; j < numParams; j++) {
-                if(simp[i][j]<parametersBoundaries[j][0])simp[i][j]=parametersBoundaries[j][0];
-                if(simp[i][j]>parametersBoundaries[j][1])simp[i][j]=parametersBoundaries[j][1];
+            	//System.out.println(parametersBoundaries[j][0]+"  -  "+simp[i][j]+"   -   "+parametersBoundaries[j][1]);
+            	//if(simp[i][j]<parametersBoundaries[j][0]) {System.out.println("YES");simp[i][j]=parametersBoundaries[j][0];}
+                //if(simp[i][j]>parametersBoundaries[j][1]) {System.out.println("YES");simp[i][j]=parametersBoundaries[j][1];}
              }
         
             sumResiduals(simp[i]);
