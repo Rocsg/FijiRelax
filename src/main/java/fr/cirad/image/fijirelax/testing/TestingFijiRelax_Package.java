@@ -2,23 +2,31 @@ package fr.cirad.image.fijirelax.testing;
 
 import java.io.File;
 
-//import com.vitimage.fijirelax.MRI_HyperCurvesExplorer;
-import fr.cirad.image.common.VitimageUtils;
-import fr.cirad.image.fijiyama.Fijiyama_GUI;
-import fr.cirad.image.fijiyama.RegistrationAction;
-import fr.cirad.image.registration.ItkTransform;
-import fr.cirad.image.registration.Transform3DType;
 
+import fr.cirad.image.common.VitimageUtils;
 import ij.IJ;
 import ij.ImageJ;
-import ij.ImagePlus;
-import ij.plugin.Concatenator;
-import ij.plugin.Duplicator;
-import ij.plugin.HyperStackConverter;
+import ij.plugin.frame.PlugInFrame;
 
-public class TestingFijiRelaxPackage {
+public class TestingFijiRelax_Package extends PlugInFrame {
 
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public TestingFijiRelax_Package() {
+		super("");
+		IJ.log("Here 1");
+	}
+
+	
+	public TestingFijiRelax_Package(String title) {
+		super(title);
+		IJ.log("Here 1");
+	}
+
 	public static boolean isInteger(String s) {
 		try {
 			int a=Integer.parseInt(s);	
@@ -48,8 +56,42 @@ public class TestingFijiRelaxPackage {
 		return ret;
 	}
 	
+	public void run(String arg) {
+		IJ.log("Here 2");
+		testNii();
+	}
 	
 	public static void main(String[]args) {
+		ImageJ ij=new ImageJ();
+		TestingFijiRelax_Package test=new TestingFijiRelax_Package("");
+		test.testNii();
+	}
+	
+	public void testNii() {
+		IJ.log("Here 3");
+		String pathTest="/home/rfernandez/Bureau/A_Test/FijiRelax_DOI/Experiments_for_figures_and_tables/Input_data/Images/Human_brain_nifti/SEdata.nii";
+	//	ImagePlus imp = IJ.openImage("/home/rfernandez/Bureau/A_Test/FijiRelax_DOI/Experiments_for_figures_and_tables/Input_data/Images/Human_brain_nifti/SEdata.nii");
+		
+//		ImageJ ij=new ImageJ();
+		//Nifti_Reader nif;
+		//System.out.println(new File(pathTest).exists());
+//		ImagePlus img=IJ.openImage(pathTest);
+//		img.show();
+		//Image img=SimpleITK.readImage(pathTest);
+//		ImageFileReader reader = new ImageFileReader();
+//		reader.get
+		//reader.setImageIO("NiftiImageIO");
+//		  reader.setFileName(pathTest);
+//		  Image simg= reader.execute();
+		//run("Bio-Formats Importer", "open=[" + id + "] autoscale color_mode=Composite rois_import=[ROI manager] split_channels view=Hyperstack stack_order=XYCZT");
+
+		  
+		//ImagePlus simgIJ=ItkImagePlusInterface.itkImageToImagePlus(img);
+		//simgIJ.show();
+		IJ.log("Here 4");
+	}
+	
+	public static void testStomata() {
 		String s="D:\\Matt\\Stomata project\\Grasses\\Experiment 5\\MGX\\ABA\\ABA 1\\ABA_1_1\\Hv_ABA_1_1_SC.tif";
 		String s2="BLABLA\\pouet";
 		System.out.println(s2);

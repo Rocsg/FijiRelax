@@ -173,6 +173,14 @@
 			<systemPath>${basedir}/lib/lma/lma-jar/1.0/lma-1.0.jar</systemPath>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/ome/pom-bio-formats
+		<dependency>
+		    <groupId>ome</groupId>
+		    <artifactId>pom-bio-formats</artifactId>
+		    <version>5.8.0</version>
+		    <type>pom</type>
+		</dependency> -->
+
 		<dependency>
 		    <groupId>com.vitimage</groupId>
 		    <artifactId>Fijiyama_GUI</artifactId>

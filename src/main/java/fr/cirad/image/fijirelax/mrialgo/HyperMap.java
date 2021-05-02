@@ -86,6 +86,7 @@ public class HyperMap {
 		this.hyperImg=hyperImg;
 		setup();
 		adjustContrast();
+		VitimageUtils.garbageCollector();
 	}
 	
 	
@@ -129,8 +130,10 @@ public class HyperMap {
 		Custom_Format_Importer t1t2=new Custom_Format_Importer(inputDir,nameSpecimen);
 		HyperMap hyp=t1t2.importHyperMap();
 		ImagePlus img=hyp.getAsImagePlus();
+		//hyp=null;
 		IJ.run(img,"Fire","");
 		HyperMap hyperNew=new HyperMap(img);
+		VitimageUtils.garbageCollector();
 		return hyp;
 	}
 
@@ -271,7 +274,8 @@ public class HyperMap {
 				img.getStack().setSliceLabel(chain,VitimageUtils.getCorrespondingSliceInHyperImage(img,c, z, 0) );
 			}		
 		}
-		
+		imgs=null;
+		VitimageUtils.garbageCollector();
 		return  new HyperMap(img);
 	}
 	
@@ -313,6 +317,7 @@ public class HyperMap {
 			}		
 		}
 		
+		
 		HyperMap hyper=new HyperMap(img);
 		hyper.adjustContrast();
 		return hyper;
@@ -345,8 +350,16 @@ public class HyperMap {
 		return hyper;
 	}
 
+	public static ImagePlus readNifti(String path) {
+		IJ.run("Bio-Formats (Windowless)", "open="+path);
+		VitimageUtils.waitFor(200);
+		ImagePlus img=IJ.getImage();
+		img.hide();
+		return img;
+	}
+	
 	public static HyperMap importHyperMapFromNifti4DSequence(String path,String imageName,Object[]niftiInfos) {
-		ImagePlus img2=IJ.openImage(path);
+		ImagePlus img2=readNifti(path);
 		IJ.run(img2, "Flip Vertically", "stack");
 		img2.setTitle("Readen Nifti");
 		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
@@ -374,7 +387,7 @@ public class HyperMap {
 	}
 
 	public static HyperMap importHyperMapFromNifti4DT1Sequence(String path,String imageName,double []Tr, double TeSpacing) {
-		ImagePlus img2=IJ.openImage(path);
+		ImagePlus img2=readNifti(path);
 		img2.setTitle("Readen Nifti");
 		IJ.run(img2, "Flip Vertically", "stack");
 		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
@@ -405,21 +418,26 @@ public class HyperMap {
 	}
 
 	public static HyperMap importHyperMapFromNifti4DUnknownSequence(String path,String imageName) {
-		ImagePlus img2=IJ.openImage(path);
-		System.out.println("Opening image from "+path);
-		IJ.run(img2, "Flip Vertically", "stack");
+		ImagePlus img2=readNifti(path);
+		IJ.log("Deb 1");
+		IJ.log("Opening image from "+path);
+		IJ.log("Exists ? "+new File(path).exists());
 		IJ.log(VitimageUtils.imageResume(img2));
+		IJ.run(img2, "Flip Vertically", "stack");
 		IJ.log("Readen Nifti");
 		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
+		IJ.log("Deb 2");
 		ImagePlus img=VitimageUtils.hyperStackingChannels(tab);
 
 		IJ.log("GetNiftinInfos");
 		Object[] objs=getNiftiInfos(img.getNChannels());
+		System.out.println("Deb 3");
 		IJ.log("GotNiftinInfos");
 		if(objs==null) {
 			IJ.log("Niftin infos were null");
 			return null;
 		}
+		System.out.println("Deb 4");
 		return importHyperMapFromNifti4DSequence(path, imageName, objs);
 	}		
 
