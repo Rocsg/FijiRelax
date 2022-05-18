@@ -14,7 +14,7 @@ import ij.plugin.Duplicator;
 import ij.plugin.HyperStackConverter;
 
 import java.io.File;
-
+import trainableSegmentation.*;
 public class TestScripts {
 
 	public TestScripts() {

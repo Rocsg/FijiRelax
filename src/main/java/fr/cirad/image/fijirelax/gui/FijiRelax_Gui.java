@@ -48,10 +48,9 @@ import ij.plugin.frame.PlugInFrame;
 import ij.plugin.frame.RoiManager;
 
 /**
- * A class which run the FijiRelax GUI
+ * The PlugInFrame inherited object which run the FijiRelax GUI, when called from the Fiji interface
  * @author Romain Fernandez (romain.fernandez@cirad.fr)
- * @version 1.0, 11.02.2021
- * 
+ * @version 1.2, 15.04.2022
  * 
  */
 public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
@@ -85,7 +84,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	private Font mySurvivalFontForLittleDisplays=null;
 
 	public String versionName="Handsome honeysuckle";
-	public String timeVersionFlag="  Release time : 2020-02-22 - 11:49 PM";
+	public String timeVersionFlag="  Release time : 2021-05-02 -11:06 PM";
 	public String versionFlag=versionName+timeVersionFlag;
 	public ImagePlus imgView;
 	private Color colorStdActivatedButton;
@@ -126,20 +125,17 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
 
-	/** Entry points and startup functions--------------------------------------------------------------------------------*/
+	/* Entry points for testing--------------------------------------------------------------------------------*/
 	public static void main(String[]args) {		
 		ImageJ ij=new ImageJ();
 		FijiRelax_Gui fj=new FijiRelax_Gui();
 		fj.run("");
 		fj.automaticTest();
 	}
-	
-	//BM1_TR{TR}.tif
 
 	public static void test() {
 		ImagePlus img=IJ.openImage("/home/fernandr/Bureau/Traitements/Sorgho/Series_temporelles/All_timeseries/BM1_Timeseries.tif");
-		img.show();
-		
+		img.show();	
 	}
 	
 	
@@ -152,6 +148,10 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 //		startFromTestImage("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Tests_Refactoring/1_Imported/hyper.tif");
 	}
 	
+	/**
+	 * Constructor of the class. Starts the interface setup
+	 */
+
 	public FijiRelax_Gui() {
 		super("");
 		this.screenHeight=Toolkit.getDefaultToolkit().getScreenSize().height;
@@ -159,6 +159,10 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		if(this.screenWidth>1920)this.screenWidth/=2;
 	}
 
+	/**
+	 * Method called from the ImageJ interface, starting the plugin
+	 * @param String arg is not interpred in any way.
+	 */
 	public void run(String arg) {
 		if(new File("/users/bionanonmri/").exists()) {
 			this.isSurvivorVncTunnelLittleDisplay=true;
@@ -319,7 +323,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	
 	
 	
-	/** Performed actions called from the interface --------------------------------------------------------------------------------*/	
+	/* Performed actions called from the interface --------------------------------------------------------------------------------*/	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource()==this.abortButton)runActionAbort();
@@ -573,7 +577,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	
 	
 	
-	/** Helpers --------------------------------------------------------------------------------*/	
+	/* Helpers --------------------------------------------------------------------------------*/	
 	public RegistrationAction openRegistrationSettingsDialog() {
 		RegistrationAction regAct=this.currentHypermap.getDefaultRegistrationSettings();
  		
@@ -829,7 +833,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	
 	
 	
-	/** Minor helpers --------------------------------------------------------------------------------*/	
+	/* Minor helpers --------------------------------------------------------------------------------*/	
 	public void lock() {
 		this.lock=true;
 	}

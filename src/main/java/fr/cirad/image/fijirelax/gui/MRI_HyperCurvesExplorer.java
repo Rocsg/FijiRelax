@@ -3542,7 +3542,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 			if(debug) {
 				System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
 			}
-			else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T1T2Seq_magnitude_data.csv");
+			else VitimageUtils.writeStringTabInCsv2(tab, dirPath+"_T1T2Seq_magnitude_data.csv");
 			//Line 1 : Day 0 "Nameday" - TR value ; TR1 ;  TR2 ;  TR3 ....
 			//Line 2 : Day 0 "Nameday" - TE value ; TE1 ;  TE2 ;  TE3 ....
 			//Line 3 : Day 0 "Nameday" - Magnitude value ; TE1 ;  TE2 ;  TE3 ....
@@ -3564,7 +3564,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 			if(debug) {
 				System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
 			}
-			else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T1T2Seq_estimated_params.csv");
+			else VitimageUtils.writeStringTabInCsv2(tab, dirPath+"_T1T2Seq_estimated_params.csv");
 			//Export T1 T2 estimated params			
 			//Line 0 : Label  ; PD_tot ; T1 ; T2 ; Khi2_mono ; PD_short ; PD_long ; T1 ; T2_short ; T2_long ; Khi2_biexp 
 			//Line 1 : Day 0 ; val ; val ; val ; val ; val
@@ -3584,7 +3584,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 			if(debug) {
 				System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
 			}
-			else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T1T2Seq_estimated_T1T2distributions.csv");
+			else VitimageUtils.writeStringTabInCsv2(tab, dirPath+"_T1T2Seq_estimated_T1T2distributions.csv");
 			//Export spectrum		
 			//Line 0 : Label  ; val ; val ; val 
 			//Day 0 T1_value(x_axis) ; 10 ; 11 ; val ; val ; val
@@ -3612,7 +3612,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				if(debug) {
 					System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
 				}
-				else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T1Seq_magnitude_data.csv");
+				else VitimageUtils.writeStringTabInCsv2(tab, dirPath+"_T1Seq_magnitude_data.csv");
 				//Line 1 : Day 0 "Nameday" - TR value ; TR1 ;  TR2 ;  TR3 ....
 				//Line 3 : Day 0 "Nameday" - Magnitude value ; TE1 ;  TE2 ;  TE3 ....
 				//...
@@ -3629,7 +3629,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				if(debug) {
 					System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
 				}
-				else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T1Seq_estimated_params.csv");
+				else VitimageUtils.writeStringTabInCsv2(tab, dirPath+"_T1Seq_estimated_params.csv");
 				//Export T1 T2 estimated params			
 				//Line 0 : Label  ; PD_tot ; T1 ; T2 ; Khi2_mono ; PD_short ; PD_long ; T1 ; T2_short ; T2_long ; Khi2_biexp 
 				//Line 1 : Day 0 ; val ; val ; val ; val ; val
@@ -3647,7 +3647,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				if(debug) {
 					System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
 				}
-				else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T1Seq_estimated_T1distributions.csv");
+				else VitimageUtils.writeStringTabInCsv2(tab, dirPath+"_T1Seq_estimated_T1distributions.csv");
 				//Export spectrum		
 				//Line 0 : Label  ; val ; val ; val 
 				//Day 0 T1_value(x_axis) ; 10 ; 11 ; val ; val ; val
@@ -3675,7 +3675,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				if(debug) {
 					System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
 				}
-				else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T2Seq_magnitude_data.csv");
+				else VitimageUtils.writeStringTabInCsv2(tab, dirPath+"_T2Seq_magnitude_data.csv");
 				//Line 1 : Day 0 "Nameday" - TR value ; TR1 ;  TR2 ;  TR3 ....
 				//Line 3 : Day 0 "Nameday" - Magnitude value ; TE1 ;  TE2 ;  TE3 ....
 				//...
@@ -3693,7 +3693,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				if(debug) {
 					System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
 				}
-				else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T2Seq_estimated_params.csv");
+				else VitimageUtils.writeStringTabInCsv2(tab, dirPath+"_T2Seq_estimated_params.csv");
 				//Export T1 T2 estimated params			
 				//Line 0 : Label  ; PD_tot ; T1 ; T2 ; Khi2_mono ; PD_short ; PD_long ; T1 ; T2_short ; T2_long ; Khi2_biexp 
 				//Line 1 : Day 0 ; val ; val ; val ; val ; val
@@ -3711,7 +3711,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				if(debug) {
 					System.out.println();for(int i=0;i<tab.length;i++) { System.out.println();for(int j=0;j<tab[i].length;j++) System.out.print("["+tab[i][j]+"]");}
 				}
-				else VitimageUtils.writeStringTabInExcelFile(tab, dirPath+"_T2Seq_estimated_T2distributions.csv");
+				else VitimageUtils.writeStringTabInCsv2(tab, dirPath+"_T2Seq_estimated_T2distributions.csv");
 				//Export spectrum		
 				//Line 0 : Label  ; val ; val ; val 
 				//Day 0 T1_value(x_axis) ; 10 ; 11 ; val ; val ; val
