@@ -18,7 +18,6 @@ FijiRelax is a generic tool for 3D+t MRI analysis and exploration using multi-ec
 <img src="https://github.com/Rocsg/FijiRelax/blob/master/images/fijirelax-snap-glob-explorer.png" width="800" caption="Time-lapse exploration of parameters in a plant under drought stress">
  
 ## Dataset for testing purpose
-![alt text](https://github.com/[username]/[reponame]/blob/[branch]/image.jpg?raw=true)
 
 A comprehensive dataset can be found on Zenodo at [https://doi.org/10.5281/zenodo.4518730](https://doi.org/10.5281/zenodo.4518730) 
 
