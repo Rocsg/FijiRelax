@@ -34,13 +34,13 @@ In order to install FijiRelax on your computer, please follow these steps:
 
 1\. *(if needed) *Download and install Fiji from https://fiji.sc/ ; start Fiji, and let it automatically update. Then restart Fiji.
 
-2\. Open Fiji, run the **Update manager** {% include bc path="Help | Update" %}. Click on "OK" to close the first popup windows, then click on the button **Manage update sites...**.
+2\. Open Fiji, run the **Update manager** (Help > Update). Click on "OK" to close the first popup windows, then click on the button **Manage update sites...**.
 
 3\. In this list, activate **ImageJ-ITK** by checking the corresponding checkboxes. Don't close the window, or reopen it if you read this too late.
 
 4\. Add the **Fijiyama** repository (by clicking on the button **Add update site**, and filling the fields : name = "/plugins/fijiyama", site = https://sites.imagej.net/Fijiyama), then check the associated checkbox. Now you can click on **Close** and apply the modifications.
 
-5\. Restart Fiji: a new **FijiRelax** entry should be available in the menu {% include bc path="Plugins | Analyze" %}. If not, go back to the Update Manager, and check that the repositories **ImageJ-ITK** and **Fijiyama** are correctly selected.
+5\. Restart Fiji: a new **FijiRelax** entry should be available in the menu (Plugins > Analyze"). If not, go back to the Update Manager, and check that the repositories **ImageJ-ITK** and **Fijiyama** are correctly selected.
 
 
 ## Preparing your data
@@ -58,13 +58,17 @@ FijiRelax interface have four main panels :
 - The third panel contains the explorer button.
 - The fourth panel has additional helper functions.
 
-<img src="https://github.com/Rocsg/FijiRelax/blob/master/images/fijirelax-snap-main-window" width="300" caption="FijiRelax main window">
+<img src="https://github.com/Rocsg/FijiRelax/blob/master/images/fijirelax-snap-main-window.png" width="300" caption="FijiRelax main window">
 
 
 ## Tutorials
 
 **Tutorial part 1: proton density, T1 and T2 time-series from 3D dicom data of a sorgho plant**
-<iframe width="560" height="315" src="https://www.youtube.com/embed/nhWRZN9puFg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<figure class="video_container">
+  <iframe src="https://www.youtube.com/embed/nhWRZN9puFg" frameborder="0" allowfullscreen="true"> </iframe>
+</figure>
+
+#<iframe width="560" height="315" src="https://www.youtube.com/embed/nhWRZN9puFg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
  
 
