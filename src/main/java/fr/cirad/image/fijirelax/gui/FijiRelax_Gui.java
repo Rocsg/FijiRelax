@@ -84,7 +84,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	private Font mySurvivalFontForLittleDisplays=null;
 
 	public String versionName="Handsome honeysuckle";
-	public String timeVersionFlag="  Release time : 2021-05-02 -11:06 PM";
+	public String timeVersionFlag="  Release time : 2022-05-29 -20:21 PM";
 	public String versionFlag=versionName+timeVersionFlag;
 	public ImagePlus imgView;
 	private Color colorStdActivatedButton;

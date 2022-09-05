@@ -834,7 +834,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		int screenY=(int) Math.round(screenSize.getHeight());
 		int screenX=(int) Math.round(screenSize.getWidth());
 		if(screenX>1920)screenX=1920;
-		if(screenX<=1600) {
+		if(screenX<=1600 && false) {
 			IJ.showMessage("Your screen has a very low resolution : "+screenX+" X "+screenY+"\nPlease consider investing in one which have at least 1024 lines x 1480 columns.\nPlugin will run in survivor mode, thus everything can happen");
 			isBionanoDisplay=true;
 		}
