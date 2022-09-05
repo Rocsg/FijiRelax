@@ -1,15 +1,4 @@
----
-mediawiki: FijiRelax
-name: "FijiRelax"
-title: FijiRelax
-categories: [Analysis]
-description: Quantitative MRI analysis
-initial-release-date: "February 11, 2021"
-dev-status: "stable, active"
-team-founder: 'Romain Fernandez'
-team-maintainer: 'Romain Fernandez'
-source-url: https://github.com/Rocsg/FijiRelax
----
+
 
 
 
@@ -26,9 +15,10 @@ FijiRelax is a generic tool for 3D+t MRI analysis and exploration using multi-ec
 - Automatic correction of spatial drift and deformations for long T1 or T2 sequences
 - Exploration of T1/T2 distribution in ROI over time
 - Operable through a GUI, or scriptable for batch processing of large datasets
-<img src="images/fijirelax-snap-glob-explorer" width="800" caption="Time-lapse exploration of parameters in a plant under drought stress">
+<img src="https://github.com/Rocsg/FijiRelax/blob/master/images/fijirelax-snap-glob-explorer.png" width="800" caption="Time-lapse exploration of parameters in a plant under drought stress">
  
 ## Dataset for testing purpose
+![alt text](https://github.com/[username]/[reponame]/blob/[branch]/image.jpg?raw=true)
 
 A comprehensive dataset can be found on Zenodo at [https://doi.org/10.5281/zenodo.4518730](https://doi.org/10.5281/zenodo.4518730) 
 
@@ -68,7 +58,8 @@ FijiRelax interface have four main panels :
 - The third panel contains the explorer button.
 - The fourth panel has additional helper functions.
 
-<img src="images/fijirelax-snap-main-window" width="300" caption="FijiRelax main window">
+<img src="https://github.com/Rocsg/FijiRelax/blob/master/images/fijirelax-snap-main-window" width="300" caption="FijiRelax main window">
+
 
 ## Tutorials
 
