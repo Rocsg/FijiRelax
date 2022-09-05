@@ -67,9 +67,7 @@ FijiRelax interface have four main panels :
 
 **Tutorial part 1: proton density, T1 and T2 time-series from 3D dicom data of a sorgho plant**
 
-#[<iframe width="560" height="315" src="https://www.youtube.com/embed/nhWRZN9puFg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>]
-
-[![Watch the video](https://i.ytimg.com/vi/nhWRZN9puFg/hqdefault.jpg)](https://www.youtube.com/embed/nhWRZN9puFg)
+[![Tutorial part 1](https://i.ytimg.com/vi/nhWRZN9puFg/hqdefault.jpg)](https://www.youtube.com/watch/nhWRZN9puFg)
 
 **Tutorial part 2: from 4D HyperMaps to time-lapse plant physiology monitoring**
 <iframe width="560" height="315" src="https://www.youtube.com/embed/tiJnq_xN-dY" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
