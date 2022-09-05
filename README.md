@@ -61,13 +61,13 @@ FijiRelax interface have four main panels :
 <img src="https://github.com/Rocsg/FijiRelax/blob/master/images/fijirelax-snap-main-window.png" width="300" caption="FijiRelax main window">
 
 
+ 
+
 ## Tutorials
 
 **Tutorial part 1: proton density, T1 and T2 time-series from 3D dicom data of a sorgho plant**
 
-<figure class="video_container">
-  <iframe src="https://www.youtube.com/embed/nhWRZN9puFg" frameborder="0" allowfullscreen="true"> </iframe>
-</figure>
+[<iframe width="560" height="315" src="https://www.youtube.com/embed/nhWRZN9puFg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>]
 
 
 **Tutorial part 2: from 4D HyperMaps to time-lapse plant physiology monitoring**
