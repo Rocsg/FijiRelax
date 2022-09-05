@@ -69,8 +69,7 @@ FijiRelax interface have four main panels :
 
 #[<iframe width="560" height="315" src="https://www.youtube.com/embed/nhWRZN9puFg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>]
 
-
-[![Watch the video](https://img.youtube.com/vi/nhWRZN9puFg/maxresdefault.jpg)](https://www.youtube.com/embed/nhWRZN9puFg)
+[![Watch the video](https://i.ytimg.com/vi/nhWRZN9puFg/hqdefault.jpg)](https://www.youtube.com/embed/nhWRZN9puFg)
 
 **Tutorial part 2: from 4D HyperMaps to time-lapse plant physiology monitoring**
 <iframe width="560" height="315" src="https://www.youtube.com/embed/tiJnq_xN-dY" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
