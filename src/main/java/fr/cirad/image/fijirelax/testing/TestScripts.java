@@ -1,11 +1,7 @@
 package fr.cirad.image.fijirelax.testing;
 import fr.cirad.image.common.VitiDialogs;
 import fr.cirad.image.common.VitimageUtils;
-import fr.cirad.image.fijiyama.RegistrationAction;
-
-import fr.cirad.image.fijirelax.mrialgo.HyperMap;
 import fr.cirad.image.fijirelax.mrialgo.MRUtils;
-import fr.cirad.image.fijirelax.mrialgo.NoiseManagement;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -14,7 +10,7 @@ import ij.plugin.Duplicator;
 import ij.plugin.HyperStackConverter;
 
 import java.io.File;
-import trainableSegmentation.*;
+//import trainableSegmentation.*;
 public class TestScripts {
 
 	public TestScripts() {

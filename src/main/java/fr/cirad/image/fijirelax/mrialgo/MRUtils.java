@@ -7,9 +7,6 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
-import org.apache.poi.hssf.eventusermodel.dummyrecord.MissingRowDummyRecord;
-import org.apache.poi.poifs.property.NPropertyTable;
-
 import fr.cirad.image.common.TransformUtils;
 import fr.cirad.image.common.VitimageUtils;
 

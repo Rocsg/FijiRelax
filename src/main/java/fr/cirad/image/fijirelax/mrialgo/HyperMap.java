@@ -27,7 +27,7 @@ import ij.plugin.Duplicator;
 import ij.plugin.HyperStackConverter;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
-import no.uib.cipr.matrix.sparse.SSOR;
+//import no.uib.cipr.matrix.sparse.SSOR;
 
 
 public class HyperMap {

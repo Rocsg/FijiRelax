@@ -29,12 +29,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.jogamp.nativewindow.VisualIDHolder;
+//import com.jogamp.nativewindow.VisualIDHolder;
 import fr.cirad.image.common.Timer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
