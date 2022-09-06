@@ -1,4 +1,4 @@
-package fr.cirad.image.fijirelax.mrialgo;
+package net.imagej.fijirelax.mrialgo;
 
 public enum MRDataType {
 	T1SEQ,

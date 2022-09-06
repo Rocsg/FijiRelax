@@ -1,4 +1,4 @@
-package fr.cirad.image.fijirelax.mrialgo;
+package net.imagej.fijirelax.mrialgo;
 
 
 import java.util.ArrayList;
@@ -7,17 +7,16 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
-import fr.cirad.image.common.TransformUtils;
-import fr.cirad.image.common.VitimageUtils;
-
-import fr.cirad.image.fijirelax.curvefit.LMCurveFitterNoBias;
-import fr.cirad.image.fijirelax.curvefit.LMDualCurveFitterNoBias;
-import fr.cirad.image.fijirelax.curvefit.SimplexDualCurveFitterNoBias;
+import net.imagej.fijiyama.registration.TransformUtils;
+import net.imagej.fijiyama.common.VitimageUtils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.Duplicator;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
+import net.imagej.fijirelax.curvefit.LMCurveFitterNoBias;
+import net.imagej.fijirelax.curvefit.LMDualCurveFitterNoBias;
+import net.imagej.fijirelax.curvefit.SimplexDualCurveFitterNoBias;
 public class MRUtils  {
 	
 	public MRUtils() {	}

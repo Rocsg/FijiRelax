@@ -1,14 +1,7 @@
-package fr.cirad.image.fijirelax.mrialgo;
+package net.imagej.fijirelax.mrialgo;
 
 import java.util.Random;
-
-import fr.cirad.image.common.Timer;
-import fr.cirad.image.common.TransformUtils;
-import fr.cirad.image.common.VitimageUtils;
-
-import ij.IJ;
-import ij.ImageJ;
-import ij.ImagePlus;
+import net.imagej.fijiyama.common.VitimageUtils;
 
 public class RiceEstimator {
 

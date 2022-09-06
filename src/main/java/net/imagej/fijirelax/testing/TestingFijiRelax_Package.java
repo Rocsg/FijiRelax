@@ -1,9 +1,9 @@
-package fr.cirad.image.fijirelax.testing;
+package net.imagej.fijirelax.testing;
 
 import java.io.File;
 
 
-import fr.cirad.image.common.VitimageUtils;
+import net.imagej.fijiyama.common.VitimageUtils;
 import ij.IJ;
 import ij.ImageJ;
 import ij.plugin.frame.PlugInFrame;

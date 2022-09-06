@@ -1,4 +1,4 @@
-package fr.cirad.image.fijirelax.mrialgo;
+package net.imagej.fijirelax.mrialgo;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -8,16 +8,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
-import fr.cirad.image.common.Timer;
-import fr.cirad.image.common.TransformUtils;
-import fr.cirad.image.common.VitimageUtils;
-import fr.cirad.image.fijiyama.RegistrationAction;
-import fr.cirad.image.registration.BlockMatchingRegistration;
-import fr.cirad.image.registration.ItkTransform;
-import fr.cirad.image.registration.Transform3DType;
-
-import fr.cirad.image.fijirelax.gui.Custom_Format_Importer;
-import fr.cirad.image.fijirelax.testing.ValidationExperimentsFijiRelaxPaper;
+import net.imagej.fijiyama.common.Timer;
+import net.imagej.fijiyama.registration.TransformUtils;
+import net.imagej.fijiyama.common.VitimageUtils;
+import net.imagej.fijiyama.fijiyamaplugin.RegistrationAction;
+import net.imagej.fijiyama.registration.BlockMatchingRegistration;
+import net.imagej.fijiyama.registration.ItkTransform;
+import net.imagej.fijiyama.registration.Transform3DType;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -26,8 +23,8 @@ import ij.plugin.Concatenator;
 import ij.plugin.Duplicator;
 import ij.plugin.HyperStackConverter;
 import ij.process.ImageProcessor;
-import ij.process.ImageStatistics;
-//import no.uib.cipr.matrix.sparse.SSOR;
+import net.imagej.fijirelax.gui.Custom_Format_Importer;
+import net.imagej.fijirelax.testing.ValidationExperimentsFijiRelaxPaper;
 
 
 public class HyperMap {

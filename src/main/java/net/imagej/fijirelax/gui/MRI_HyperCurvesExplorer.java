@@ -1,19 +1,14 @@
-package fr.cirad.image.fijirelax.gui;
+package net.imagej.fijirelax.gui;
 
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Event;
 import java.awt.Font;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Polygon;
 import java.awt.Rectangle;
-import java.awt.TextField;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -30,7 +25,7 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 //import com.jogamp.nativewindow.VisualIDHolder;
-import fr.cirad.image.common.Timer;
+import net.imagej.fijiyama.common.Timer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -41,13 +36,9 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import fr.cirad.image.common.TransformUtils;
-import fr.cirad.image.common.VitiDialogs;
-import fr.cirad.image.common.VitimageUtils;
-
-import fr.cirad.image.fijirelax.mrialgo.HyperMap;
-import fr.cirad.image.fijirelax.mrialgo.MRUtils;
-import fr.cirad.image.fijirelax.mrialgo.RiceEstimator;
+import net.imagej.fijiyama.registration.TransformUtils;
+import net.imagej.fijiyama.common.VitiDialogs;
+import net.imagej.fijiyama.common.VitimageUtils;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -60,9 +51,11 @@ import ij.gui.PointRoi;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.io.Opener;
-import ij.plugin.Duplicator;
 import ij.plugin.frame.PlugInFrame;
 import ij.plugin.frame.RoiManager;
+import net.imagej.fijirelax.mrialgo.HyperMap;
+import net.imagej.fijirelax.mrialgo.MRUtils;
+import net.imagej.fijirelax.mrialgo.RiceEstimator;
 
 /**
  * 

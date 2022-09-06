@@ -1,13 +1,13 @@
-package fr.cirad.image.fijirelax.testing;
-import fr.cirad.image.common.VitiDialogs;
-import fr.cirad.image.common.VitimageUtils;
-import fr.cirad.image.fijirelax.mrialgo.MRUtils;
+package net.imagej.fijirelax.testing;
+import net.imagej.fijiyama.common.VitiDialogs;
+import net.imagej.fijiyama.common.VitimageUtils;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.plugin.Concatenator;
 import ij.plugin.Duplicator;
 import ij.plugin.HyperStackConverter;
+import net.imagej.fijirelax.mrialgo.MRUtils;
 
 import java.io.File;
 //import trainableSegmentation.*;

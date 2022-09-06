@@ -1,11 +1,10 @@
-package fr.cirad.image.fijirelax.curvefit;
+package net.imagej.fijirelax.curvefit;
 
-import fr.cirad.image.common.VitimageUtils;
-
-import fr.cirad.image.fijirelax.mrialgo.MRUtils;
+import net.imagej.fijiyama.common.VitimageUtils;
 import ij.macro.Interpreter;
 import ij.macro.Program;
 import ij.macro.Tokenizer;
+import net.imagej.fijirelax.mrialgo.MRUtils;
 
 public class SimplexCurveFitterNoBias{
 	private static final int CUSTOM = 21;

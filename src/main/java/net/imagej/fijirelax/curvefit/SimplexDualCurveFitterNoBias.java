@@ -1,14 +1,11 @@
-package fr.cirad.image.fijirelax.curvefit;
+package net.imagej.fijirelax.curvefit;
 
 import java.util.ArrayList;
 
-import fr.cirad.image.common.TransformUtils;
-import fr.cirad.image.common.VitimageUtils;
-
-import fr.cirad.image.fijirelax.mrialgo.MRUtils;
+import net.imagej.fijiyama.registration.TransformUtils;
+import net.imagej.fijiyama.common.VitimageUtils;
 import ij.macro.Interpreter;
-import ij.macro.Program;
-import ij.macro.Tokenizer;
+import net.imagej.fijirelax.mrialgo.MRUtils;
 
 public class SimplexDualCurveFitterNoBias{
 	public boolean iterationsBreak=false;

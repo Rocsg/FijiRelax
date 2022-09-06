@@ -1,12 +1,9 @@
-package fr.cirad.image.fijirelax.curvefit;
-import fr.cirad.image.common.VitimageUtils;
-
-import fr.cirad.image.fijirelax.mrialgo.MRUtils;
-import ij.IJ;
-import lma.LMAFunction;
+package net.imagej.fijirelax.curvefit;
+import net.imagej.fijiyama.common.VitimageUtils;
 import lma.LMAMatrix.InvertException;
 import lma.LMAMultiDimFunction;
 import lma.implementations.LMA;
+import net.imagej.fijirelax.mrialgo.MRUtils;
 
 /** Class for building curve fitter */
 public class LMDualCurveFitterNoBias {	

@@ -1,17 +1,14 @@
-package fr.cirad.image.fijirelax.gui;
+package net.imagej.fijirelax.gui;
 
 import java.io.File;
 import java.util.ArrayList;
-import fr.cirad.image.common.Timer;
-import fr.cirad.image.common.VitiDialogs;
-import fr.cirad.image.common.VitimageUtils;
-import fr.cirad.image.fijiyama.RegistrationAction;
-import fr.cirad.image.registration.BlockMatchingRegistration;
-import fr.cirad.image.registration.ItkTransform;
-import fr.cirad.image.registration.Transform3DType;
-
-import fr.cirad.image.fijirelax.mrialgo.HyperMap;
-import fr.cirad.image.fijirelax.mrialgo.MRUtils;
+import net.imagej.fijiyama.common.Timer;
+import net.imagej.fijiyama.common.VitiDialogs;
+import net.imagej.fijiyama.common.VitimageUtils;
+import net.imagej.fijiyama.fijiyamaplugin.RegistrationAction;
+import net.imagej.fijiyama.registration.BlockMatchingRegistration;
+import net.imagej.fijiyama.registration.ItkTransform;
+import net.imagej.fijiyama.registration.Transform3DType;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.Concatenator;
@@ -19,6 +16,8 @@ import ij.plugin.Duplicator;
 import ij.plugin.FolderOpener;
 import ij.plugin.HyperStackConverter;
 import math3d.Point3d;
+import net.imagej.fijirelax.mrialgo.HyperMap;
+import net.imagej.fijirelax.mrialgo.MRUtils;
 
 
 

@@ -1,36 +1,23 @@
-package fr.cirad.image.fijirelax.testing;
+package net.imagej.fijirelax.testing;
 
-/*
-t2Init_dif = xData(1) - xData(end-1);
-t2Init = t2Init_dif/log(yDat(end-1)/yDat(1));
 
-if t2Init<=0 || isnan(t2Init),
-    t2Init=30;
-end
-*/
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import fr.cirad.image.common.Timer;
-import fr.cirad.image.common.TransformUtils;
-import fr.cirad.image.common.VitimageUtils;
-import fr.cirad.image.fijiyama.RegistrationAction;
-import fr.cirad.image.registration.BlockMatchingRegistration;
-import fr.cirad.image.registration.ItkTransform;
-
-import fr.cirad.image.fijirelax.mrialgo.HyperMap;
-import fr.cirad.image.fijirelax.mrialgo.MRDataType;
-import fr.cirad.image.fijirelax.mrialgo.MRUtils;
-import fr.cirad.image.fijirelax.mrialgo.NoiseManagement;
-import fr.cirad.image.fijirelax.mrialgo.RiceEstimator;
+import net.imagej.fijiyama.registration.TransformUtils;
+import net.imagej.fijiyama.common.VitimageUtils;
+import net.imagej.fijiyama.fijiyamaplugin.RegistrationAction;
+import net.imagej.fijiyama.registration.BlockMatchingRegistration;
+import net.imagej.fijiyama.registration.ItkTransform;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.plugin.Duplicator;
+import net.imagej.fijirelax.mrialgo.HyperMap;
+import net.imagej.fijirelax.mrialgo.MRDataType;
+import net.imagej.fijirelax.mrialgo.MRUtils;
+import net.imagej.fijirelax.mrialgo.NoiseManagement;
+import net.imagej.fijirelax.mrialgo.RiceEstimator;
 
 public class ValidationExperimentsFijiRelaxPaper {
 

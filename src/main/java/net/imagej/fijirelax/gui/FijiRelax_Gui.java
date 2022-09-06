@@ -1,21 +1,16 @@
-package fr.cirad.image.fijirelax.gui;
+package net.imagej.fijirelax.gui;
 
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.lang.management.ManagementFactory;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,23 +24,16 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 
-import fr.cirad.image.common.VitiDialogs;
-import fr.cirad.image.common.VitimageUtils;
-import fr.cirad.image.fijiyama.RegistrationAction;
-import fr.cirad.image.fijiyama.RegistrationManager;
-import fr.cirad.image.registration.OptimizerType;
-import fr.cirad.image.registration.Transform3DType;
-
-import fr.cirad.image.fijirelax.mrialgo.HyperMap;
-import fr.cirad.image.fijirelax.mrialgo.NoiseManagement;
+import net.imagej.fijiyama.common.VitiDialogs;
+import net.imagej.fijiyama.common.VitimageUtils;
+import net.imagej.fijiyama.fijiyamaplugin.RegistrationAction;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
-import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.plugin.Memory;
 import ij.plugin.frame.PlugInFrame;
-import ij.plugin.frame.RoiManager;
+import net.imagej.fijirelax.mrialgo.HyperMap;
 
 /**
  * The PlugInFrame inherited object which run the FijiRelax GUI, when called from the Fiji interface
