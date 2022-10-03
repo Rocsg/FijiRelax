@@ -39,8 +39,10 @@ FijiRelax is a Fiji plugin allowing calculation and exploration of 3D + t relaxa
 We acknowledge contributions from Jean-Luc Verdeil, Christophe Goze-Back, Anne-Sophie Spilmont and Maïda Cardoso.
 This work was funded by the Plan Deperissement de la Vigne (France Agrimer) and APLIM Project (Agropolis Foundation).
 
+![Caption for example figure.](figure.png){ width=20% }
 
 # Figures
+
 ![Figure 1: Quantitative MRI using FijiRelax. \newline
 a) Computation of PD, T1, and T2 maps (bottom line) from spin-echo sequences collected on a living Sorghum stem (upper line). Middle: visualization of spin-echo values with the GUI. \newline
  \newline
@@ -48,8 +50,7 @@ b) Result of map computation from a benchmarking dataset of a human brain (left)
 c) Results of drift artifacts correction with the registration feature. Maps shown are computed before (left) and after (right) registration.  \newline
 d) Comparison of the Rice fit model (FijiRelax feature) with fitting model used in other open-source software. From left to right: expected results, exponential fit results, offset fit results, and Rice fit results. \newline
 e) FijiRelax workflow. Yellow boxes: input/output data; grey boxes: processing operations; white stars: compulsory steps. \newline
-f) Benchmark of FijiRelax against other open-source equivalent software
-
+f) Benchmark of FijiRelax against other open-source equivalent software] (images/figure.png){ width=20% }
 
 
 # References
