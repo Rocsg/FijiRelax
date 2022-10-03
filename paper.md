@@ -3,8 +3,10 @@ title: 'FijiRelax: Fast and noise-corrected estimation of MRI relaxation maps in
 tags:
   - Java
   - Fiji
+  - Image analysis
   - MRI
-  - relaxometry
+  - Relaxometry
+  - Phenotyping
 authors:
   - name: Romain Fernandez
     orcid: 0000-0003-3670-044X
@@ -27,15 +29,15 @@ bibliography: paper.bib
 
 Quantitative Magnetic Resonance Imaging (MRI) is a relevant phenotyping technique for deciphering impacts of abiotic and biotic stresses on living samples. Reproducible measurements of anatomical and physiological modifications can be obtained by quantitative mapping of biomarkers such as proton density (PD) and magnetization relaxation times (T1, T2) in 3D + t. However, applying quantitative MRI to plant tissues at a microscopic scale is still challenging. Detection of weak signals requires longer acquisition times, which favors spatial drift and tissue deformations. In addition, low signal-to-noise ratio (SNR) environments dramatically reduce parameters estimation accuracy. Finally, non-specialists might be deterred by long computation times and the lack of user-friendly solutions. 
 
-# Stamement of need
+# Statmement of need
 
 FijiRelax is a Fiji plugin allowing calculation and exploration of 3D + t relaxation parameter maps from a series of spin-echo sequences. It is a generic tool capable of processing a wide variety of MRI images ranging from a plant stem to a human brain. Its performance was compared to other open-source solutions. FijiRelax provides an efficient and generic tool to facilitate the time-lapse analysis of resonance magnetic images and their application to plant and animal biology, as well as medicine. FijiRelax was designed to be used by both researchers and by students in courses on magnetical resonance imaging. 
 
 
 # Acknowledgements
 
-We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project.
+We acknowledge contributions from Jean-Luc Verdeil, Christophe Goze-Back, Anne-Sophie Spilmont and Maïda Cardoso.
+This work was funded by the Plan Deperissement de la Vigne (France Agrimer) and APLIM Project (Agropolis Foundation).
 
 
 # Figures
@@ -50,6 +52,9 @@ d) Comparison of different fitting models for T2 values estimation.<br>
 e) FijiRelax workflow. Yellow boxes: input/output data; grey boxes: processing operations; white stars: compulsory steps.<br>
 f) Investigation of T1/T2 distribution in a specific ROI using the graphical explorer. <br>
 g) Computation times measured during a classical phenotyping experiment.<br>
-](images/figure.png){ width=20% }
+](images/figure.png){ width=100% }
 
+
+
+# References
 
