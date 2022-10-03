@@ -41,18 +41,14 @@ This work was funded by the Plan Deperissement de la Vigne (France Agrimer) and 
 
 
 # Figures
-![Figure 1: Quantitative MRI using FijiRelax.<br>
-a) PD, T1, and T2 maps computed from spin-echo sequences collected on a living Sorghum stem.<br>
-Top: Spin-echo sequences acquired through micro-RMI. Recovery times = {600, 1200, 1800, 10000 ms}, Echo time spacing= 11.15 ms. <br>
-Middle: Spin-echo data modeling versus MRI measurements. The magnitude of the spin-echo signal (blue crosses) corresponds to points collected on the relaxation decay curves after TR seconds of longitudinal relaxation (red curve) and TE seconds of transversal relaxation (green curves).
-Bottom: Computed PD, T1, and T2 maps.<br>
-b) Maps computed from a grapevine stem (left) and human brain (right) datasets. <br>
-c) Correction of drift artifacts using the registration feature. T1 values estimated from simulated spin-echo images showing a translation drift (250 µm total). Maps are computed before (left) and after (right) registration. <br>
-d) Comparison of different fitting models for T2 values estimation.<br>
-e) FijiRelax workflow. Yellow boxes: input/output data; grey boxes: processing operations; white stars: compulsory steps.<br>
-f) Investigation of T1/T2 distribution in a specific ROI using the graphical explorer. <br>
-g) Computation times measured during a classical phenotyping experiment.<br>
-](images/figure.png){ width=100% }
+![Figure 1: Quantitative MRI using FijiRelax. \newline
+a) Computation of PD, T1, and T2 maps (bottom line) from spin-echo sequences collected on a living Sorghum stem (upper line). Middle: visualization of spin-echo values with the GUI. \newline
+ \newline
+b) Result of map computation from a benchmarking dataset of a human brain (left) and a grapevine stem (right).  \newline
+c) Results of drift artifacts correction with the registration feature. Maps shown are computed before (left) and after (right) registration.  \newline
+d) Comparison of the Rice fit model (FijiRelax feature) with fitting model used in other open-source software. From left to right: expected results, exponential fit results, offset fit results, and Rice fit results. \newline
+e) FijiRelax workflow. Yellow boxes: input/output data; grey boxes: processing operations; white stars: compulsory steps. \newline
+f) Benchmark of FijiRelax against other open-source equivalent software
 
 
 
