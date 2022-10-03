@@ -39,8 +39,6 @@ FijiRelax is a Fiji plugin allowing calculation and exploration of 3D + t relaxa
 We acknowledge contributions from Jean-Luc Verdeil, Christophe Goze-Back, Anne-Sophie Spilmont and Maïda Cardoso.
 This work was funded by the Plan Deperissement de la Vigne (France Agrimer) and APLIM Project (Agropolis Foundation).
 
-![Caption for example figure.](figure.png){ width=20% }
-
 # Figures
 
 ![Figure 1: Quantitative MRI using FijiRelax. \newline
