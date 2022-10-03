@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.curvefit;
 
 import io.github.rocsg.fijiyama.common.VitimageUtils;
@@ -6,44 +9,109 @@ import ij.macro.Program;
 import ij.macro.Tokenizer;
 import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class SimplexCurveFitterNoBias.
+ */
 public class SimplexCurveFitterNoBias{
+	
+	/** The Constant CUSTOM. */
 	private static final int CUSTOM = 21;
 	
+	/** The Iter factor. */
 	public static  int IterFactor = 500;
+	
+	/** The sigma. */
 	protected double sigma;   
+	
+	/** The Constant alpha. */
 	private static final double alpha = -1.0;	  // reflection coefficient
+	
+	/** The Constant beta. */
 	private static final double beta = 0.5;	  // contraction coefficient
+	
+	/** The Constant gamma. */
 	private static final double gamma = 2.0;	  // expansion coefficient
+	
+	/** The Constant root2. */
 	private static final double root2 = 1.414214; // square root of 2
 	
+	/** The fit. */
 	protected int fit;                // Number of curve type to fit
+	
+	/** The y data. */
 	protected double[] xData, yData;  // x,y data to fit
+	
+	/** The num points. */
 	protected int numPoints;          // number of data points
+	
+	/** The num params. */
 	protected int numParams;          // number of parametres
+	
+	/** The num vertices. */
 	protected int numVertices;        // numParams+1 (includes sumLocalResiduaalsSqrd)
+	
+	/** The worst. */
 	private int worst;			// worst current parametre estimates
+	
+	/** The next worst. */
 	private int nextWorst;		// 2nd worst current parametre estimates
+	
+	/** The best. */
 	private int best;			// best current parametre estimates
+	
+	/** The simp. */
 	protected double[][] simp; 		// the simplex (the last element of the array at each vertice is the sum of the square of the residuals)
+	
+	/** The next. */
 	protected double[] next;		// new vertex to be tested
+	
+	/** The num iter. */
 	private int numIter;		// number of iterations so far
+	
+	/** The max iter. */
 	private int maxIter; 	// maximum number of iterations per restart
+	
+	/** The restarts. */
 	private int restarts; 	// number of times to restart simplex after first soln.
+	
+	/** The default restarts. */
 	private static int defaultRestarts = 2;  // default number of restarts
+	
+	/** The n restarts. */
 	private int nRestarts;  // the number of restarts that occurred
+	
+	/** The max error. */
 	private static double maxError = 1e-10;    // maximum error tolerance
+	
+	/** The initial params. */
 	private double[] initialParams;  // user specified initial parameters
+	
+	/** The time. */
 	private long time;  //elapsed time in ms
+	
+	/** The custom formula. */
 	private String customFormula;
+	
+	/** The custom param count. */
 	private static int customParamCount;
+	
+	/** The initial values. */
 	private double[] initialValues;
+	
+	/** The macro. */
 	private Interpreter macro;
+	
+	/** The provided M 0. */
 	private int providedM0;
 
+	/** The parameters boundaries. */
 	private double[][] parametersBoundaries;
 
-	/** 
-	 * Return a first order approximation of initial signal leading to value valFunk, after being corrupted by Rice noise with stddev=sigma 
+	/**
+	 *  
+	 * Return a first order approximation of initial signal leading to value valFunk, after being corrupted by Rice noise with stddev=sigma .
+	 *
 	 * @param valFunk The observed value after noise alteration
 	 * @param sigma The parameter of the Rice noise
 	 * @return First order approximation of the signal, as a double
@@ -51,14 +119,37 @@ public class SimplexCurveFitterNoBias{
 	public static double sigmaWay(double valFunk,double sigma){
 		return valFunk*valFunk-2*sigma*sigma;
 	}
+	
+	/**
+	 * Bes funk cost.
+	 *
+	 * @param value the value
+	 * @param sigma the sigma
+	 * @return the double
+	 */
 	public static double besFunkCost(double value,double sigma) {
 		double alpha=value*value/(4*sigma*sigma);
 		return Math.sqrt(Math.PI*sigma*sigma/2.0)*( (1+2*alpha)*bessi0NoExp(alpha) + 2*alpha*bessi1NoExp(alpha) );
 	}	
+	
+	/**
+	 * Bes funk deriv.
+	 *
+	 * @param value the value
+	 * @param sigma the sigma
+	 * @return the double
+	 */
 	public static double besFunkDeriv(double value,double sigma) {
 		double alpha=value*value/(4*sigma*sigma);
 		return Math.sqrt(Math.PI*alpha/2.0)*(bessi0NoExp(alpha) + bessi1NoExp(alpha) );
 	}
+	
+	/**
+	 * Bessi 0 no exp.
+	 *
+	 * @param x the x
+	 * @return the double
+	 */
 	public static double bessi0NoExp( double x ){
 	   double ax,ans;
 	   double y;
@@ -73,6 +164,13 @@ public class SimplexCurveFitterNoBias{
 	   }
 	   return ans;
 	}
+	
+	/**
+	 * Bessi 1 no exp.
+	 *
+	 * @param x the x
+	 * @return the double
+	 */
 	//Fonction de bessel modifiee de premiere espece d'ordre 1
 	public static double bessi1NoExp( double x){
 		double ax,ans;
@@ -91,7 +189,14 @@ public class SimplexCurveFitterNoBias{
 	   return x < 0.0 ? -ans : ans;
 	}
 
-    /** Construct a new SimplexCurveFitter. */
+    /**
+     *  Construct a new SimplexCurveFitter.
+     *
+     * @param xData the x data
+     * @param yData the y data
+     * @param fitType the fit type
+     * @param sigma the sigma
+     */
     public SimplexCurveFitterNoBias (double[] xData, double[] yData, int fitType,double sigma) {
 		this.sigma=sigma;
         this.xData = xData;
@@ -101,18 +206,37 @@ public class SimplexCurveFitterNoBias{
         initialize(fit);
     }
     
+    /**
+     * Config.
+     *
+     * @param maxIterations the max iterations
+     */
     public void config(int maxIterations) {
     	IterFactor=maxIterations;
     }
     
+    /**
+     * Do fit.
+     */
     public void doFit() {
     	doFit(fit, false);
     }
     
+    /**
+     * Do fit.
+     *
+     * @param fitType the fit type
+     */
     public void doFit(int fitType) {
       doFit(fitType, false);
     }
     
+    /**
+     * Do fit.
+     *
+     * @param fitType the fit type
+     * @param showSettings the show settings
+     */
     public void doFit(int fitType, boolean showSettings) {
 
         int saveFitType = fitType;
@@ -207,6 +331,14 @@ public class SimplexCurveFitterNoBias{
         fitType = saveFitType;
     }
         
+	/**
+	 * Do custom fit.
+	 *
+	 * @param equation the equation
+	 * @param initialValues the initial values
+	 * @param showSettings the show settings
+	 * @return the int
+	 */
 	public int doCustomFit(String equation, double[] initialValues, boolean showSettings) {
 		customFormula = null;
 		customParamCount = 0;
@@ -235,7 +367,11 @@ public class SimplexCurveFitterNoBias{
 	}
 
 
-    /** Initialise the simplex */
+    /**
+     *  Initialise the simplex.
+     *
+     * @param fitType the fit type
+     */
     protected void initialize(int fitType) {
         // Calculate some things that might be useful for predicting parametres
         numParams = getNumParams(fitType);
@@ -306,7 +442,11 @@ public class SimplexCurveFitterNoBias{
         }
     }
         
-    /** Restart the simplex at the nth vertex */
+    /**
+     *  Restart the simplex at the nth vertex.
+     *
+     * @param n the n
+     */
     void restart(int n) {
         // Copy nth vertice of simplex to first vertice
         for (int i = 0; i < numParams; i++) {
@@ -347,6 +487,11 @@ public class SimplexCurveFitterNoBias{
         nRestarts++;
     }
         
+    /**
+     * Show simplex.
+     *
+     * @param iter the iter
+     */
     // Display simplex [Iteration: s0(p1, p2....), s1(),....] in Log window
     void showSimplex(int iter) {
         ij.IJ.log("" + iter);
@@ -358,7 +503,12 @@ public class SimplexCurveFitterNoBias{
         }
     }
         
-    /** Get number of parameters for current fit formula */
+    /**
+     *  Get number of parameters for current fit formula.
+     *
+     * @param fitType the fit type
+     * @return the num params
+     */
     public int getNumParams(int fitType) {
         switch (fitType) {
 			case MRUtils.T1_MONO_RICE: return 2;
@@ -368,12 +518,25 @@ public class SimplexCurveFitterNoBias{
         return 0;
     }
         
-	/** Returns formula value for parameters 'p' at 'x' */
+	/**
+	 *  Returns formula value for parameters 'p' at 'x'.
+	 *
+	 * @param p the p
+	 * @param x the x
+	 * @return the double
+	 */
 	public double f(double[] p, double x) {
 		return f(fit, p, x);
 	}
 
-   /** Returns 'fit' formula value for parameters "p" at "x" */
+   /**
+    *  Returns 'fit' formula value for parameters "p" at "x".
+    *
+    * @param fit the fit
+    * @param p the p
+    * @param x the x
+    * @return the double
+    */
     public double f(int fit, double[] p, double x) {
     	double y;
         switch (fit) {
@@ -388,13 +551,21 @@ public class SimplexCurveFitterNoBias{
         }
     }
     
-    /** Get the set of parameter values from the best corner of the simplex */
+    /**
+     *  Get the set of parameter values from the best corner of the simplex.
+     *
+     * @return the params
+     */
     public double[] getParams() {
         order();
         return simp[best];
     }
     
-	/** Returns residuals array ie. differences between data and curve. */
+	/**
+	 *  Returns residuals array ie. differences between data and curve.
+	 *
+	 * @return the residuals
+	 */
 	public double[] getResiduals() {
 		int saveFit = fit;
 		double[] params = getParams();
@@ -410,6 +581,11 @@ public class SimplexCurveFitterNoBias{
 		return residuals;
 	}
     
+    /**
+     * Gets the sum residuals sqr.
+     *
+     * @return the sum residuals sqr
+     */
     /* Last "parameter" at each vertex of simplex is sum of residuals
      * for the curve described by that vertex
      */
@@ -418,7 +594,11 @@ public class SimplexCurveFitterNoBias{
         return sumResidualsSqr;
     }
     
-    /**  Returns the standard deviation of the residuals. */
+    /**
+     *   Returns the standard deviation of the residuals.
+     *
+     * @return the sd
+     */
     public double getSD() {
     	double[] residuals = getResiduals();
 		int n = residuals.length;
@@ -431,14 +611,17 @@ public class SimplexCurveFitterNoBias{
 		return Math.sqrt(stdDev/(n-1.0));
     }
     
-    /** Returns R^2, where 1.0 is best.
-    <pre>
-     r^2 = 1 - SSE/SSD
-     
-     where:	 SSE = sum of the squares of the errors
-                 SSD = sum of the squares of the deviations about the mean.
-    </pre>
-    */
+    /**
+     *  Returns R^2, where 1.0 is best.
+     *     <pre>
+     *      r^2 = 1 - SSE/SSD
+     *      
+     *      where:	 SSE = sum of the squares of the errors
+     *                  SSD = sum of the squares of the deviations about the mean.
+     *     </pre>
+     *
+     * @return the r squared
+     */
     public double getRSquared() {
         double sumY = 0.0;
         for (int i=0; i<numPoints; i++) sumY += yData[i];
@@ -452,7 +635,11 @@ public class SimplexCurveFitterNoBias{
         return rSquared;
     }
 
-    /**  Get a measure of "goodness of fit" where 1.0 is best. */
+    /**
+     *   Get a measure of "goodness of fit" where 1.0 is best.
+     *
+     * @return the fit goodness
+     */
     public double getFitGoodness() {
         double sumY = 0.0;
         for (int i = 0; i < numPoints; i++) sumY += yData[i];
@@ -469,13 +656,21 @@ public class SimplexCurveFitterNoBias{
         return fitGoodness;
     }
     
-    /** Get a string description of the curve fitting results
+    /**
+     *  Get a string description of the curve fitting results
      * for easy output.
+     *
+     * @param d the d
+     * @return the double
      */
         
     double sqr(double d) { return d * d; }
     
-	/** Adds sum of square of residuals to end of array of parameters */
+	/**
+	 *  Adds sum of square of residuals to end of array of parameters.
+	 *
+	 * @param x the x
+	 */
 	void sumResiduals (double[] x) {
 		x[numParams] = 0.0;
 		if (fit==CUSTOM) {
@@ -487,13 +682,17 @@ public class SimplexCurveFitterNoBias{
 		}
 	}
 
-    /** Keep the "next" vertex */
+    /**
+     *  Keep the "next" vertex.
+     */
     void newVertex() {
     	for (int i = 0; i < numVertices; i++)
             simp[worst][i] = next[i];
     }
     
-    /** Find the worst, nextWorst and best current set of parameter estimates */
+    /**
+     *  Find the worst, nextWorst and best current set of parameter estimates.
+     */
     void order() {
         for (int i = 0; i < numVertices; i++) {
             if (simp[i][numParams] < simp[best][numParams])	best = i;
@@ -508,40 +707,64 @@ public class SimplexCurveFitterNoBias{
         //        IJ.log("B: " + simp[best][numParams] + " 2ndW: " + simp[nextWorst][numParams] + " W: " + simp[worst][numParams]);
     }
 
-    /** Get number of iterations performed */
+    /**
+     *  Get number of iterations performed.
+     *
+     * @return the iterations
+     */
     public int getIterations() {
         return numIter;
     }
     
-    /** Get maximum number of iterations allowed */
+    /**
+     *  Get maximum number of iterations allowed.
+     *
+     * @return the max iterations
+     */
     public int getMaxIterations() {
         return maxIter;
     }
     
-    /** Set maximum number of iterations allowed */
+    /**
+     *  Set maximum number of iterations allowed.
+     *
+     * @param x the new max iterations
+     */
     public void setMaxIterations(int x) {
         maxIter = x;
     }
     
-    /** Get number of simplex restarts to do */
+    /**
+     *  Get number of simplex restarts to do.
+     *
+     * @return the restarts
+     */
     public int getRestarts() {
         return defaultRestarts;
     }
     
-    /** Set number of simplex restarts to do */
+    /**
+     *  Set number of simplex restarts to do.
+     *
+     * @param n the new restarts
+     */
     public void setRestarts(int n) {
         defaultRestarts = n;
     }
 
-	/** Sets the initial parameters, which override the default initial parameters. */
+	/**
+	 *  Sets the initial parameters, which override the default initial parameters.
+	 *
+	 * @param params the new initial parameters
+	 */
 	public void setInitialParameters(double[] params) {
 		initialParams = params;
 	}
 
     /**
      * Gets index of highest value in an array.
-     * 
-     * @param              Double array.
+     *
+     * @param array the array
      * @return             Index of highest value.
      */
     public static int getMax(double[] array) {
@@ -556,14 +779,29 @@ public class SimplexCurveFitterNoBias{
         return index;
     }
     
+	/**
+	 * Gets the x points.
+	 *
+	 * @return the x points
+	 */
 	public double[] getXPoints() {
 		return xData;
 	}
 	
+	/**
+	 * Gets the y points.
+	 *
+	 * @return the y points
+	 */
 	public double[] getYPoints() {
 		return yData;
 	}
 	
+	/**
+	 * Gets the fit.
+	 *
+	 * @return the fit
+	 */
 	public int getFit() {
 		return fit;
 	}

@@ -1,29 +1,54 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.lma;//Initially joalho.data.lma, see  https://zenodo.org/record/4281064
 
+// TODO: Auto-generated Javadoc
 /**
  * The matrix to be used in LMA.
  * Implement this to make LMA operational if you
  * don't or can't use jama or flanagan math libraries.
  */
 public interface LMAMatrix {
+	
+	/**
+	 * The Class InvertException.
+	 */
 	public static class InvertException extends RuntimeException {
+		
+		/**
+		 * Instantiates a new invert exception.
+		 *
+		 * @param message the message
+		 */
 		public InvertException(String message) {
 			super(message);
 		}
 	}
+	
 	/**
 	 * Inverts the matrix for solving linear equations for
 	 * parameter increments.
+	 *
+	 * @throws InvertException the invert exception
 	 */
 	public void invert() throws InvertException;
 	
 	/**
 	 * Set the value of a matrix element.
+	 *
+	 * @param row the row
+	 * @param col the col
+	 * @param value the value
 	 */
 	public void setElement(int row, int col, double value);
 	
 	/**
 	 * Get the value of a matrix element.
+	 *
+	 * @param row the row
+	 * @param col the col
+	 * @return the element
 	 */
 	public double getElement(int row, int col);
 	

@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.gui;
 
 import java.awt.Color;
@@ -35,84 +38,196 @@ import ij.plugin.Memory;
 import ij.plugin.frame.PlugInFrame;
 import io.github.rocsg.fijirelax.mrialgo.HyperMap;
 
+// TODO: Auto-generated Javadoc
 /**
- * The PlugInFrame inherited object which run the FijiRelax GUI, when called from the Fiji interface
+ * The PlugInFrame inherited object which run the FijiRelax GUI, when called from the Fiji interface.
+ *
  * @author Romain Fernandez (romain.fernandez@cirad.fr)
  * @version 1.2, 15.04.2022
- * 
  */
 public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 
 	//Buttons, Frames, Panels
+	/** The import button. */
 	//Registration Frame buttons
 	public JButton importButton=new JButton("Import Nifti / Dicom data");
+	
+	/** The open button. */
 	private JButton openButton=new JButton("Open existing hypermap");
+	
+	/** The export button. */
 	private JButton exportButton=new JButton("Export current hypermap");
+	
+	/** The register button. */
 	private JButton registerButton=new JButton("Register sequences");
+	
+	/** The compute button. */
 	private JButton computeButton=new JButton("Compute maps");
+	
+	/** The sos button. */
 	private JButton sosButton = new JButton("About FijiRelax...");
+	
+	/** The explorer button. */
 	private JButton explorerButton=new JButton("Explorer");
+	
+	/** The undo button. */
 	private JButton undoButton=new JButton("Undo");
+	
+	/** The abort button. */
 	private JButton abortButton=new JButton("Abort");
+	
+	/** The stress button. */
 	private JButton stressButton=new JButton("Feeling stressed with FijiRelax ?");
+	
+	/** The outliers button. */
 	private JButton outliersButton=new JButton("Process outliers");
 
+	/** The registration frame. */
 	//Some more Gui objects and constants
 	public JFrame registrationFrame;
+	
+	/** The log area. */
 	private JTextArea logArea=new JTextArea("", 11,10);
+	
+	/** The color idle. */
 	private Color colorIdle;
+	
+	/** The screen height. */
 	private int screenHeight=0;
+	
+	/** The screen width. */
 	private int screenWidth=0;
+	
+	/** The last view sizes. */
 	public int[] lastViewSizes=new int[] {700,700};//Only useful for serie running
+	
+	/** The displayed name image 1. */
 	public final String displayedNameImage1="Image 1";
+	
+	/** The displayed name image 2. */
 	public final String displayedNameImage2="Image 2";
+	
+	/** The displayed name combined image. */
 	public final String displayedNameCombinedImage="Data_combined";
+	
+	/** The displayed name hyper image. */
 	public final String displayedNameHyperImage="Data_combined";
 
+	/** The my survival font for little displays. */
 	private Font mySurvivalFontForLittleDisplays=null;
 
+	/** The version name. */
 	public String versionName="Handsome honeysuckle";
+	
+	/** The time version flag. */
 	public String timeVersionFlag="  Release time : 2022-05-29 -20:21 PM";
+	
+	/** The version flag. */
 	public String versionFlag=versionName+timeVersionFlag;
+	
+	/** The img view. */
 	public ImagePlus imgView;
+	
+	/** The color std activated button. */
 	private Color colorStdActivatedButton;
+	
+	/** The color green run button. */
 	private Color colorGreenRunButton;
+	
+	/** The interface is running. */
 	public boolean interfaceIsRunning=false;
 
+	/** The Constant saut. */
 	private static final String saut="<div style=\"height:1px;display:block;\"> </div>";
+	
+	/** The Constant startPar. */
 	private static final String startPar="<p  width=\"650\" >";
+	
+	/** The Constant nextPar. */
 	private static final String nextPar="</p><p  width=\"650\" >";
 
+	/** The Constant IMPORT. */
 	//Identifiers for buttons
 	private static final int IMPORT=91;
+	
+	/** The Constant OPEN. */
 	private static final int OPEN=92;
+	
+	/** The Constant REGISTER. */
 	private static final int REGISTER=93;
+	
+	/** The Constant COMPUTE. */
 	private static final int COMPUTE=94;
+	
+	/** The Constant EXPLORER. */
 	private static final int EXPLORER=95;
+	
+	/** The Constant SOS. */
 	private static final int SOS=96;
+	
+	/** The Constant ABORT. */
 	private static final int ABORT=97;
+	
+	/** The Constant STRESS. */
 	private static final int STRESS=98;
+	
+	/** The Constant UNDO. */
 	private static final int UNDO=99;
+	
+	/** The Constant OUTLIERS. */
 	private static final int OUTLIERS=100;
 	
 
+	/** The action aborted. */
 	private volatile boolean actionAborted=false;
+	
+	/** The developer mode. */
 	boolean developerMode=false;
+	
+	/** The debug mode. */
 	private boolean debugMode=true;
+	
+	/** The spaces. */
 	String spaces="                                                                                                                                   ";
+	
+	/** The view slice. */
 	public int viewSlice;
+	
+	/** The is survivor vnc tunnel little display. */
 	private boolean isSurvivorVncTunnelLittleDisplay=false;
+	
+	/** The nb cpu. */
 	private int nbCpu;
+	
+	/** The jvm memory. */
 	private int jvmMemory;
+	
+	/** The memory full size. */
 	private long memoryFullSize;
+	
+	/** The current hypermap. */
 	private HyperMap currentHypermap;
+	
+	/** The hypermap list. */
 	private ArrayList<HyperMap>hypermapList=new ArrayList<HyperMap>();
+	
+	/** The img showed list. */
 	private ArrayList<ImagePlus>imgShowedList=new ArrayList<ImagePlus>();
+	
+	/** The lock. */
 	private boolean lock=false;
+	
+	/** The step. */
 	private int step=0;
 
+	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * The main method.
+	 *
+	 * @param args the arguments
+	 */
 	/* Entry points for testing--------------------------------------------------------------------------------*/
 	public static void main(String[]args) {		
 		ImageJ ij=new ImageJ();
@@ -121,12 +236,18 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		fj.automaticTest();
 	}
 
+	/**
+	 * Test.
+	 */
 	public static void test() {
 		ImagePlus img=IJ.openImage("/home/fernandr/Bureau/Traitements/Sorgho/Series_temporelles/All_timeseries/BM1_Timeseries.tif");
 		img.show();	
 	}
 	
 	
+	/**
+	 * Automatic test.
+	 */
 	public void automaticTest() {
 		//startFromTestImage("/home/fernandr/Bureau/test.tif");
 		//startFromTestImage("/home/fernandr/Bureau/test.tif");
@@ -148,8 +269,9 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 
 	/**
-	 * Method called from the ImageJ interface, starting the plugin
-	 * @param String arg is not interpred in any way.
+	 * Method called from the ImageJ interface, starting the plugin.
+	 *
+	 * @param arg the arg
 	 */
 	public void run(String arg) {
 		if(new File("/users/bionanonmri/").exists()) {
@@ -162,6 +284,9 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		
 	}
 	
+	/**
+	 * Start fiji relax interface.
+	 */
 	public void startFijiRelaxInterface() {
 		IJ.log("Starting FijiRelax registration interface");
 
@@ -311,6 +436,11 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	
 	
 	
+	/**
+	 * Action performed.
+	 *
+	 * @param e the e
+	 */
 	/* Performed actions called from the interface --------------------------------------------------------------------------------*/	
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -328,6 +458,9 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		if(e.getSource()==this.outliersButton)runActionOutliers();
 	}
 	
+	/**
+	 * Run action export.
+	 */
 	public void runActionExport() {
 		this.addLog("Export image.", 1);
 //try
@@ -346,6 +479,9 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 //	}catch(Exception e) {IJ.showMessage("Sorry, it seems that the importation does not went well. Please, contact our support : romain.fernandez@cirad.fr");e.printStackTrace();}
 	}
 	
+	/**
+	 * Run action import.
+	 */
 	public void runActionImport() {		
 		this.addLog("Import image.", 1);
 		try {
@@ -402,6 +538,9 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		}catch(Exception e) {IJ.showMessage("Sorry, it seems that the importation does not went well. \nOur support can help you fixing issues, and updating the software \nin order that you can use FijiRelax with your data.\n Contact: romain.fernandez@cirad.fr");e.printStackTrace();}
 	}
 
+	/**
+	 * Run action registration.
+	 */
 	public void runActionRegistration() {
  		if(currentHypermap==null)return;
 		this.addLog("Register series.", 1);
@@ -414,6 +553,9 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		});
 	}
 
+	/**
+	 * Run action compute.
+	 */
 	public void runActionCompute() {
  		if(currentHypermap==null)return;
 		this.addLog("Compute maps.", 1);
@@ -447,6 +589,9 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		});
 	}
 	
+	/**
+	 * Run action outliers.
+	 */
 	public void runActionOutliers() {
 		if(currentHypermap==null)return;
 		this.addLog("Removing outliers.", 1);
@@ -489,11 +634,17 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
   		
 	}
 
+	/**
+	 * Run action abort.
+	 */
 	public void runActionAbort() {
 		this.addLog("Abort.", 0);
 		VitiDialogs.notYet("runActionAbort");
 	}
 	
+	/**
+	 * Run action undo.
+	 */
 	public void runActionUndo() {
 		if(hypermapList.size()<2)return;
 		this.imgShowedList.get(imgShowedList.size()-1).hide();
@@ -504,6 +655,9 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		step--;
 	}
 
+	/**
+	 * Run action explorer.
+	 */
 	public void runActionExplorer() {
 		if(this.currentHypermap==null)IJ.showMessage("No Hypermap opened");
 		else {
@@ -513,10 +667,16 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		}
 	}
 		
+	/**
+	 * Run action stress.
+	 */
 	public void runActionStress(){
 		VitimageUtils.getRelaxingPopup("",true);
 	}
 	
+	/**
+	 * Run action sos.
+	 */
 	public void runActionSos(){
 		String textToDisplay="<html>"+saut;
 		textToDisplay+="<b> </b>FijiRelax is a tool for computing maps from spin-echo multi-echo sequences,"+
@@ -533,6 +693,9 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		enable(SOS);
 	}
 	
+	/**
+	 * Run action open.
+	 */
 	public void runActionOpen() {
 		ImagePlus imgNew=VitiDialogs.chooseOneImageUI("Hypermap selection", "Choose nifti or tif hypermap");
 		if(imgNew!=null) {
@@ -547,6 +710,11 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		if(this.currentHypermap.T>1)disable(REGISTER);
 	}
 	
+	/**
+	 * Start from test image.
+	 *
+	 * @param testPath the test path
+	 */
 	public void startFromTestImage(String testPath) {
  		ImagePlus imgNew=IJ.openImage(testPath);
 		if(imgNew!=null) {
@@ -565,6 +733,11 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	
 	
 	
+	/**
+	 * Open registration settings dialog.
+	 *
+	 * @return the registration action
+	 */
 	/* Helpers --------------------------------------------------------------------------------*/	
 	public RegistrationAction openRegistrationSettingsDialog() {
 		RegistrationAction regAct=this.currentHypermap.getDefaultRegistrationSettings();
@@ -651,6 +824,11 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
        	return regAct;
 	}
 
+	/**
+	 * Open outliers dialog.
+	 *
+	 * @return the double[]
+	 */
 	public double[] openOutliersDialog() {
 		double[]params=new double[3];
 		//Parameters for automatic registration
@@ -679,6 +857,11 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
        	return params;
 	}
 
+	/**
+	 * Open compute dialog.
+	 *
+	 * @return the object[]
+	 */
 	public Object[] openComputeDialog() {
 		ImagePlus imgMask=null;
 		double[]params=new double[6];
@@ -716,17 +899,29 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
        	return new Object[] {params,imgMask};
 	}
 
+	/**
+	 * Welcome and inform about computer capabilities.
+	 */
 	public void welcomeAndInformAboutComputerCapabilities() {		
 		String[]str=checkComputerCapacity(true);
 		addLog(str[0],0);
 		addLog(str[1],0);		
 	}
 	
+	/**
+	 * Adds the log.
+	 *
+	 * @param t the t
+	 * @param level the level
+	 */
 	public void addLog(String t,int level) {
 		logArea.append((level==0 ? "\n > ": (level==1) ? "\n\n > " : " ")+t);
 		logArea.setCaretPosition(logArea.getDocument().getLength());
 	}
 
+	/**
+	 * Update view.
+	 */
 	public void updateView() {
 		this.addLog("Updating view", 0);
 		if(this.hypermapList.size()==0)return;
@@ -774,14 +969,29 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		imgView.updateAndRepaintWindow();
 	}
 	
+	/**
+	 * Gets the img view text.
+	 *
+	 * @param st the st
+	 * @return the img view text
+	 */
 	public static String getImgViewText(int st){
 		return ( (st==0) ? "Superimposition before registration" :  ("Registration results after "+(st)+" step"+((st>1)? "s" : "")) );
 	}
 	
+	/**
+	 * Close all views.
+	 */
 	public void closeAllViews() {
 		for(ImagePlus img : imgShowedList) {if(img!=null)img.close();};
 	}	
 
+	/**
+	 * Check computer capacity.
+	 *
+	 * @param verbose the verbose
+	 * @return the string[]
+	 */
 	@SuppressWarnings("restriction")
 	public String []checkComputerCapacity(boolean verbose) {
 		this.nbCpu=Runtime.getRuntime().availableProcessors();
@@ -805,6 +1015,11 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		else return new String[] {"",""};
 	}
 	
+	/**
+	 * Gets the relative optimal position for 2 D view.
+	 *
+	 * @return the relative optimal position for 2 D view
+	 */
 	public int getRelativeOptimalPositionFor2DView() {
 		java.awt.Dimension currentScreen = Toolkit.getDefaultToolkit().getScreenSize();
         int screenX=(int)Math.round(currentScreen.width);
@@ -821,28 +1036,63 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	
 	
 	
+	/**
+	 * Lock.
+	 */
 	/* Minor helpers --------------------------------------------------------------------------------*/	
 	public void lock() {
 		this.lock=true;
 	}
+	
+	/**
+	 * Unlock.
+	 */
 	public void unlock() {
 		this.lock=false;
 	}
 
+	/**
+	 * Enable.
+	 *
+	 * @param but the but
+	 */
 	public void enable(int but) {
 		setState(new int[] {but},true);
 	}
+	
+	/**
+	 * Disable.
+	 *
+	 * @param but the but
+	 */
 	public void disable(int but) {
 		setState(new int[] {but},false);
 	}
 
+	/**
+	 * Enable.
+	 *
+	 * @param tabBut the tab but
+	 */
 	public void enable(int[]tabBut) {
 		setState(tabBut,true);
 	}
+	
+	/**
+	 * Disable.
+	 *
+	 * @param tabBut the tab but
+	 */
 	public void disable(int[]tabBut) {
 		setState(tabBut,false);
 	}
 			
+	/**
+	 * Sets the state.
+	 *
+	 * @param tabBut the tab but
+	 * @param state the state
+	 */
 	public void setState(int[]tabBut,boolean state) {
 		for(int but:tabBut) {
 			switch(but) {

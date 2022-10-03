@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.curvefit;
 
 import io.github.rocsg.fijirelax.lma.ArrayConverter;
@@ -9,6 +12,7 @@ import  io.github.rocsg.fijirelax.lma.implementations.JAMAMatrix;
 import io.github.rocsg.fijirelax.lma.LMA;
 
 
+// TODO: Auto-generated Javadoc
 /**
  * A class which implements the <i>Levenberg-Marquardt Algorithm</i>
  * (LMA) fit for non-linear, multidimensional parameter space
@@ -68,19 +72,41 @@ public class MRLMADual extends LMA{
 	 */
 	public double[] weights;
 	
+	/** The alpha. */
 	public LMAMatrix alpha;
+	
+	/** The beta. */
 	public double[] beta;
+	
+	/** The da. */
 	public double[] da;
+	
+	/** The lambda. */
 	public double lambda = 0.001;
+	
+	/** The lambda factor. */
 	public double lambdaFactor = 10;
+	
+	/** The incremented chi 2. */
 	public double incrementedChi2;
+	
+	/** The incremented parameters. */
 	public double[] incrementedParameters;
+	
+	/** The iteration count. */
 	public int iterationCount;
+	
+	/** The chi 2. */
 	public double chi2;
 	
+	/** The min delta chi 2. */
 	// default end conditions
 	public double minDeltaChi2 = 1e-30;
+	
+	/** The max iterations. */
 	public int maxIterations = 100;
+	
+	/** The parameter bounds. */
 	private float[][] parameterBounds;
 	
 	
@@ -92,11 +118,12 @@ public class MRLMADual extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of data points, M is the number of fit parameters.
 	 * Call <code>fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in an array, <code>double[0 = x, 1 = y][point index]</code>.
 	 * Size must be <code>double[2][N]</code>.
+	 * @param bounds the bounds
 	 */
 	public MRLMADual(final LMAFunction function, double[] parameters, double[][] dataPoints, float[][]bounds) {
 		super(function, parameters, dataPoints, function.constructWeights(dataPoints));
@@ -110,11 +137,13 @@ public class MRLMADual extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of data points, M is the number of fit parameters.
 	 * Call <code>fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in an array, <code>double[0 = x, 1 = y][point index]</code>.
 	 * Size must be <code>double[2][N]</code>.
+	 * @param weights the weights
+	 * @param bounds the bounds
 	 */
 	public MRLMADual(final LMAFunction function, double[] parameters, double[][] dataPoints, double[] weights, float[][]bounds) {
 		super (
@@ -147,11 +176,12 @@ public class MRLMADual extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of data points, M is the number of fit parameters.
 	 * Call <code>fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in an array, <code>float[0 = x, 1 = y][point index]</code>.
 	 * Size must be <code>float[2][N]</code>.
+	 * @param bounds the bounds
 	 */
 	public MRLMADual(final LMAFunction function, float[] parameters, float[][] dataPoints, float[][]bounds) {
 		super(
@@ -169,7 +199,7 @@ public class MRLMADual extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of data points, M is the number of fit parameters.
 	 * Call <code>fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in an array, <code>float[0 = x, 1 = y][point index]</code>.
@@ -177,6 +207,7 @@ public class MRLMADual extends LMA{
 	 * @param weights The weights, normally given as: <code>weights[i] = 1 / sigma_i^2</code>.
 	 * If you have a bad data point, set its weight to zero.
 	 * If the given array is null, a new array is created with all elements set to 1.
+	 * @param bounds the bounds
 	 */
 	public MRLMADual(final LMAFunction function, float[] parameters, float[][] dataPoints, float[] weights, float[][]bounds) {
 		super(
@@ -193,7 +224,7 @@ public class MRLMADual extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in two dimensional array where each array, dataPoints[i],
@@ -204,6 +235,7 @@ public class MRLMADual extends LMA{
 	 * dataPoints[1] = y1 x10 x11 x12 ... x1[K-1]<br>
 	 * ...<br>
 	 * dataPoints[N] = yN xN0 xN1 xN2 ... x[N-1][K-1]
+	 * @param bounds the bounds
 	 */
 	public MRLMADual(LMAMultiDimFunction function, float[] parameters, float[][] dataPoints, float[][]bounds) {
 		super (
@@ -221,7 +253,7 @@ public class MRLMADual extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in two dimensional array where each array, dataPoints[i],
@@ -232,6 +264,7 @@ public class MRLMADual extends LMA{
 	 * dataPoints[1] = y1 x10 x11 x12 ... x1[K-1]<br>
 	 * ...<br>
 	 * dataPoints[N] = yN xN0 xN1 xN2 ... x[N-1][K-1]
+	 * @param bounds the bounds
 	 */
 	public MRLMADual(LMAMultiDimFunction function, double[] parameters, double[][] dataPoints, float[][]bounds) {
 		super (
@@ -249,11 +282,12 @@ public class MRLMADual extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param yDataPoints The y-data points in an array.
 	 * @param xDataPoints The x-data points for each y data point, double[y-index][x-index]
+	 * @param bounds the bounds
 	 */
 	public MRLMADual(LMAMultiDimFunction function, double[] parameters, float[] yDataPoints, float[][] xDataPoints, float[][]bounds) {
 		super (
@@ -272,11 +306,12 @@ public class MRLMADual extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param yDataPoints The y-data points in an array.
 	 * @param xDataPoints The x-data points for each y data point, double[y-index][x-index]
+	 * @param bounds the bounds
 	 */
 	public MRLMADual(LMAMultiDimFunction function, double[] parameters, double[] yDataPoints, double[][] xDataPoints, float[][]bounds) {
 		super (
@@ -294,7 +329,7 @@ public class MRLMADual extends LMA{
 	/**
 	 * Initiates the fit. N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in two dimensional array where each array, dataPoints[i],
@@ -310,6 +345,7 @@ public class MRLMADual extends LMA{
 	 * If you have a bad data point, set its weight to zero.
 	 * If the given array is null, a new array is created with all elements set to 1.
 	 * @param alpha An LMAMatrix instance. Must be initiated to (M x M) size.
+	 * @param bounds the bounds
 	 */
 	public MRLMADual(LMAMultiDimFunction function, float[] parameters, float[][] dataPoints, float[] weights, LMAMatrix alpha, float[][]bounds) {
 		super(
@@ -325,7 +361,7 @@ public class MRLMADual extends LMA{
 	/**
 	 * Initiates the fit. N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in two dimensional array where each array, dataPoints[i],
@@ -341,6 +377,7 @@ public class MRLMADual extends LMA{
 	 * If you have a bad data point, set its weight to zero.
 	 * If the given array is null, a new array is created with all elements set to 1.
 	 * @param alpha An LMAMatrix instance. Must be initiated to (M x M) size.
+	 * @param bounds the bounds
 	 */
 	public MRLMADual(LMAMultiDimFunction function, double[] parameters, double[][] dataPoints, double[] weights, LMAMatrix alpha, float[][]bounds) {
 		super(function,parameters,dataPoints,weights,alpha);
@@ -355,7 +392,7 @@ public class MRLMADual extends LMA{
 	/**
 	 * Initiates the fit. N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param yDataPoints The y-data points in an array.
@@ -366,6 +403,7 @@ public class MRLMADual extends LMA{
 	 * If you have a bad data point, set its weight to zero. If the given array is null,
 	 * a new array is created with all elements set to 1.
 	 * @param alpha An LMAMatrix instance. Must be initiated to (M x M) size.
+	 * @param bounds the bounds
 	 */
 	public MRLMADual(LMAMultiDimFunction function, double[] parameters, double[] yDataPoints, double[][] xDataPoints, double[] weights, LMAMatrix alpha, float[][]bounds) {
 		super(function,parameters,xDataPoints,weights,alpha);

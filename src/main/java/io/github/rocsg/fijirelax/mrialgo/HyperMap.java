@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.mrialgo;
 
 import java.io.File;
@@ -24,58 +27,139 @@ import ij.plugin.Duplicator;
 import ij.plugin.HyperStackConverter;
 import ij.process.ImageProcessor;
 import io.github.rocsg.fijirelax.gui.Custom_Format_Importer;
-import io.github.rocsg.fijirelax.test.ValidationExperimentsFijiRelaxPaper;
+//import io.github.rocsg.fijirelax.test.ValidationExperimentsFijiRelaxPaper;
 
 /**
  * HyperMap class is the data packager for the variety of possible data processed by FijiRelax.
  * A HyperMap can represent up to a 3D+modality+t MRI image series
  * <p>
  * 
- * @author rfernandez
+ * @author Romain Fernandez (rocsg@github)
  *
  */
 public class HyperMap {
+	
+	/** The default outlier algorithm. */
 	public static int defaultOutlierAlgorithm=1;//1=Tukey fences, 2=double-sided MADe
+	
+	/** The default outlier std dev. */
 	public static double defaultOutlierStdDev=3;
+	
+	/** The default outlier neighbour XY. */
 	public static int defaultOutlierNeighbourXY=3;
+	
+	/** The default algo choice. */
 	public static int defaultAlgoChoice=0;//0=Simplexe, 1=Levenberg
+	
+	/** The default noise choice. */
 	public static int defaultNoiseChoice =0;//0=Rice , 1=Offset, 2=nothing
+	
+	/** The default first choice. */
 	public static int defaultFirstChoice =0;//0=Yes , 1=No (weird)
+	
+	/** The default mask choice. */
 	public static int defaultMaskChoice =0;//0=Auto , 1=provided
+	
+	/** The default std dev mask. */
 	public static double defaultStdDevMask =4;//Threshold for significant points is = mean Rice noise + n * sigma rice noise
+	
+	/** The default joint scheme choice. */
 	public static int defaultJointSchemeChoice =0;//0=Joint , 1=Separated
+	
+	/** The factor view normalisation. */
 	public static double factorViewNormalisation=1.2;
+	
+	/** The percentage keep normalisation. */
 	public static double percentageKeepNormalisation=99;
 
+	/** The dims. */
 	public int[]dims;
+	
+	/** The voxel sizes. */
 	public double[]voxs;
+	
+	/** number of time-frames in the HyperMap. */
 	public int T;
+	
+	/** Number of channels in the HyperMaps, including original echoes, and maps if so. */
 	public int C;
+	
+	/** HyperMap width */
 	public int X;
+	
+	/** HyperMap Height. */
 	public int Y;
+	
+	/** HyperMap number of z-slices */
 	public int Z;
+	
+	/** Total channel number to expect, including both original echoes and maps. */
 	public int Ctot;
+	
+	/** The expected number of maps, given the relaxation sequences provided . */
 	public int nMaps=0;
+	
+	/** The m 0 map channel. */
 	final int m0MapChannel=0;
+	
+	/** The index of the t1 map in channels. */
 	final int t1MapChannel=1;
+	
+	/** The index of the t2 map in channels. */
 	final int t2mapChannel=2;
+	
+	/** Has T 2 sequence. */
 	public boolean hasT2sequence=false;
+	
+	/** Has T 1 sequence. */
 	public boolean hasT1sequence=false;
+	
+	/** Has joint T1-T2 sequence. */
 	public boolean hasT1T2sequence=false;
+	
+	/** Has maps. */
 	public boolean hasMaps=false;
+	
+	/** The hyper img. */
 	public ImagePlus hyperImg;
+	
+	/** The hyper maps. */
 	public ImagePlus hyperMaps;
+	
+	/** The hyper echoes. */
 	public ImagePlus hyperEchoes;
+	
+	/** The Te. */
 	public double[][][]Te;
+	
+	/** The Tr. */
 	public double[][][]Tr;
+	
+	/** The sigma rice. */
 	public double [][][]sigmaRice;
+	
+	/** The mr data type. */
 	public MRDataType [][] mrDataType;
+	
+	/** The actual day. */
 	public String[]actualDay;
+	
+	/** The tab sigmas T 1 seq. */
 	public double[][]tabSigmasT1Seq;
+	
+	/** The tab sigmas T 2 seq. */
 	public double[][]tabSigmasT2Seq;
+	
+	/** The tab sigmas T 1 T 2 seq. */
 	public double[][]tabSigmasT1T2Seq;
+	
+	/** The name. */
 	public String name="JOHN-DOE";
+	
+	/** The sigma in use. */
 	public double sigmaInUse=0;
+	
+	/** The default contrast sat. */
 	private double defaultContrastSat=0.35;
 
 	
@@ -86,10 +170,12 @@ public class HyperMap {
 	 */
 	public HyperMap() {}
 
-	/** 
-	Constructor of HyperMap object from an hypermap serialized as a TIFF file
-	Runs no safety check
-	@param ImagePlus hyperImg a serialized HyperMap
+	/**
+	 *  
+	 * 	Constructor of HyperMap object from an hypermap serialized as a TIFF file
+	 * 	Runs no safety check.
+	 *
+	 * @param hyperImg the hyper img
 	 */
 	//TODO : add a safety check
 	public HyperMap(ImagePlus hyperImg) {
@@ -101,10 +187,12 @@ public class HyperMap {
 	
 	
 
-	/** 
-	HyperMap Factory. Return a copy of the provided HyperMap
-	@param ImagePlus hyperMap a serialized HyperMap
-	@return A new HyperMap, copy
+	/**
+	 *  
+	 * 	HyperMap Factory. Return a copy of the provided HyperMap
+	 *
+	 * @param hyp the hyp
+	 * @return A new HyperMap, copy
 	 */
 	public static HyperMap hyperMapFactory(HyperMap hyp) {
 		return new HyperMap(hyp.getAsImagePlus());
@@ -115,6 +203,13 @@ public class HyperMap {
 	
 	
 	
+	/**
+	 * Import hyper map from raw dicom data.
+	 *
+	 * @param inputDir the input dir
+	 * @param nameSpecimen the name specimen
+	 * @return the hyper map
+	 */
 	public static HyperMap importHyperMapFromRawDicomData(String inputDir,String nameSpecimen) {
 		IJ.log("Starting importation with : \ninputDir="+inputDir+"\nnameSpecimen="+nameSpecimen);
 		Custom_Format_Importer t1t2=new Custom_Format_Importer(inputDir,nameSpecimen);
@@ -127,6 +222,13 @@ public class HyperMap {
 		return hyp;
 	}
 	
+	/**
+	 * Import hyper map from custom data.
+	 *
+	 * @param path the path
+	 * @param pattern the pattern
+	 * @return the hyper map
+	 */
 	public static HyperMap importHyperMapFromCustomData(String path,String pattern) {
 		int TR=1000;
 		int TE=10;
@@ -272,7 +374,15 @@ public class HyperMap {
 	
 	
 	//TODO : use more features of nifti metadata (radiologic convention for example) in more handsome functions, in a specific class NiftiImporter
-	/** Main entry points : Nifti handling ---------------------------------------------------------*/
+	/**
+	 *  Main entry points : Nifti handling ---------------------------------------------------------.
+	 *
+	 * @param path the path
+	 * @param imageName the image name
+	 * @param Tr the tr
+	 * @param TeSpacing the te spacing
+	 * @return the hyper map
+	 */
 	public static HyperMap importHyperMapFromNifti4DT2Sequence(String path,String imageName,double Tr, double TeSpacing) {
 		ImagePlus img2=IJ.openImage(path);
 		boolean isOldBioImage=false;
@@ -290,7 +400,7 @@ public class HyperMap {
 			if(img2!=null)img2.hide();
 		}
 		
-		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
+		ImagePlus[]tab=stackToSlicesTframes(img2);
 		tab[0].setTitle("Readen tab0");
 		ImagePlus img=VitimageUtils.hyperStackingChannels(tab);
 		img.setTitle("Stacken Nifti");
@@ -314,11 +424,40 @@ public class HyperMap {
 		return hyper;
 	}
 
+	/**
+	 * Stack to slices tframes.
+	 *
+	 * @param img the img
+	 * @return the image plus[]
+	 */
+	public static ImagePlus[]stackToSlicesTframes(ImagePlus img){
+		VitimageUtils.printImageResume(img);
+		int X=img.getWidth();int Y=img.getHeight();int Z=img.getNFrames();
+		ImagePlus []ret=new ImagePlus[Z];
+		for(int z=0;z<Z;z++) {
+			ret[z]=new Duplicator().run(img, 1, 1, 1, 1, z+1, z+1);
+			VitimageUtils.adjustImageCalibration(ret[z],img);
+			ret[z].getStack().setSliceLabel(img.getStack().getSliceLabel(z+1),1);
+		}
+		return ret;
+	}	
+
+
+	
+	/**
+	 * Import hyper map from nifti 4 DT 2 sequence.
+	 *
+	 * @param path the path
+	 * @param imageName the image name
+	 * @param Tr the tr
+	 * @param Tes the tes
+	 * @return the hyper map
+	 */
 	public static HyperMap importHyperMapFromNifti4DT2Sequence(String path,String imageName,double Tr, double Tes[]) {
 		ImagePlus img2=IJ.openImage(path);
 		img2.setTitle("Readen Nifti");
 		IJ.run(img2, "Flip Vertically", "stack");
-		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
+		ImagePlus[]tab=stackToSlicesTframes(img2);
 		tab[0].setTitle("Readen tab0");
 		ImagePlus img=VitimageUtils.hyperStackingChannels(tab);
 		img.setTitle("Stacken Nifti");
@@ -341,6 +480,12 @@ public class HyperMap {
 		return hyper;
 	}
 
+	/**
+	 * Read nifti.
+	 *
+	 * @param path the path
+	 * @return the image plus
+	 */
 	public static ImagePlus readNifti(String path) {
 		IJ.run("Bio-Formats (Windowless)", "open="+path);
 		VitimageUtils.waitFor(200);
@@ -349,11 +494,19 @@ public class HyperMap {
 		return img;
 	}
 	
+	/**
+	 * Import hyper map from nifti 4 D sequence.
+	 *
+	 * @param path the path
+	 * @param imageName the image name
+	 * @param niftiInfos the nifti infos
+	 * @return the hyper map
+	 */
 	public static HyperMap importHyperMapFromNifti4DSequence(String path,String imageName,Object[]niftiInfos) {
 		ImagePlus img2=readNifti(path);
 		IJ.run(img2, "Flip Vertically", "stack");
 		img2.setTitle("Readen Nifti");
-		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
+		ImagePlus[]tab=stackToSlicesTframes(img2);
 		tab[0].setTitle("Readen tab0");
 		ImagePlus img=VitimageUtils.hyperStackingChannels(tab);
 		img.setTitle("Stacken Nifti");
@@ -377,11 +530,20 @@ public class HyperMap {
 		return hyper;
 	}
 
+	/**
+	 * Import hyper map from nifti 4 DT 1 sequence.
+	 *
+	 * @param path the path
+	 * @param imageName the image name
+	 * @param Tr the tr
+	 * @param TeSpacing the te spacing
+	 * @return the hyper map
+	 */
 	public static HyperMap importHyperMapFromNifti4DT1Sequence(String path,String imageName,double []Tr, double TeSpacing) {
 		ImagePlus img2=readNifti(path);
 		img2.setTitle("Readen Nifti");
 		IJ.run(img2, "Flip Vertically", "stack");
-		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
+		ImagePlus[]tab=stackToSlicesTframes(img2);
 		tab[0].setTitle("Readen tab0");
 		ImagePlus img=VitimageUtils.hyperStackingChannels(tab);
 		img.setTitle("Stacken Nifti");
@@ -408,6 +570,13 @@ public class HyperMap {
 		return hyper;
 	}
 
+	/**
+	 * Import hyper map from nifti 4 D unknown sequence.
+	 *
+	 * @param path the path
+	 * @param imageName the image name
+	 * @return the hyper map
+	 */
 	public static HyperMap importHyperMapFromNifti4DUnknownSequence(String path,String imageName) {
 		ImagePlus img2=readNifti(path);
 		IJ.log("Deb 1");
@@ -416,7 +585,7 @@ public class HyperMap {
 		IJ.log(VitimageUtils.imageResume(img2));
 		IJ.run(img2, "Flip Vertically", "stack");
 		IJ.log("Readen Nifti");
-		ImagePlus[]tab=ValidationExperimentsFijiRelaxPaper.stackToSlicesTframes(img2);
+		ImagePlus[]tab=stackToSlicesTframes(img2);
 		IJ.log("Deb 2");
 		ImagePlus img=VitimageUtils.hyperStackingChannels(tab);
 
@@ -432,6 +601,12 @@ public class HyperMap {
 		return importHyperMapFromNifti4DSequence(path, imageName, objs);
 	}		
 
+	/**
+	 * Gets the nifti infos.
+	 *
+	 * @param nChannels the n channels
+	 * @return the nifti infos
+	 */
 	public static Object[] getNiftiInfos(int nChannels) {	
 		IJ.log("Entering GetNiftinInfos");
 		
@@ -500,16 +675,29 @@ public class HyperMap {
     	return null;
  	}
 
+	/**
+	 * Gets the as image plus.
+	 *
+	 * @return the as image plus
+	 */
 	public ImagePlus getAsImagePlus() {
 		return hyperImg.duplicate();
 	}
 	
+	/**
+	 * The main method.
+	 *
+	 * @param args the arguments
+	 */
 	public static void main(String[]args) {
    		@SuppressWarnings("unused")
 		ImageJ ij=new ImageJ();
    		runDebugTest();
 	}
 
+	/**
+	 * Run debug test.
+	 */
 	public static void runDebugTest() {
 		ImagePlus imgTest=IJ.openImage("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Tests_Refactoring/3_Computed_Maps/hyper.tif");
 		imgTest.show();
@@ -548,6 +736,9 @@ public class HyperMap {
 	
 	
 	
+	/**
+	 * Setup.
+	 */
 	/* Setup object---------------------------------------------------------*/	
 	public void setup (){
 		setupDimensions();
@@ -558,6 +749,9 @@ public class HyperMap {
 		setupSigmaTabs();
 	}
 	
+	/**
+	 * Setup dimensions.
+	 */
 	public void setupDimensions() {
 		//Dimensions
 		this.T=hyperImg.getNFrames();
@@ -571,6 +765,9 @@ public class HyperMap {
 		this.Ctot=hyperImg.getNChannels();
 	}
 
+	/**
+	 * Setup data type.
+	 */
 	public void setupDataType() {
 		hasT1sequence=false;
 		hasT2sequence=false;
@@ -623,6 +820,9 @@ public class HyperMap {
 		}
 	}
 		
+	/**
+	 * Setup images.
+	 */
 	public void setupImages() {
 		if(hasMaps) {
 			hyperMaps=new Duplicator().run(hyperImg,1,nMaps,1,Z,1,T);
@@ -634,6 +834,9 @@ public class HyperMap {
 		}
 	}
 	
+	/**
+	 * Setup name.
+	 */
 	public void setupName() {
 		String label=this.hyperEchoes.getStack().getSliceLabel(1);
 		if(label==null)return;
@@ -645,6 +848,9 @@ public class HyperMap {
 		hyperImg.setTitle("Hypermap_"+name);
 	}
 
+	/**
+	 * Setup tr te.
+	 */
 	public void setupTrTe(){
 		this.Te=new double[this.T][this.Z][this.C];
 		this.Tr=new double[this.T][this.Z][this.C];
@@ -667,6 +873,9 @@ public class HyperMap {
 		}
 	}
 	
+	/**
+	 * Setup sigma tabs.
+	 */
 	public void setupSigmaTabs() {
 		if(hasT1T2sequence) {
 			this.tabSigmasT1T2Seq=new double[this.T][dims[2]];			
@@ -708,20 +917,40 @@ public class HyperMap {
 	
     
     
+	/**
+	 * Gets the mask.
+	 *
+	 * @return the mask
+	 */
 	/* Helpers for accessing to data subparts ---------------------------------------------------------*/	
 	public ImagePlus getMask() {
 		if(!hasMaps)return null;
 		else return new Duplicator().run(hyperMaps,this.nMaps,this.nMaps,1,this.Z,1,this.T);
 	}
 	
+	/**
+	 * Gets the echoes image.
+	 *
+	 * @return the echoes image
+	 */
 	public ImagePlus getEchoesImage() {
 		return hyperEchoes.duplicate();
 	}
 	
+	/**
+	 * Gets the maps image.
+	 *
+	 * @return the maps image
+	 */
 	public ImagePlus getMapsImage() {
 		return hyperMaps.duplicate();
 	}
 	
+	/**
+	 * Gets the echoes image text.
+	 *
+	 * @return the echoes image text
+	 */
 	public String[][][] getEchoesImageText() {
 		String[][][]texts=new String[C][dims[2]][T];
 		for(int z=0;z<dims[2];z++)for(int t=0;t<T;t++) for(int c=0;c<C;c++) {
@@ -731,6 +960,12 @@ public class HyperMap {
 		return texts;
 	}
 
+	/**
+	 * Gets the t 1 echoes image.
+	 *
+	 * @param t the t
+	 * @return the t 1 echoes image
+	 */
 	public ImagePlus getT1EchoesImage(int t) {
 		int nbT1=getT1SeqNumberReps(t);
 		VitimageUtils.printImageResume(hyperEchoes);
@@ -738,6 +973,12 @@ public class HyperMap {
 		return echoes;
 	}
 
+	/**
+	 * Gets the t 2 echoes image.
+	 *
+	 * @param t the t
+	 * @return the t 2 echoes image
+	 */
 	public ImagePlus getT2EchoesImage(int t) {
 		int nbT2=getT2SeqNumberReps(t);		
 		if(!hasT1sequence) {
@@ -746,6 +987,13 @@ public class HyperMap {
 		return new Duplicator().run(hyperEchoes,getT1SeqNumberReps(t)+1,getT1SeqNumberReps(t)+getT2SeqNumberReps(t),1,Z,1,T);
 	}
 
+	/**
+	 * Gets the hyper echo.
+	 *
+	 * @param c the c
+	 * @param t the t
+	 * @return the hyper echo
+	 */
 	public ImagePlus getHyperEcho(int c,int t) {
 		if (c>=this.C)return getHyperEcho(this.C-1,t);
 		if(c<0)return getHyperEcho(0,t);
@@ -754,6 +1002,11 @@ public class HyperMap {
 		return new Duplicator().run(hyperEchoes,c+1,c+1,1,Z,t,t);				
 	}
 
+	/**
+	 * To string.
+	 *
+	 * @return the string
+	 */
 	public String toString() {
 		String s="";
 		s+="HyperMap "+this.name+"\n X Y Z = "+this.X+" x "+this.Y+" x "+this.Z+"\n";
@@ -780,6 +1033,11 @@ public class HyperMap {
 		return s;
 	}
 	
+	/**
+	 * Gets the range infos.
+	 *
+	 * @return the range infos
+	 */
 	public String getRangeInfos() {
 		String s="";
 		if(this.hyperMaps!=null) {
@@ -816,6 +1074,12 @@ public class HyperMap {
 	
 	
 	
+	/**
+	 * Gets the t 1 T 2 seq number reps.
+	 *
+	 * @param t the t
+	 * @return the t 1 T 2 seq number reps
+	 */
 	/* Helpers for accessing to data T1 and T2 specific informations--------------------------------------------------------- */	
 	public int getT1T2SeqNumberReps(int t){
 		int nb=0;
@@ -823,18 +1087,36 @@ public class HyperMap {
 		return nb;
 	}
 	
+	/**
+	 * Gets the t 1 seq number reps.
+	 *
+	 * @param t the t
+	 * @return the t 1 seq number reps
+	 */
 	public int getT1SeqNumberReps(int t){
 		int nb=0;
 		for(int c=0;c<this.Ctot;c++)if(mrDataType[t][c]==MRDataType.T1SEQ)nb++;
 		return nb;
 	}
 		
+	/**
+	 * Gets the t 2 seq number reps.
+	 *
+	 * @param t the t
+	 * @return the t 2 seq number reps
+	 */
 	public int getT2SeqNumberReps(int t){
 		int nb=0;
 		for(int c=0;c<this.Ctot;c++)if(mrDataType[t][c]==MRDataType.T2SEQ)nb++;
 		return nb;
 	}
 			
+	/**
+	 * Gets the t 1 indices.
+	 *
+	 * @param t the t
+	 * @return the t 1 indices
+	 */
 	public int[]getT1Indices(int t){
 		int[]ret=new int[getT1SeqNumberReps(t)];
 		int incr=0;
@@ -842,6 +1124,12 @@ public class HyperMap {
 		return ret;
 	}
 	
+	/**
+	 * Gets the t 2 indices.
+	 *
+	 * @param t the t
+	 * @return the t 2 indices
+	 */
 	public int[]getT2Indices(int t){
 		int[]ret=new int[getT2SeqNumberReps(t)];
 		int incr=0;
@@ -849,6 +1137,12 @@ public class HyperMap {
 		return ret;
 	}
 
+	/**
+	 * Gets the t 1 T 2 indices.
+	 *
+	 * @param t the t
+	 * @return the t 1 T 2 indices
+	 */
 	public int[]getT1T2Indices(int t){
 		int[]ret=new int[getT1T2SeqNumberReps(t)];
 		int incr=0;
@@ -856,18 +1150,33 @@ public class HyperMap {
 		return ret;
 	}
 	
+	/**
+	 * Gets the t 1 indices.
+	 *
+	 * @return the t 1 indices
+	 */
 	public int[][]getT1Indices(){
 		int[][]ret=new int[this.T][];
 		for(int t=0;t<this.T;t++)ret[t]=this.getT1Indices(t);
 		return ret;
 	}
 
+	/**
+	 * Gets the t 2 indices.
+	 *
+	 * @return the t 2 indices
+	 */
 	public int[][]getT2Indices(){
 		int[][]ret=new int[this.T][];
 		for(int t=0;t<this.T;t++)ret[t]=this.getT2Indices(t);
 		return ret;
 	}
 
+	/**
+	 * Gets the t 1 T 2 indices.
+	 *
+	 * @return the t 1 T 2 indices
+	 */
 	public int[][]getT1T2Indices(){
 		int[][]ret=new int[this.T][];
 		for(int t=0;t<this.T;t++)ret[t]=this.getT1T2Indices(t);
@@ -879,6 +1188,11 @@ public class HyperMap {
 	
 	
 	
+	/**
+	 * Gets the t 1 T 2 te times.
+	 *
+	 * @return the t 1 T 2 te times
+	 */
 	/* Helpers for accessing to echo and recovery times--------------------------------------------------------- */		
 	public double[][][]getT1T2TeTimes(){
 		double[][][][]init=getT1T2TrTeTimes();
@@ -892,6 +1206,11 @@ public class HyperMap {
 		return ret;
 	}
 
+	/**
+	 * Gets the t 1 te times.
+	 *
+	 * @return the t 1 te times
+	 */
 	public double[][][]getT1TeTimes(){
 		double[][][][]init=getT1TrTeTimes();
 		double[][][]ret=new double[this.T][dims[2]][];
@@ -904,6 +1223,11 @@ public class HyperMap {
 		return ret;
 	}
 	
+	/**
+	 * Gets the t 2 te times.
+	 *
+	 * @return the t 2 te times
+	 */
 	public double[][][]getT2TeTimes(){
 		double[][][][]init=getT2TrTeTimes();
 		double[][][]ret=new double[this.T][dims[2]][];
@@ -917,6 +1241,11 @@ public class HyperMap {
 	}
 
 	
+	/**
+	 * Gets the t 1 T 2 tr times.
+	 *
+	 * @return the t 1 T 2 tr times
+	 */
 	public double[][][]getT1T2TrTimes(){
 		double[][][][]init=getT1T2TrTeTimes();
 		double[][][]ret=new double[this.T][dims[2]][];
@@ -931,6 +1260,11 @@ public class HyperMap {
 		return ret;
 	}
 
+	/**
+	 * Gets the t 1 tr times.
+	 *
+	 * @return the t 1 tr times
+	 */
 	public double[][][]getT1TrTimes(){
 		double[][][][]init=getT1TrTeTimes();
 		double[][][]ret=new double[this.T][dims[2]][];
@@ -943,6 +1277,11 @@ public class HyperMap {
 		return ret;
 	}
 
+	/**
+	 * Gets the t 2 tr times.
+	 *
+	 * @return the t 2 tr times
+	 */
 	public double[][][]getT2TrTimes(){
 		double[][][][]init=getT2TrTeTimes();
 		double[][][]ret=new double[this.T][dims[2]][];
@@ -956,6 +1295,12 @@ public class HyperMap {
 	}
 
 	
+	/**
+	 * Gets the t 1 T 2 tr te times.
+	 *
+	 * @param t the t
+	 * @return the t 1 T 2 tr te times
+	 */
 	public double[][][]getT1T2TrTeTimes(int t){
 		int incr=0;
 		double[][][]ret=new double[dims[2]][getT1T2SeqNumberReps(t)][2];
@@ -970,6 +1315,12 @@ public class HyperMap {
 		return ret;
 	}
 	
+	/**
+	 * Gets the t 1 tr te times.
+	 *
+	 * @param t the t
+	 * @return the t 1 tr te times
+	 */
 	public double[][][]getT1TrTeTimes(int t){
 		int incr=0;
 		double[][][]ret=new double[dims[2]][getT1SeqNumberReps(t)][2];
@@ -985,6 +1336,12 @@ public class HyperMap {
 		return ret;
 	}
 	
+	/**
+	 * Gets the t 2 tr te times.
+	 *
+	 * @param t the t
+	 * @return the t 2 tr te times
+	 */
 	public double[][][]getT2TrTeTimes(int t){
 		int incr=0;
 		double[][][]ret=new double[dims[2]][getT2SeqNumberReps(t)][2];
@@ -1000,18 +1357,33 @@ public class HyperMap {
 	}
 
 	
+	/**
+	 * Gets the t 1 T 2 tr te times.
+	 *
+	 * @return the t 1 T 2 tr te times
+	 */
 	public double[][][][]getT1T2TrTeTimes(){
 		double[][][][]ret=new double[T][][][];
 		for(int t=0;t<this.T;t++)ret[t]=getT1T2TrTeTimes(t);
 		return ret;
 	}
 
+	/**
+	 * Gets the t 2 tr te times.
+	 *
+	 * @return the t 2 tr te times
+	 */
 	public double[][][][]getT2TrTeTimes(){
 		double[][][][]ret=new double[T][][][];
 		for(int t=0;t<this.T;t++)ret[t]=getT2TrTeTimes(t);
 		return ret;
 	}
 
+	/**
+	 * Gets the t 1 tr te times.
+	 *
+	 * @return the t 1 tr te times
+	 */
 	public double[][][][]getT1TrTeTimes(){
 		double[][][][]ret=new double[T][][][];
 		for(int t=0;t<this.T;t++)ret[t]=getT1TrTeTimes(t);
@@ -1025,6 +1397,17 @@ public class HyperMap {
 	
 	
 	
+	/**
+	 * Gets the full MRI signal around this voxel T 1 T 2.
+	 *
+	 * @param x the x
+	 * @param y the y
+	 * @param z the z
+	 * @param crossWidth the cross width
+	 * @param crossThick the cross thick
+	 * @param sigmaXYInVoxels the sigma XY in voxels
+	 * @return the full MRI signal around this voxel T 1 T 2
+	 */
 	/* Helpers for dynamic maps computation, give access to magnitude data and coordinates in a neighbourhood around a voxel---------------------------------------------------------*/
 	public double[][][][]getFullMRISignalAroundThisVoxelT1T2(int x,int y, int z,int crossWidth,int crossThick,double sigmaXYInVoxels){
 		int xm,ym,xM,yM,zm,zM;
@@ -1070,6 +1453,16 @@ public class HyperMap {
 		return data;
 	}
 
+	/**
+	 * Gets the full MRI signal in these coordinates T 1 T 2.
+	 *
+	 * @param xCor the x cor
+	 * @param yCor the y cor
+	 * @param zCor the z cor
+	 * @param coordinates the coordinates
+	 * @param sigmaXYInVoxels the sigma XY in voxels
+	 * @return the full MRI signal in these coordinates T 1 T 2
+	 */
 	public double[][][][]getFullMRISignalInTheseCoordinatesT1T2(int xCor,int yCor, int zCor,int[][]coordinates,double sigmaXYInVoxels){
 		int[][]t1t2Indices=this.getT1T2Indices();
 		int nHits=coordinates.length;
@@ -1108,6 +1501,16 @@ public class HyperMap {
 		return data;
 	}
 
+	/**
+	 * Gets the coordinates around this voxel.
+	 *
+	 * @param x the x
+	 * @param y the y
+	 * @param z the z
+	 * @param crossWidth the cross width
+	 * @param crossThick the cross thick
+	 * @return the coordinates around this voxel
+	 */
 	public int[][]getCoordinatesAroundThisVoxel(int x,int y, int z,int crossWidth,int crossThick){
 		int xm,ym,xM,yM,zm,zM;
 		xm=Math.max(0, x-crossWidth);
@@ -1130,6 +1533,17 @@ public class HyperMap {
 		return coords;
 	}	
 	
+	/**
+	 * Gets the max value for contrast more intelligent.
+	 *
+	 * @param img2 the img 2
+	 * @param channel the channel
+	 * @param time the time
+	 * @param z the z
+	 * @param percentageKeep the percentage keep
+	 * @param factor the factor
+	 * @return the max value for contrast more intelligent
+	 */
 	public static double getMaxValueForContrastMoreIntelligent(ImagePlus img2,int channel,int time,int z,double percentageKeep,double factor) {
 		Timer t=new Timer();
 		int nBins=256;
@@ -1144,6 +1558,9 @@ public class HyperMap {
 		return (d[index]*factor);
 	}
 
+	/**
+	 * Adjust contrast.
+	 */
 	public void adjustContrast() {
 		ImagePlus echoes2=this.getEchoesImage();
 		ImagePlus echoes=new Duplicator().run(echoes2,1,echoes2.getNChannels(),1,echoes2.getNSlices(),1,1);
@@ -1202,38 +1619,75 @@ public class HyperMap {
 
 	
 	
-	/** Maps computation routine---------------------------------------------------------*/	
+	/**
+	 *  Maps computation routine---------------------------------------------------------.
+	 *
+	 * @return the image plus
+	 */	
 	//TODO : document this
 	public ImagePlus computeMaps() {
 		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,4);
 	}
 
+	/**
+	 * Compute maps.
+	 *
+	 * @param noise the noise
+	 * @return the image plus
+	 */
 	//TODO : document this
 	public ImagePlus computeMaps(NoiseManagement noise) {
 		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,noise,false,null,4);
 	}
 
+	/**
+	 * Compute maps no joint.
+	 *
+	 * @return the image plus
+	 */
 	//TODO : document this
 	public ImagePlus computeMapsNoJoint() {
 		return computeMapsAgainAndMask(MRUtils.SIMPLEX,true,NoiseManagement.RICE,false,null,4);
 	}
 	
+	/**
+	 * Compute maps no joint.
+	 *
+	 * @param noi the noi
+	 * @return the image plus
+	 */
 	//TODO : document this
 	public ImagePlus computeMapsNoJoint(NoiseManagement noi) {
 		return computeMapsAgainAndMask(MRUtils.SIMPLEX,true,noi,false,null,4);
 	}
 
-	//TODO : document this
+	/**
+	 * Compute maps with mask.
+	 *
+	 * @param mask the mask
+	 * @return the image plus
+	 */
 	public ImagePlus computeMapsWithMask(ImagePlus mask) {
 		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,mask,4);
 	}
 	
-	//TODO : document this
+	/**
+	 * Compute maps.
+	 *
+	 * @param nStdDevForMask the n std dev for mask
+	 * @return the image plus
+	 */
 	public ImagePlus computeMaps(double nStdDevForMask) {
 		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,nStdDevForMask);
 	}
 
-	//TODO : document this
+	/**
+	 * Compute maps according to the provided parameters. Calls to this function are made by the plugin GUI
+	 *
+	 * @param paramsGUI the params GUI
+	 * @param imgMask the img mask
+	 * @return the image plus
+	 */
 	public ImagePlus computeMaps(double[]paramsGUI,ImagePlus imgMask) {
 		int algType=(paramsGUI[0]==0) ? MRUtils.SIMPLEX : MRUtils.LM;
 		NoiseManagement noi=null;
@@ -1245,7 +1699,19 @@ public class HyperMap {
 		return computeMapsAgainAndMask(algType,separated ,noi,forgetFistEcho,imgMask,nbStd);
 	}
 
-	//TODO : document this
+	/**
+	 * Compute maps again and mask of the current HyperMap. If it already has computed maps, it updates it.
+	 * The kind of maps computed depends on the available data. If the Hypermap provide a T2 relaxation sequence, the T2 map is computed
+	 * If the Hypermap provide a T1 relaxation sequence, the T1 map is computed.
+	 *
+	 * @param algType the fitting algorithm, that can be MRUtils.SIMPLEX or MRUtils.LM (LM stands for Levenberg-Marquardt)
+	 * @param separated when set to false and both T1 relax and T2 relax data are available, compute a cross-fit T1-T2
+	 * @param noise can be chose among fijirelax.mrialgo.NoiseManagement.NOTHING, OFFSET, or RICE
+	 * @param forgetFirstEcho set to true to avoid fitting the first relaxation point (convention in some clinical setups)
+	 * @param imgMaskUser if non null, used as a mask for the computation. Points outside the mask (set to 0) are not used for fitting, nor estimating T1-T2 relaxation times
+	 * @param nbStdNoiseAroundMeanForSelection if no mask is provided, mask is computed by selecting the voxels which max value among the relax series is upper than mean rice noise + sigma noise * nbstdNoiseAroundMean)
+	 * @return the HyperImage, in the shape of a 4D or 5D image, including the echoes data in the last channels, and computed maps in the first channels
+	 */
 	public ImagePlus computeMapsAgainAndMask(int algType,boolean separated,NoiseManagement noise,boolean forgetFirstEcho,ImagePlus imgMaskUser,double nbStdNoiseAroundMeanForSelection) {
 		if(T>1) {
 			
@@ -1288,7 +1754,7 @@ public class HyperMap {
 		}
 
 		//Mask computation
-		double meanRice=meanRice(imgT1T2Line);
+		double meanRice=getMeanRiceOfCentralSlicesOverEchoes(imgT1T2Line);
 		if(imgMaskUser!=null) {maskGiven=true;imgMask=imgMaskUser;IJ.run(imgMask,"32-bit","");}
 		else {
 			int index=0;
@@ -1426,11 +1892,19 @@ public class HyperMap {
 	}
 	
 
+	/**
+	 * Register echoes.
+	 */
 	//TODO : document this
 	public void registerEchoes(){
 		registerEchoes(this.getDefaultRegistrationSettings());
 	}
 	
+	/**
+	 * Register echoes.
+	 *
+	 * @param regAct the reg act
+	 */
 	public void registerEchoes(RegistrationAction regAct){
 		double PD=this.hyperEchoes.getDisplayRangeMax();
 		if(! hasT1sequence)IJ.log("RegisterEchoes in HyperMap : no T1 sequence, thus nothing to do there");
@@ -1497,10 +1971,15 @@ public class HyperMap {
 		adjustContrast();
 	}
 		
+	/**
+	 * Gets the default registration settings.
+	 *
+	 * @return the default registration settings
+	 */
 	public RegistrationAction getDefaultRegistrationSettings() {
 		RegistrationAction regAct=new RegistrationAction();
 		regAct.defineSettingsSimplyFromTwoImages(this.getHyperEcho(0,0),this.getHyperEcho(0,0));
-		regAct.typeAutoDisplay=2;
+		regAct.typeAutoDisplay=0;
 		regAct.higherAcc=0;
 		//In Fijiyama default settings, images could have a very different geometry. Here we have only minor translations / rotations to correct
 		regAct.levelMaxLinear=2;
@@ -1523,6 +2002,9 @@ public class HyperMap {
 
 
 	
+	/**
+	 * Update hyper img from echoes and maps.
+	 */
 	/* HyperMap global update when a part of it changed ---------------------------------------------------------*/	
 	public void updateHyperImgFromEchoesAndMaps() {
 		ImagePlus []tab=new ImagePlus[Ctot*T];
@@ -1545,6 +2027,9 @@ public class HyperMap {
 		adjustContrast();
 	}
 	
+	/**
+	 * Update hyper img from echoes and maps old.
+	 */
 	/* HyperMap global update when a part of it changed ---------------------------------------------------------*/	
 	public void updateHyperImgFromEchoesAndMapsOld() {
 		ImagePlus []tab=new ImagePlus[Ctot];
@@ -1560,6 +2045,9 @@ public class HyperMap {
 		this.setDisplayRange();
 	}
 	
+	/**
+	 * Update echoes and maps.
+	 */
 	public void updateEchoesAndMaps() {
 		if(hasMaps) {
 			hyperMaps=new Duplicator().run(hyperImg,1,nMaps,1,Z,1,T);
@@ -1571,6 +2059,11 @@ public class HyperMap {
 		adjustContrast();
 	}
 	
+	/**
+	 * Update both from new hyper img.
+	 *
+	 * @param hyperImgNew the hyper img new
+	 */
 	public void updateBothFromNewHyperImg(ImagePlus hyperImgNew) {
 		this.hyperImg=hyperImgNew.duplicate();
 		updateEchoesAndMaps();
@@ -1578,6 +2071,9 @@ public class HyperMap {
 		adjustContrast();
 	}
 	
+	/**
+	 * Sets the display range.
+	 */
 	public void setDisplayRange() {
 		double maxPD=VitimageUtils.maxOfImage(hyperEchoes)*MRUtils.maxDisplayedPDratio;
 		double maxT1=VitimageUtils.max(getT1T2TrTimes()[0][0])*MRUtils.maxDisplayedT1ratio;
@@ -1605,15 +2101,17 @@ public class HyperMap {
 		hyperImg.setC(1);
 	}
 	
+	/**
+	 * Specific setup for colleagues from BionanoImaging platform.
+	 *
+	 * @return the hyper map
+	 */
 	public HyperMap pruneBionanoStuff() {
-		System.out.println("1");
-		this.hyperEchoes.show();
 		ImagePlus []tab=VitimageUtils.stacksFromHyperstackFastBis(this.hyperEchoes);
 		int incr=0;
 		int ZZ=tab[0].getNSlices();
 		double[]trTab=MRUtils.getTrFrom3DRelaxationImageTab(tab);
 		double[]teTab=MRUtils.getTeFrom3DRelaxationImageTab(tab)[0];
-		System.out.println("2");
 		System.out.println(tab.length+"");
 		for(int i=0;i<tab.length;i++) {
 			System.out.println(i);
@@ -1621,14 +2119,10 @@ public class HyperMap {
 		}
 		ImagePlus []ret=new ImagePlus[incr];
 		incr=0;
-		System.out.println("3");
 		for(int i=0;i<tab.length;i++) {
 			if( ! (trTab[i]<10000 && teTab[i]>13))ret[incr++]=tab[i];
 		}
 		ImagePlus newHyperImg=Concatenator.run(ret);
-		VitimageUtils.printImageResume(newHyperImg,"Hyper");
-		System.out.println("4");
-
 		newHyperImg=HyperStackConverter.toHyperStack(newHyperImg, incr,ZZ,1,"xyztc","Grayscale");	
 		return new HyperMap(newHyperImg);
 	}
@@ -1637,6 +2131,15 @@ public class HyperMap {
 	
 	
 	
+	/**
+	 * Tuckey is outlier.
+	 *
+	 * @param val the val
+	 * @param tabIn the tab in
+	 * @param mask the mask
+	 * @param eRatio the e ratio
+	 * @return the object[]
+	 */
 	/* Helpers for outlier detection and removal--------------------------------------------------------- */	
     public static Object[] tuckeyIsOutlier(double val,double []tabIn,double[]mask,double eRatio) {
 	    double[]tabStats=getQuartiles(tabIn,mask);
@@ -1646,6 +2149,15 @@ public class HyperMap {
     	return new Object[]{false,val,tabStats[1]};
     }
     
+    /**
+     * MA de is outlier.
+     *
+     * @param val the val
+     * @param tabIn the tab in
+     * @param mask the mask
+     * @param eRatio the e ratio
+     * @return the object[]
+     */
     public static Object[] MADeIsOutlier(double val,double []tabIn,double[]mask,double eRatio) {
     	double factorB=1.4826;//see reference Leys at al. JESP 2013 - Detecting outliers:
     	double[]tabStats=MADeStatsDoubleSided(tabIn, mask);
@@ -1657,6 +2169,13 @@ public class HyperMap {
     	return(new Object[] {false,val,tabStats[0]});
     }
 	
+    /**
+     * MA de stats double sided.
+     *
+     * @param tabIn the tab in
+     * @param mask the mask
+     * @return the double[]
+     */
     public static double[] MADeStatsDoubleSided(double[] tabIn,double []mask) {
 		if (tabIn.length==0)return null;
 		if(mask==null) {mask=new double[tabIn.length];for(int i=0;i<tabIn.length;i++)mask[i]=1;}
@@ -1693,6 +2212,13 @@ public class HyperMap {
 	    return new double[] {valMed,valMedDown,valMedUp};
     }
 
+    /**
+     * Gets the quartiles.
+     *
+     * @param tabInTmp the tab in tmp
+     * @param mask the mask
+     * @return the quartiles
+     */
     public static double[] getQuartiles(double[] tabInTmp,double []mask) {
 	  	if (tabInTmp.length==0)return null;
 		if(mask==null) {mask=new double[tabInTmp.length];for(int i=0;i<tabInTmp.length;i++)mask[i]=1;}
@@ -1711,6 +2237,15 @@ public class HyperMap {
 		return new double[] {tab[N/4],tab[N/2],tab[(3*N)/4]};
     }
 
+    /**
+     * Replace maps outliers slice per slice.
+     *
+     * @param oneForTukeyFenceTwoForMADe the one for tukey fence two for MA de
+     * @param nStdDev the n std dev
+     * @param blockHalfSize the block half size
+     * @param informUser the inform user
+     * @return the image plus
+     */
     public ImagePlus replaceMapsOutliersSlicePerSlice(int oneForTukeyFenceTwoForMADe,double nStdDev,int blockHalfSize,boolean informUser) {
 	   if(oneForTukeyFenceTwoForMADe<1 || oneForTukeyFenceTwoForMADe>2)return VitimageUtils.nullImage(this.getMask());
 	   if(nStdDev<0) {IJ.showMessage("Please choose a positive value for outliers threshold");return VitimageUtils.nullImage(this.getMask());}
@@ -1791,6 +2326,17 @@ public class HyperMap {
 		   return maskChange;
    }
 
+   /**
+    * Simulate outlier removal.
+    *
+    * @param x0 the x 0
+    * @param y0 the y 0
+    * @param x1 the x 1
+    * @param y1 the y 1
+    * @param z the z
+    * @param t the t
+    * @return the image plus
+    */
    public ImagePlus simulateOutlierRemoval(int x0,int y0,int x1,int y1,int z,int t){
 	   int nConfigs=2;
 	   int []configOutlier=new int[] {1,2};
@@ -1870,10 +2416,22 @@ public class HyperMap {
 	   
 	   
     
+	/**
+	 * Text alg.
+	 *
+	 * @param algType the alg type
+	 * @return the string representing the algorithm, to be displayed in image metadata
+	 */
 	/* Random helpers ---------------------------------------------------------*/
 	public static String textAlg(int algType) {return algType==MRUtils.LM ? "LM" : "SIMP";}
 	
-	public static double meanRice(ImagePlus[]imgT1T2Line) {
+	/**
+	 * Get the mean Rice noise computed over the imaged echoes.
+	 *
+	 * @param imgT1T2Line the array of echoe images
+	 * @return Rice noise mean value, as a double
+	 */
+	public static double getMeanRiceOfCentralSlicesOverEchoes(ImagePlus[]imgT1T2Line) {
 		double[]meanRiceTab=new double[imgT1T2Line.length];
 		for(int c=0;c<imgT1T2Line.length;c++) {		
 			meanRiceTab[c]=MRUtils.readSigmaInSliceLabel(imgT1T2Line[c], 0, imgT1T2Line[c].getNSlices()/2, 0); 
@@ -1881,12 +2439,22 @@ public class HyperMap {
 		return VitimageUtils.statistics1D(meanRiceTab)[0];
 	}
 
+	/**
+	 * Show copy.
+	 *
+	 * @param text the text
+	 */
 	public void showCopy(String text) {
 		ImagePlus temp=hyperImg.duplicate();
 		temp.show();
 		temp.setTitle(text);
 	}
 	
+	/**
+	 * Gets the copy.
+	 *
+	 * @return the copy
+	 */
 	public ImagePlus getCopy() {
 		return hyperImg.duplicate();
 	}
@@ -1898,6 +2466,12 @@ public class HyperMap {
 	
 	
 	
+	/**
+	 * Measure mean capillary value along Z.
+	 *
+	 * @param imgM0 the img M 0
+	 * @return the double
+	 */
 	/* Helpers for capillary measurements and hypermap normalization--------------------------------------------------------- */	
 	public static double measureMeanCapillaryValueAlongZ(ImagePlus imgM0) {
 		//Find capillary in the central slice
@@ -1910,6 +2484,12 @@ public class HyperMap {
 		return VitimageUtils.statistics1D(vals)[0];
 	}
 		
+	/**
+	 * Measure capillary values in M 0 map.
+	 *
+	 * @param time the time
+	 * @return the double[]
+	 */
 	public double[]measureCapillaryValuesInM0Map(int time){
 		//Find capillary in the central slice
 		ImagePlus img=new Duplicator().run(hyperImg,1,1,Z/2+1,Z/2+1,time+1,time+1);
@@ -1919,6 +2499,14 @@ public class HyperMap {
 		return capillaryValuesAlongZ(time,coordsCentral,VitimageUtils.bionanoCapillaryRadius);
 	}
 
+	/**
+	 * Capillary values along Z.
+	 *
+	 * @param time the time
+	 * @param coords the coords
+	 * @param capillaryRadius the capillary radius
+	 * @return the double[]
+	 */
 	public double[]capillaryValuesAlongZ(int time,int[]coords,double capillaryRadius){
 		IJ.log("\nCapillary detection at time="+time+".\nStarting from coordinates :"+coords[0]+", "+coords[1]);
 		Duplicator dup=new Duplicator();

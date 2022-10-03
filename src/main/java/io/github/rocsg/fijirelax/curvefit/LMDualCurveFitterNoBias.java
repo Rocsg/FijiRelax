@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.curvefit;
 import io.github.rocsg.fijiyama.common.VitimageUtils;
 import io.github.rocsg.fijirelax.lma.LMAMatrix.InvertException;
@@ -5,28 +8,65 @@ import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 import io.github.rocsg.fijirelax.lma.LMAMultiDimFunction;
 import io.github.rocsg.fijirelax.lma.LMA;
 
-/** Class for building curve fitter */
+// TODO: Auto-generated Javadoc
+/**
+ *  Class for building curve fitter.
+ */
 public class LMDualCurveFitterNoBias {	
+	
+	/** The debug LM. */
 	public boolean debugLM=false;
+	
+	/** The Constant timeunits. */
 	public final static String[] timeunits={"ms", "s"};
+	
+	/** The Constant timeitems. */
 	public final static int[] timeitems={MRUtils.MSEC, MRUtils.SEC};
+	
+	/** The Constant fititems2. */
 	public final static String[] fititems2={"Simplex","Levenberg-Marquardt"};
+	
+	/** The Constant constitems2. */
 	public final static int[] constitems2={MRUtils.SIMPLEX,MRUtils.LM};
+	
+	/** The fit. */
 	protected int fit;                // Number of curve type to fit
 
+	/** The data. */
 	protected double[][] data; // x,y data to fit
+	
+	/** The lma. */
 	private MRLMA lma;
+	
+	/** The parameters. */
 	private double[] parameters;
+	
+	/** The parameters boundaries. */
 	private float[][] parametersBoundaries;
 	
+	/** The gfit. */
 	private float gfit;
+	
+	/** The iterations break. */
 	public boolean iterationsBreak=false;
+	
+	/** The lambda. */
 	public static double lambda = 0.01;
+	
+	/** The min delta chi 2. */
 	public static double minDeltaChi2 = 1e-7;
+	
+	/** The max iterations. */
 	public static int maxIterations=200;
 
 		
 	
+    /**
+     * Gets the default parameters boundaries.
+     *
+     * @param fitType the fit type
+     * @return the default parameters boundaries
+     */
     public float[][] getDefaultParametersBoundaries(int fitType) {
     	float[][]parametersBoundaries=new float[MRUtils.getNparams(fitType)+1][2];
     	for(int i=0;i<parametersBoundaries.length;i++)parametersBoundaries[i]=new float[] {(float) -MRUtils.infinity,(float) MRUtils.infinity};
@@ -34,7 +74,16 @@ public class LMDualCurveFitterNoBias {
     }
 
 
-	/** Construct a new CurveFitter. */
+	/**
+	 *  Construct a new CurveFitter.
+	 *
+	 * @param trData the tr data
+	 * @param teData the te data
+	 * @param yData the y data
+	 * @param fitType the fit type
+	 * @param sigma the sigma
+	 * @param debugLM the debug LM
+	 */
 	public LMDualCurveFitterNoBias (double[] trData, double[] teData, double[] yData, int fitType,double sigma,boolean debugLM) {
 		this.fit=fitType;
 		this.debugLM=debugLM;
@@ -377,6 +426,13 @@ public class LMDualCurveFitterNoBias {
 	}
 
 
+	/**
+	 * Config LMA.
+	 *
+	 * @param lambda the lambda
+	 * @param minDeltaChi2 the min delta chi 2
+	 * @param maxIterations the max iterations
+	 */
 	public void configLMA(double lambda, double minDeltaChi2, int maxIterations) {
 		if (lma==null) return;
 		lma.lambda=lambda;
@@ -384,6 +440,9 @@ public class LMDualCurveFitterNoBias {
 		lma.maxIterations=maxIterations;
 	}
 
+	/**
+	 * Do fit.
+	 */
 	public void doFit() {
 		try {
 			lma.fit();
@@ -396,6 +455,13 @@ public class LMDualCurveFitterNoBias {
 		}
 	}
 
+	/**
+	 * Do fit.
+	 *
+	 * @param lambda the lambda
+	 * @param minDeltaChi2 the min delta chi 2
+	 * @param maxIterations the max iterations
+	 */
 	public void doFit(double lambda, double minDeltaChi2, int maxIterations) {
 		try {
 			lma.fit( lambda,  minDeltaChi2,  maxIterations);
@@ -405,6 +471,11 @@ public class LMDualCurveFitterNoBias {
 			for(int i=0;i<parameters.length;i++)parameters[i]=MRUtils.ERROR_VALUE;}
 	}
 
+	/**
+	 * Gets the params.
+	 *
+	 * @return the params
+	 */
 	public double[] getParams() {
 		double[]ret=new double[parameters.length+1];
 		for(int i=0;i<parameters.length;i++)ret[i]=parameters[i];
@@ -412,6 +483,11 @@ public class LMDualCurveFitterNoBias {
 		return ret;
 	}
 
+	/**
+	 * Gets the lma.
+	 *
+	 * @return the lma
+	 */
 	public LMA getLMA() {
 		return lma;
 	}
@@ -423,30 +499,80 @@ public class LMDualCurveFitterNoBias {
 	
 	
 
+	/**
+	 * The Class T1Mono.
+	 */
 	//////////////////////  1-  T1MONO  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1Mono extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=2;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]*(1-Math.exp(-Tr/a[1]));
 		}
 		
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ a[0]* (1 - Math.exp(-(Tr / a[1])) ]";
 		}
 
+		/**
+		 * Gets the y.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @return the y
+		 */
 		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
 			double Te=x[1];					
 			return  getNonRicedY(Tr,Te,a) ; // a[1] - echo times
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -459,30 +585,81 @@ public class LMDualCurveFitterNoBias {
 		}
 
 	} // end class
+	
+	/**
+	 * The Class T1MonoBias.
+	 */
 	//////////////////////  1-  T1MONOBIAS  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1MonoBias extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=3;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]*(1-Math.exp(-Tr/a[1]))+a[2];
 		}
 		
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ a[0]* (1 - Math.exp(-(Tr / a[1])) ]";
 		}
 
+		/**
+		 * Gets the y.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @return the y
+		 */
 		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
 			double Te=x[1];					
 			return  getNonRicedY(Tr,Te,a); // a[1] - echo times
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -496,30 +673,81 @@ public class LMDualCurveFitterNoBias {
 		}
 
 	} // end class
+	
+	/**
+	 * The Class T1MonoRice.
+	 */
 	//////////////////////  1-  T1MONORICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1MonoRice extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=2;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]*(1-Math.exp(-Tr/a[1]));
 		}
 		
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ a[0]* (1 - Math.exp(-(Tr / a[1])) ]";
 		}
 
+		/**
+		 * Gets the y.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @return the y
+		 */
 		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
 			double Te=x[1];					
 			return  MRUtils.besFunkCost( getNonRicedY(Tr,Te,a) , sigma); // a[1] - echo times
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -539,30 +767,80 @@ public class LMDualCurveFitterNoBias {
 	
 	
 	
+	/**
+	 * The Class T2Mono.
+	 */
 	//////////////////////  2-  T2MONO  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T2Mono extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=2;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]* Math.exp(-(Te / a[1]));
 		}
 		
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[1])) ]";
 		}
 
+		/**
+		 * Gets the y.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @return the y
+		 */
 		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
 			double Te=x[1];					
 			return  getNonRicedY(Tr,Te,a); // a[1] - echo times
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -575,30 +853,81 @@ public class LMDualCurveFitterNoBias {
 		}
 
 	} // end class
+	
+	/**
+	 * The Class T2MonoBias.
+	 */
 	//////////////////////  2-  T2MONOBIAS  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T2MonoBias extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=3;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]* Math.exp(-(Te / a[1]))+a[2];
 		}
 		
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[1])) ]";
 		}
 
+		/**
+		 * Gets the y.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @return the y
+		 */
 		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
 			double Te=x[1];					
 			return  getNonRicedY(Tr,Te,a) ; // a[1] - echo times
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -612,30 +941,81 @@ public class LMDualCurveFitterNoBias {
 		}
 
 	} // end class
+	
+	/**
+	 * The Class T2MonoRice.
+	 */
 	//////////////////////  2-  T2MONORICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T2MonoRice extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=2;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]* Math.exp(-(Te / a[1]));
 		}
 		
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[1])) ]";
 		}
 
+		/**
+		 * Gets the y.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @return the y
+		 */
 		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
 			double Te=x[1];					
 			return  MRUtils.besFunkCost( getNonRicedY(Tr,Te,a) , sigma); // a[1] - echo times
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -660,17 +1040,45 @@ public class LMDualCurveFitterNoBias {
 	
 	
 	
+	/**
+	 * The Class T2Multi.
+	 */
 	//////////////////////  3-  T2MULTI  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T2Multi extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=4;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
 		
+/**
+ * Gets the y.
+ *
+ * @param x the x
+ * @param a the a
+ * @return the y
+ */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -678,14 +1086,36 @@ public class LMDualCurveFitterNoBias {
 			return  getNonRicedY(Tr,Te,a); // a[1] - echo times
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return  ( a[0]* Math.exp(-(Te / a[2])) + a[1] * Math.exp(-(Te / a[3])));
 		}
 		
 
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]";
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -699,17 +1129,46 @@ public class LMDualCurveFitterNoBias {
 			throw new RuntimeException("No such parameter index: " + parameterIndex);
 		}
 	} // end class
+	
+	/**
+	 * The Class T2MultiBias.
+	 */
 	//////////////////////  3-  T2MULTIRICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T2MultiBias extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=5;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
 		
+/**
+ * Gets the y.
+ *
+ * @param x the x
+ * @param a the a
+ * @return the y
+ */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -717,14 +1176,36 @@ public class LMDualCurveFitterNoBias {
 			return  getNonRicedY(Tr,Te,a); // a[1] - echo times
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return  ( a[0]* Math.exp(-(Te / a[2])) + a[1] * Math.exp(-(Te / a[3]))+a[4]);
 		}
 		
 
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]";
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -739,17 +1220,46 @@ public class LMDualCurveFitterNoBias {
 			throw new RuntimeException("No such parameter index: " + parameterIndex);
 		}
 	} // end class
+	
+	/**
+	 * The Class T2MultiRice.
+	 */
 	//////////////////////  3-  T2MULTIRICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T2MultiRice extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=4;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
 		
+/**
+ * Gets the y.
+ *
+ * @param x the x
+ * @param a the a
+ * @return the y
+ */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -757,14 +1267,36 @@ public class LMDualCurveFitterNoBias {
 			return  MRUtils.besFunkCost( getNonRicedY(Tr,Te,a)  , sigma); // a[1] - echo times
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return  ( a[0]* Math.exp(-(Te / a[2])) + a[1] * Math.exp(-(Te / a[3])));
 		}
 		
 
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]";
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -786,30 +1318,80 @@ public class LMDualCurveFitterNoBias {
 	
 	
 	
+	/**
+	 * The Class T1T2Mono.
+	 */
 	//////////////////////  4-  T1T2MONO  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2Mono extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=3;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]* Math.exp(-(Te / a[2]))*(1-Math.exp(-Tr/a[1]));
 		}
 		
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]";
 		}
 
+		/**
+		 * Gets the y.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @return the y
+		 */
 		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
 			double Te=x[1];					
 			return   getNonRicedY(Tr,Te,a); // a[1] - echo times
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -823,30 +1405,81 @@ public class LMDualCurveFitterNoBias {
 		}
 
 	} // end class
+	
+	/**
+	 * The Class T1T2MonoBias.
+	 */
 	//////////////////////  4-  T1T2MONOBIAS  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2MonoBias extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=4;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]* Math.exp(-(Te / a[2]))*(1-Math.exp(-Tr/a[1]))+a[3];
 		}
 		
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]";
 		}
 
+		/**
+		 * Gets the y.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @return the y
+		 */
 		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
 			double Te=x[1];					
 			return  getNonRicedY(Tr,Te,a); // a[1] - echo times
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -861,30 +1494,81 @@ public class LMDualCurveFitterNoBias {
 		}
 
 	} // end class
+	
+	/**
+	 * The Class T1T2MonoRice.
+	 */
 	//////////////////////  4-  T1T2MONORICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2MonoRice extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=3;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]* Math.exp(-(Te / a[2]))*(1-Math.exp(-Tr/a[1]));
 		}
 		
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]";
 		}
 
+		/**
+		 * Gets the y.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @return the y
+		 */
 		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
 			double Te=x[1];					
 			return  MRUtils.besFunkCost( getNonRicedY(Tr,Te,a) , sigma); // a[1] - echo times
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -904,17 +1588,45 @@ public class LMDualCurveFitterNoBias {
 	
 	
 	
+	/**
+	 * The Class T1T2Multi.
+	 */
 	//////////////////////  5-  T1T2MULTI  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2Multi extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=5;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
 		
+/**
+ * Gets the y.
+ *
+ * @param x the x
+ * @param a the a
+ * @return the y
+ */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -922,14 +1634,36 @@ public class LMDualCurveFitterNoBias {
 			return  getNonRicedY(Tr,Te,a) ; // a[1] - echo times
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return (1-Math.exp(-Tr/a[2])) * ( a[0]* Math.exp(-(Te / a[3])) + a[1] * Math.exp(-(Te / a[4])));
 		}
 		
 
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]";
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -945,17 +1679,45 @@ public class LMDualCurveFitterNoBias {
 		}
 	} // end class
 
+	/**
+	 * The Class T1T2MultiBias.
+	 */
 	//////////////////////  5-  T1T2MULTIBIAS  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2MultiBias extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=6;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
 		
+/**
+ * Gets the y.
+ *
+ * @param x the x
+ * @param a the a
+ * @return the y
+ */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -963,14 +1725,36 @@ public class LMDualCurveFitterNoBias {
 			return  getNonRicedY(Tr,Te,a) ; // a[1] - echo times
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return (1-Math.exp(-Tr/a[2])) * ( a[0]* Math.exp(-(Te / a[3])) + a[1] * Math.exp(-(Te / a[4])))+a[5];
 		}
 		
 
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]";
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -987,17 +1771,45 @@ public class LMDualCurveFitterNoBias {
 		}
 	} // end class
 
+	/**
+	 * The Class T1T2MultiRice.
+	 */
 	//////////////////////  5-  T1T2MULTIRICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2MultiRice extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=5;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
 		
+/**
+ * Gets the y.
+ *
+ * @param x the x
+ * @param a the a
+ * @return the y
+ */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -1005,14 +1817,36 @@ public class LMDualCurveFitterNoBias {
 			return  MRUtils.besFunkCost( getNonRicedY(Tr,Te,a)  , sigma); // a[1] - echo times
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return (1-Math.exp(-Tr/a[2])) * ( a[0]* Math.exp(-(Te / a[3])) + a[1] * Math.exp(-(Te / a[4])));
 		}
 		
 
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]";
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -1030,30 +1864,80 @@ public class LMDualCurveFitterNoBias {
 
 
 	
+	/**
+	 * The Class T1T2DefaultMonoRice.
+	 */
 	//////////////////////  6-  T1T2DEFAULTMONORICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2DefaultMonoRice extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=4;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]* Math.exp(-((Te+(Tr>9999 ? a[3] : 0)) / a[2]))*(1-Math.exp(-Tr/a[1]));
 		}
 		
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ a[0]* Math.exp(-((Te+a[3]) / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]";
 		}
 
+		/**
+		 * Gets the y.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @return the y
+		 */
 		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
 			double Te=x[1];					
 			return  MRUtils.besFunkCost( getNonRicedY(Tr,Te,a) , sigma); // a[1] - echo times
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];
@@ -1070,17 +1954,45 @@ public class LMDualCurveFitterNoBias {
 	} // end class
 
 	
+	/**
+	 * The Class T1T2DefaultMultiRice.
+	 */
 	//////////////////////  7-  T1T2DEFAULTMULTIRICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2DefaultMultiRice extends LMAMultiDimFunction {
+		
+		/** The Constant Nparams. */
 		public static final int Nparams=6;
+		
+		/** The sigma. */
 		public double sigma=0;
+		
+		/** The lm. */
 		public LMDualCurveFitterNoBias lm;
+		
+		/**
+		 * Sets the lm.
+		 *
+		 * @param lm the new lm
+		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
+		
+		/**
+		 * Sets the sigma.
+		 *
+		 * @param sig the new sigma
+		 */
 		public void setSigma(double sig){
 			sigma=sig;
 		}
 
 		
+/**
+ * Gets the y.
+ *
+ * @param x the x
+ * @param a the a
+ * @return the y
+ */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -1088,14 +2000,36 @@ public class LMDualCurveFitterNoBias {
 			return  MRUtils.besFunkCost( getNonRicedY(Tr,Te,a)  , sigma); // a[1] - echo times
 		}
 
+		/**
+		 * Gets the non riced Y.
+		 *
+		 * @param Tr the tr
+		 * @param Te the te
+		 * @param a the a
+		 * @return the non riced Y
+		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return (1-Math.exp(-Tr/a[2])) * ( a[0]* Math.exp(-((Te+(Tr>9999 ? a[5] : 0)) / a[3])) + a[1] * Math.exp(-((Te+(Tr>9999 ? a[5] : 0)) / a[4])));
 		}
 		
 
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		public String toString() {
 			return "y=  Rice_sigma [ (      a[0]* Math.exp(-((Te+a[5]) / a[3])) + a[1]* Math.exp(-((Te+a[5]) / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]";
 		}
+		
+		/**
+		 * Gets the partial derivate.
+		 *
+		 * @param x the x
+		 * @param a the a
+		 * @param parameterIndex the parameter index
+		 * @return the partial derivate
+		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
 			double Tr=x[0];

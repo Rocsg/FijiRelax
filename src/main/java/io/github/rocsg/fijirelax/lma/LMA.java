@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.lma;//Initially joalho.data.lma, see  https://zenodo.org/record/4281064
 
 
@@ -7,6 +10,7 @@ import io.github.rocsg.fijirelax.lma.implementations.JAMAMatrix;
 import java.util.Arrays;
 
 
+// TODO: Auto-generated Javadoc
 /**
  * A class which implements the <i>Levenberg-Marquardt Algorithm</i>
  * (LMA) fit for non-linear, multidimensional parameter space
@@ -66,18 +70,38 @@ public class LMA {
 	 */
 	public double[] weights;
 	
+	/** The alpha. */
 	public LMAMatrix alpha;
+	
+	/** The beta. */
 	public double[] beta;
+	
+	/** The da. */
 	public double[] da;
+	
+	/** The lambda. */
 	public double lambda = 0.001;
+	
+	/** The lambda factor. */
 	public double lambdaFactor = 10;
+	
+	/** The incremented chi 2. */
 	public double incrementedChi2;
+	
+	/** The incremented parameters. */
 	public double[] incrementedParameters;
+	
+	/** The iteration count. */
 	public int iterationCount;
+	
+	/** The chi 2. */
 	public double chi2;
 	
+	/** The min delta chi 2. */
 	// default end conditions
 	public double minDeltaChi2 = 1e-30;
+	
+	/** The max iterations. */
 	public int maxIterations = 100;
 	
 	
@@ -106,11 +130,12 @@ public class LMA {
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of data points, M is the number of fit parameters.
 	 * Call <code>fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in an array, <code>double[0 = x, 1 = y][point index]</code>.
 	 * Size must be <code>double[2][N]</code>.
+	 * @param weights the weights
 	 */
 	public LMA(final LMAFunction function, double[] parameters, double[][] dataPoints, double[] weights) {
 		this (
@@ -350,6 +375,16 @@ public class LMA {
 		init(function, parameters, yDataPoints, xDataPoints, weights, alpha);
 	}
 	
+	/**
+	 * Inits the.
+	 *
+	 * @param function the function
+	 * @param parameters the parameters
+	 * @param yDataPoints the y data points
+	 * @param xDataPoints the x data points
+	 * @param weights the weights
+	 * @param alpha the alpha
+	 */
 	protected void init(LMAMultiDimFunction function, double[] parameters, double[] yDataPoints, double[][] xDataPoints, double[] weights, LMAMatrix alpha) {
 		if (yDataPoints.length != xDataPoints.length) 
 			throw new IllegalArgumentException("Data must contain an x-array for each y-value. Check your xDataPoints-array.");
@@ -365,10 +400,13 @@ public class LMA {
 	}
 	
 	
-	/** 
+	/**
+	 *  
 	 * The default fit. If used after calling fit(lambda, minDeltaChi2, maxIterations),
 	 * uses those values. The stop condition is fetched from <code>this.stop()</code>.
 	 * Override <code>this.stop()</code> if you want to use another stop condition.
+	 *
+	 * @throws InvertException the invert exception
 	 */
 	public void fit() throws LMAMatrix.InvertException {
 		iterationCount = 0;
@@ -405,6 +443,9 @@ public class LMA {
 		printEndReport();
 	}
 	
+	/**
+	 * Prints the end report.
+	 */
 	private void printEndReport() {
 		if (verbose) {
 			System.out.println(" ***** FIT ENDED ***** ");
@@ -420,9 +461,15 @@ public class LMA {
 		}
 	}
 	
-	/** 
+	/**
+	 *  
 	 * Initializes and starts the fit. The stop condition is fetched from <code>this.stop()</code>.
 	 * Override <code>this.stop()</code> if you want to use another stop condition.
+	 *
+	 * @param lambda the lambda
+	 * @param minDeltaChi2 the min delta chi 2
+	 * @param maxIterations the max iterations
+	 * @throws InvertException the invert exception
 	 */
 	public void fit(double lambda, double minDeltaChi2, int maxIterations) throws LMAMatrix.InvertException {
 		this.lambda = lambda;
@@ -431,9 +478,12 @@ public class LMA {
 		fit();
 	}
 	
-	/** 
+	/**
+	 *  
 	 * The stop condition for the fit.
 	 * Override this if you want to use another stop condition.
+	 *
+	 * @return true, if successful
 	 */
 	public boolean stop() {
 		return Math.abs(chi2 - incrementedChi2) < minDeltaChi2 || iterationCount > maxIterations;
@@ -448,6 +498,8 @@ public class LMA {
 	 * Solves the increments array (<code>this.da</code>) using alpha and beta.
 	 * Then updates the <code>this.incrementedParameters</code> array.
 	 * NOTE: Inverts alpha. Call at least <code>updateAlpha()</code> before calling this.
+	 *
+	 * @throws InvertException the invert exception
 	 */
 	protected void solveIncrements() throws LMAMatrix.InvertException {
 		alpha.invert(); // throws InvertException if matrix is singular
@@ -458,6 +510,9 @@ public class LMA {
 	}
 	
 	/**
+	 * Calculate chi 2.
+	 *
+	 * @param a the a
 	 * @return The calculated evalution function value (chi2) for the given parameter array.
 	 * NOTE: Does not change the value of chi2.
 	 */
@@ -482,6 +537,8 @@ public class LMA {
 	}
 	
 	/**
+	 * Calculate chi 2.
+	 *
 	 * @return The calculated evaluation function value for the current fit parameters.
 	 * NOTE: Does not change the value of chi2.
 	 */
@@ -490,6 +547,8 @@ public class LMA {
 	}
 	
 	/**
+	 * Calculate incremented chi 2.
+	 *
 	 * @return The calculated evaluation function value for the incremented parameters (da + a).
 	 * NOTE: Does not change the value of chi2.
 	 */
@@ -506,7 +565,11 @@ public class LMA {
 		}
 	}
 	
-	/** 
+	/**
+	 *  
+	 *
+	 * @param row the row
+	 * @param col the col
 	 * @return An calculated lambda weighted element for the alpha-matrix.
 	 * NOTE: Does not change the value of alpha-matrix.
 	 */
@@ -530,7 +593,10 @@ public class LMA {
 		}
 	}
 	
-	/** 
+	/**
+	 *  
+	 *
+	 * @param row the row
 	 * @return An calculated element for the beta-matrix.
 	 * NOTE: Does not change the value of beta-matrix.
 	 */
@@ -545,7 +611,11 @@ public class LMA {
 		return result;
 	}
 	
-	/** @return Estimate for goodness of fit, used for binned data, Sum[(y_data - y_fit)^2 / y_data] */
+	/**
+	 * Gets the relative chi 2.
+	 *
+	 * @return Estimate for goodness of fit, used for binned data, Sum[(y_data - y_fit)^2 / y_data]
+	 */
 	public float getRelativeChi2() {
 		float result = 0;
 		for (int i = 0; i < yDataPoints.length; i++) {
@@ -557,7 +627,11 @@ public class LMA {
 		return result;
 	}
 	
-	/** @return Estimate for goodness of fit, Sum[|y_data - y_fit| / y_fit] / n */
+	/**
+	 * Gets the mean relative error.
+	 *
+	 * @return Estimate for goodness of fit, Sum[|y_data - y_fit| / y_fit] / n
+	 */
 	public float getMeanRelativeError() {
 		float result = 0;
 		for (int i = 0; i < yDataPoints.length; i++) {
@@ -570,13 +644,20 @@ public class LMA {
 		return result / (float) yDataPoints.length;
 	}
 	
-	/** @return Estimate for goodness of fit, Sum[(y_data - y_fit)^2] / n */
+	/**
+	 * Chi 2 goodness.
+	 *
+	 * @return Estimate for goodness of fit, Sum[(y_data - y_fit)^2] / n
+	 */
 	public float chi2Goodness() {
 		return (float) (chi2 / (double) (yDataPoints.length - parameters.length));
 	}
 	
 	/**
 	 * Checks that the given array in not null, filled with zeros or contain negative weights.
+	 *
+	 * @param length the length
+	 * @param weights the weights
 	 * @return A valid weights array.
 	 */
 	protected double[] checkWeights(int length, double[] weights) {
@@ -603,7 +684,10 @@ public class LMA {
 	}
 	
 	/**
+	 * Gets the covariance matrix of standard errors in parameters.
+	 *
 	 * @return The covariance matrix of the fit parameters.
+	 * @throws InvertException the invert exception
 	 * @throws LMAMatrix.InvertException if the inversion of alpha fails.
 	 * Note that even if the fit does NOT throw the invert exception,
 	 * this method can still do it, because here alpha is inverted with lambda = 0.
@@ -634,7 +718,10 @@ public class LMA {
 	}
 	
 	/**
+	 * Gets the standard errors of parameters.
+	 *
 	 * @return The estimated standard errors of the fit parameters.
+	 * @throws InvertException the invert exception
 	 * @throws LMAMatrix.InvertException if the inversion of alpha fails.
 	 * Note that even if the fit does NOT throw the invert exception,
 	 * this method can still do it, because here alpha is inverted with lambda = 0.

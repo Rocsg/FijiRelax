@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.gui;
 
 
@@ -57,8 +60,10 @@ import io.github.rocsg.fijirelax.mrialgo.HyperMap;
 import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 import io.github.rocsg.fijirelax.mrialgo.RiceEstimator;
 
+// TODO: Auto-generated Javadoc
 /**
- * 
+ * The Class MRI_HyperCurvesExplorer.
+ *
  * @author Rocsg
  * MRI_HyperCurvesExplorer is a user-friendly tool for exploration of T1 T2 relaxation curves coming from T1 and T2 sequence
  * 
@@ -67,333 +72,902 @@ import io.github.rocsg.fijirelax.mrialgo.RiceEstimator;
  */
 
 
-public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListener,KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {// 
+public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListener,KeyListener, MouseListener, MouseWheelListener, MouseMotionListener {/** The init timer. */
+// 
 	Timer initTimer;
+	
+	/** The has T 1. */
 	boolean hasT1=false;
+	
+	/** The has T 2. */
 	boolean hasT2=false;
+	
+	/** The sexy for bio info. */
 	boolean sexyForBioInfo=true;
+	
+	/** The number bins. */
 	int numberBins=150 /(1) ;//over 3 decades it makes one bin every 1.2%
+	
+	/** The sigma smoothing before estimation. */
 	private double sigmaSmoothingBeforeEstimation=0.75;
+	
+	/** The timer. */
 	private Timer timer;
+	
+	/** The x src start. */
 	private int xSrcStart;
+	
+	/** The y src start. */
 	private int ySrcStart;
+	
+	/** The roi is hidden. */
 	private boolean roiIsHidden=false;
+	
+	/** The is bionano display. */
 	private boolean isBionanoDisplay=false;//false;
+	
+	/** The but next echo. */
 	JButton butNextEcho=new JButton("<Html>Next<br>echo<br> <Html>");
+	
+	/** The button switch mono. */
 	JButton buttonSwitchMono=new JButton("<Html>Single T2 component<br>(Mono-exp)<br><Html>");
+	
+	/** The button switch bi. */
 	JButton buttonSwitchBi=new JButton("<Html>Two T2 components<br>(Bi-exp)<br><Html>");
+	
+	/** The but prev echo. */
 	JButton butPrevEcho=new JButton("<Html>Prev.<br>echo<br> <Html>");
+	
+	/** The but next tr. */
 	JButton butNextTr=new JButton("<Html><br>Next<br>Tr<br> <Html>");
+	
+	/** The but prev tr. */
 	JButton butPrevTr=new JButton("<Html><br>Prev.<br>Tr<br> <Html>");
+	
+	/** The but play. */
 	JButton butPlay=new JButton("<Html><br>Play<br>with<br>prms<Html>");
+	
+	/** The but all curves. */
 	JButton butAllCurves=new JButton("<Html><br>All<br>data<br> <Html>");
 
+	/** The but M 0 map. */
 	JButton butM0Map=new JButton("<Html> PD<br>map<Html>");
+	
+	/** The but T 1 map. */
 	JButton butT1Map=new JButton("<Html> T1<br>map<Html>");
+	
+	/** The but T 2 map. */
 	JButton butT2Map=new JButton("<Html> T2<br>map<Html>");
 
+	/** The text exp. */
 	JTextField textExp=new JTextField("Image exploration");
+	
+	/** The text tim. */
 	JTextArea textTim=new JTextArea("              Observation day");
+	
+	/** The but prev day. */
 	JButton butPrevDay=new JButton("Prev. day");
+	
+	/** The but next day. */
 	JButton butNextDay=new JButton("Next day");
+	
+	/** The button exp. */
 	JButton buttonExp=new JButton("Exp. fit");
+	
+	/** The button export. */
 	JButton buttonExport=new JButton("Export results");
+	
+	/** The button off. */
 	JButton buttonOff=new JButton("Off. fit");
+	
+	/** The button rice. */
 	JButton buttonRice=new JButton("Rice. fit");
+	
+	/** The text sli. */
 	JTextArea textSli=new JTextArea("               Current Z-slice");
+	
+	/** The but prev sli. */
 	JButton butPrevSli=new JButton("Prev. slice");
+	
+	/** The but next sli. */
 	JButton butNextSli=new JButton("Next slice");
+	
+	/** The but fire lut. */
 	JButton butFireLut=new JButton("Fire LUT");
+	
+	/** The but gray lut. */
 	JButton butGrayLut=new JButton("Gray LUT");
+	
+	/** The text luts. */
 	JTextArea textLuts=new JTextArea("               Colormap");
 
+	/** The text roi. */
 	JTextField textRoi=new JTextField("       Region of interest");
+	
+	/** The text sam. */
 	JTextArea textSam=new JTextArea("       Sample size (5x5x1)");
+	
+	/** The but prev roi. */
 	JButton butPrevRoi=new JButton("Smaller");
+	
+	/** The but next roi. */
 	JButton butNextRoi=new JButton("Larger");
+	
+	/** The text ran. */
 	JTextArea textRan=new JTextArea("           Ranging interval");
+	
+	/** The but prev rang. */
 	JButton butPrevRang=new JButton("Smaller");
+	
+	/** The but next rang. */
 	JButton butNextRang=new JButton("Larger");
+	
+	/** The text misc. */
 	JTextArea textMisc=new JTextArea("           Miscellaneous");
+	
+	/** The but hide. */
 	JButton butHide=new JButton("<Html>Show<br>ranging<Html>");
+	
+	/** The but roi. */
 	JButton butRoi=new JButton("<Html>Custom<br>ROI<Html>");
 
+	/** The text info echoes. */
 	JTextArea textInfoEchoes=new JTextArea("-------T2SEQ Day 28 TR=10000 ms TE=11ms------",45,1);
+	
+	/** The text info maps. */
 	JTextArea textInfoMaps=new JTextArea("--------PDMAP Day 28 -----------",45,1);
 
+	/** The play mode. */
 	private boolean playMode=false;
+	
+	/** The switch T 1 T 2. */
 	private int switchT1T2=0;
+	
+	/** The init mag. */
 	private double initMag=0;
+	
+	/** The x D. */
 	private double xD;
+	
+	/** The y D. */
 	private double yD;
+	
+	/** The ij. */
 	private ImageJ ij;
+	
+	/** The hyper map. */
 	private HyperMap hyperMap;
+	
+	/** The dims. */
 	private int[] dims;
+	
+	/** The voxs. */
 	private double[] voxs;
+	
+	/** The n timepoints. */
 	private int nTimepoints;
+	
+	/** The c echoes. */
 	private int cEchoes;
+	
+	/** The c maps. */
 	private int cMaps;
+	
+	/** The c T 1 T 2 tr index. */
 	private int cT1T2TrIndex;
+	
+	/** The c T 1 T 2 te index. */
 	private int cT1T2TeIndex;
+	
+	/** The n T 1 T 2 tr available. */
 	private int nT1T2TrAvailable;
+	
+	/** The n T 1 T 2 te available. */
 	private int [] nT1T2TeAvailable;
+	
+	/** The data timelapse T 1. */
 	private double[][] dataTimelapseT1;
+	
+	/** The data timelapse T 2. */
 	private double[][] dataTimelapseT2;
+	
+	/** The data timelapse T 1 T 2. */
 	private double[][] dataTimelapseT1T2;
+	
+	/** The arbitrary limit between T 1 and T 2. */
 	private double arbitraryLimitBetweenT1andT2=500;
+	
+	/** The norm value spectrum. */
 	private final double normValueSpectrum=0.9;
+	
+	/** The maps image. */
 	private ImagePlus mapsImage;
+	
+	/** The echoes image. */
 	private ImagePlus echoesImage;
+	
+	/** The bubble color. */
 	Color bubbleColor=new Color(220,220,0);
+	
+	/** The params unactivated. */
 	Color paramsUnactivated=new Color(150,150,150);
+	
+	/** The params T 1 activated color. */
 	Color paramsT1ActivatedColor=new Color(255,200,200);
+	
+	/** The params T 1 text activated color. */
 	Color paramsT1TextActivatedColor=new Color(255,220,220);
+	
+	/** The params T 2 activated color. */
 	Color paramsT2ActivatedColor=new Color(200,255,200);
+	
+	/** The params T 2 text activated color. */
 	Color paramsT2TextActivatedColor=new Color(220,255,220);
+	
+	/** The cross color. */
 	Color crossColor=new Color (60,60,255);
+	
+	/** The curve T 1 mono. */
 	Color curveT1Mono=new Color (170,0,0);
+	
+	/** The curve T 1 bicomp. */
 	Color curveT1Bicomp=new Color (255,70,70);
+	
+	/** The curve T 2 mono. */
 	Color curveT2Mono=new Color (0,115,0);
+	
+	/** The curve T 2 bicomp. */
 	Color curveT2Bicomp=new Color (50,205,50);
 
+	/** The Constant maxT1. */
 	private static final double maxT1=10500;
+	
+	/** The Constant maxT2. */
 	private static final double maxT2=350;
+	
+	/** The Constant maxDisplayedT1. */
 	private static final double maxDisplayedT1=4000;
+	
+	/** The Constant maxDisplayedT2. */
 	private static final double maxDisplayedT2=120;
+	
+	/** The Constant t0T1. */
 	private static final int t0T1=100;
+	
+	/** The Constant t1T1. */
 	private static final int t1T1=10000;
+	
+	/** The Constant t0T2. */
 	private static final int t0T2=10;
+	
+	/** The Constant t1T2. */
 	private static final int t1T2=1000;
+	
+	/** The Constant WIN_T1. */
 	private static final int WIN_T1=1;
+	
+	/** The Constant WIN_T2. */
 	private static final int WIN_T2=2;
+	
+	/** The Constant WIN_PLOT1. */
 	private static final int WIN_PLOT1=3;
+	
+	/** The Constant WIN_PLOT2. */
 	private static final int WIN_PLOT2=4;
+	
+	/** The Constant WIN_PLOT1T2. */
 	private static final int WIN_PLOT1T2=5;
+	
+	/** The Constant WIN_PLOT21. */
 	private static final int WIN_PLOT21=6;
+	
+	/** The Constant WIN_PLOT22. */
 	private static final int WIN_PLOT22=7;
 
 	
 
+	/** The range displayed full blocks. */
 	//Parameters of graph and distribution estimation
 	boolean rangeDisplayedFullBlocks=true;
+	
+	/** The ranging boundaries. */
 	public double[]rangingBoundaries=new double[3];
+	
+	/** The ranging factor. */
 	public double rangingFactor=0.2;
+	
+	/** The spectrum ranging mode T 1. */
 	public boolean spectrumRangingModeT1=false;
+	
+	/** The spectrum ranging mode T 2. */
 	public boolean spectrumRangingModeT2=false;
+	
+	/** The gaussian spectrum. */
 	public int gaussianSpectrum=2;
+	
+	/** The separate normalization spectrum mode. */
 	public int separateNormalizationSpectrumMode=1;//0 : all separated, 1= normalize along time, 2 : global normalization
+	
+	/** The multi threaded. */
 	boolean multiThreaded=true;
+	
+	/** The sigma khi 2 weighted by number points. */
 	boolean sigmaKhi2WeightedByNumberPoints=false;
+	
+	/** The rice estimator. */
 	RiceEstimator riceEstimator;
+	
+	/** The sigma data rice lookup table T 1. */
 	double[][][]sigmaDataRiceLookupTableT1;
+	
+	/** The sigma data rice lookup table T 2. */
 	double[][][]sigmaDataRiceLookupTableT2;
+	
+	/** The sigma data rice lookup table T 1 T 2. */
 	double[][][]sigmaDataRiceLookupTableT1T2;
+	
+	/** The fit algorithm. */
 	private int fitAlgorithm=MRUtils.SIMPLEX;
+	
+	/** The computation rate. */
 	int computationRate=100;
+	
+	/** The cur ec 1. */
 	int curEc1;
+	
+	/** The cur ec 2. */
 	int curEc2;
+
+/** The gaussian weighting. */
 //	int nRepetMonteCarlo=0;
 	boolean gaussianWeighting=false;
+	
+	/** The max curves. */
 	int maxCurves=170;
+	
+	/** The mean noise T 1 cur. */
 	double meanNoiseT1Cur=1;
+	
+	/** The sigma noise T 1 cur. */
 	double sigmaNoiseT1Cur=1;
+	
+	/** The mean noise T 2 cur. */
 	double meanNoiseT2Cur=1;
+	
+	/** The sigma noise T 2 cur. */
 	double sigmaNoiseT2Cur=1;
+	
+	/** The mean noise T 1 T 2 cur. */
 	double meanNoiseT1T2Cur=1;
+	
+	/** The sigma noise T 1 T 2 cur. */
 	double sigmaNoiseT1T2Cur=1;
+	
+	/** The n pts cur. */
 	int nPtsCur=1;
+	
+	/** The thick curve. */
 	int thickCurve=1;
 
 	
 	
+	/** The x mouse range. */
 	//Gui parameters : Window constants
 	public int xMouseRange=0;
+	
+	/** The target width for plots t1t2. */
 	private int TARGET_WIDTH_FOR_PLOTS_T1T2;
+	
+	/** The target width for plots alone. */
 	private int TARGET_WIDTH_FOR_PLOTS_ALONE;
+	
+	/** The target height for plots and imgs. */
 	private int TARGET_HEIGHT_FOR_PLOTS_AND_IMGS;
+	
+	/** The target width for plots and imgs. */
 	private int TARGET_WIDTH_FOR_PLOTS_AND_IMGS;
+	
+	/** The dx img. */
 	private int DX_IMG;
+	
+	/** The dy img. */
 	private int DY_IMG;
+	
+	/** The dy text. */
 	private int DY_TEXT;
+	
+	/** The delta x. */
 	private int DELTA_X;
+	
+	/** The delta y. */
 	private int DELTA_Y;
+	
+	/** The dx plot 1. */
 	private int DX_PLOT_1;
+	
+	/** The dx plot 2. */
 	private int DX_PLOT_2;
+	
+	/** The dy plot. */
 	private int DY_PLOT;
+	
+	/** The total size X. */
 	private int totalSizeX;  
+	
+	/** The total size Y. */
 	private int totalSizeY;  
+	
+	/** The auto sizing time plots. */
 	boolean autoSizingTimePlots=true;
+	
+	/** The is fire lut. */
 	boolean isFireLut=true;
 	
 
+	/** The target number chars in texts. */
 	//Params for Gui : Objects and texts to display
 	int targetNumberCharsInTexts=50;
+	
+	/** The size based on image. */
 	boolean sizeBasedOnImage=false;
+	
+	/** The debug display. */
 	boolean debugDisplay=true;
+	
+	/** The user roi. */
 	Roi userRoi;
+	
+	/** The r sentence. */
 	String rSentence="";
+	
+	/** The py sentence. */
 	String pySentence="";
+	
+	/** The mat sentence. */
 	String matSentence="";
+	
+	/** The cross width. */
 	int crossWidth=3;//3;//3;//3;
+	
+	/** The cross thick. */
 	int crossThick=0;
+	
+	/** The x mouse. */
 	int xMouse=0;
+	
+	/** The y mouse. */
 	int yMouse=0;
+	
+	/** The x cor. */
 	int xCor=1;
+	
+	/** The y cor. */
 	int yCor=1;
+	
+	/** The t cor. */
 	int tCor=0;
+	
+	/** The z cor. */
 	int zCor=0;
+	
+	/** The plot T 1. */
 	private Plot plotT1;
+	
+	/** The plot T 2. */
 	private Plot plotT2;
+	
+	/** The plot T 1 T 2. */
 	private Plot plotT1T2;
+	
+	/** The plot T 21. */
 	private Plot plotT21;
+	
+	/** The plot T 22. */
 	private Plot plotT22;
+	
+	/** The img can 1. */
 	private ImageCanvas imgCan1;
+	
+	/** The img can 2. */
 	private ImageCanvas imgCan2;
+	
+	/** The plot can 1. */
 	private PlotCanvas plotCan1;
+	
+	/** The plot can 2. */
 	private PlotCanvas plotCan2;
+	
+	/** The plot can 21. */
 	private PlotCanvas plotCan21;
+	
+	/** The plot can 22. */
 	private PlotCanvas plotCan22;
+	
+	/** The zoom level. */
 	private double zoomLevel=0;
+	
+	/** The max plot YT 1. */
 	private double maxPlotYT1;
+	
+	/** The max plot YT 2. */
 	private double maxPlotYT2;
+	
+	/** The current canvas. */
 	private int currentCanvas=1;
+	
+	/** The titles. */
 	JTextField []titles=new JTextField[8];
+	
+	/** The params. */
 	JTextField [][]params=new JTextField[16][5];
+	
+	/** The instance. */
 	static PlugInFrame instance;
+	
+	/** The compute multi comp. */
 	boolean computeMultiComp=true;
+	
+	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
+	
+	/** The x step cute T 1. */
 	double xStepCuteT1=50;
+	
+	/** The x step cute T 2. */
 	double xStepCuteT2=3;
+	
+	/** The t 1 times. */
 	double [][][]t1Times;
+	
+	/** The t 2 times. */
 	double [][][]t2Times;
+	
+	/** The t 1 t 2 times. */
 	double [][][]t1t2Times;
+	
+	/** The times T 1 cute. */
 	double[][][][][]timesT1Cute;
+	
+	/** The times T 2 cute. */
 	double[][][][][]timesT2Cute;
+	
+	/** The times T 1 T 2 cute. */
 	double[][][][][]timesT1T2Cute;
 
+	/** The data timelapse full. */
 	double[][][][]dataTimelapseFull;
+	
+	/** The points coords. */
 	int [][]pointsCoords;
+	
+	/** The points estimations. */
 	double[][][][]pointsEstimations;
+	
+	/** The data timelapse T 1 sigmas. */
 	double[][]dataTimelapseT1Sigmas;
+	
+	/** The data timelapse T 2 sigmas. */
 	double[][]dataTimelapseT2Sigmas;
+	
+	/** The data timelapse T 1 T 2 sigmas. */
 	double[][]dataTimelapseT1T2Sigmas;
 
+	/** The params timelapse T 1. */
 	double[][]paramsTimelapseT1;
+	
+	/** The params timelapse T 2. */
 	double[][]paramsTimelapseT2;
+	
+	/** The params timelapse T 1 T 2. */
 	double[][]paramsTimelapseT1T2;
+	
+	/** The vals spectrum. */
 	double[][][]valsSpectrum;
+	
+	/** The vals spectrum T 1. */
 	double[][][]valsSpectrumT1;
+	
+	/** The vals spectrum T 2. */
 	double[][][]valsSpectrumT2;
 
+	/** The tab fitten T 1 mono. */
 	//Updated just before plot being updated
 	double [][]tabFittenT1Mono;
+	
+	/** The tab fitten T 1 mono cute. */
 	double [][][]tabFittenT1MonoCute;
+	
+	/** The jitter T 1 mono. */
 	double[]jitterT1Mono;
+	
+	/** The khi 2 T 1 mono. */
 	double[]khi2T1Mono;
+	
+	/** The p val T 1 mono. */
 	double[]pValT1Mono;
 
+	/** The tab fitten T 1 bicomp. */
 	double [][]tabFittenT1Bicomp;
+	
+	/** The tab fitten T 1 bicomp cute. */
 	double [][][]tabFittenT1BicompCute;
+	
+	/** The jitter T 1 bicomp. */
 	double[]jitterT1Bicomp;
+	
+	/** The khi 2 T 1 bicomp. */
 	double[]khi2T1Bicomp;
+	
+	/** The p val T 1 bicomp. */
 	double[]pValT1Bicomp;
 
+	/** The tab fitten T 2 mono. */
 	double [][]tabFittenT2Mono;
+	
+	/** The tab fitten T 2 mono cute. */
 	double [][][]tabFittenT2MonoCute;
+	
+	/** The jitter T 2 mono. */
 	double[]jitterT2Mono;
+	
+	/** The khi 2 T 2 mono. */
 	double[]khi2T2Mono;
+	
+	/** The p val T 2 mono. */
 	double[]pValT2Mono;
 
+	/** The tab fitten T 2 bicomp. */
 	double [][]tabFittenT2Bicomp;
+	
+	/** The tab fitten T 2 bicomp cute. */
 	double [][][]tabFittenT2BicompCute;
+	
+	/** The jitter T 2 bicomp. */
 	double[]jitterT2Bicomp;
+	
+	/** The khi 2 T 2 bicomp. */
 	double[]khi2T2Bicomp;	
+	
+	/** The p val T 2 bicomp. */
 	double[]pValT2Bicomp;
 
+	/** The tab fitten T 1 T 2 mono. */
 	double [][]tabFittenT1T2Mono;
+	
+	/** The tab fitten T 1 T 2 mono cute. */
 	double [][][]tabFittenT1T2MonoCute;
+	
+	/** The jitter T 1 T 2 mono. */
 	double[]jitterT1T2Mono;
+	
+	/** The khi 2 T 1 T 2 mono. */
 	double[]khi2T1T2Mono;	
+	
+	/** The p val T 1 T 2 mono. */
 	double[]pValT1T2Mono;
 
+	/** The tab fitten T 1 T 2 bicomp. */
 	double [][]tabFittenT1T2Bicomp;
+	
+	/** The tab fitten T 1 T 2 bicomp cute. */
 	double [][][]tabFittenT1T2BicompCute;
+	
+	/** The jitter T 1 T 2 bicomp. */
 	double[]jitterT1T2Bicomp;
+	
+	/** The khi 2 T 1 T 2 bicomp. */
 	double[]khi2T1T2Bicomp;	
+	
+	/** The p val T 1 T 2 bicomp. */
 	double[]pValT1T2Bicomp;
 
+	/** The tab fitten T 1 bi T 2 bicomp. */
 	double [][]tabFittenT1BiT2Bicomp;
+	
+	/** The tab fitten T 1 bi T 2 bicomp cute. */
 	double [][][]tabFittenT1BiT2BicompCute;
+	
+	/** The jitter T 1 bi T 2 bicomp. */
 	double[]jitterT1BiT2Bicomp;
+	
+	/** The khi 2 T 1 bi T 2 bicomp. */
 	double[]khi2T1BiT2Bicomp;	
+	
+	/** The p val T 1 bi T 2 bicomp. */
 	double[]pValT1BiT2Bicomp;
 
+	/** The tab fitten T 1 T 2 bionano. */
 	double [][]tabFittenT1T2Bionano;
+	
+	/** The tab fitten T 1 T 2 bionano cute. */
 	double [][][]tabFittenT1T2BionanoCute;
+	
+	/** The jitter T 1 T 2 bionano. */
 	double[]jitterT1T2Bionano;
+	
+	/** The khi 2 T 1 T 2 bionano. */
 	double[]khi2T1T2Bionano;	
+	
+	/** The p val T 1 T 2 bionano. */
 	double[]pValT1T2Bionano;
 
+	/** The status roi. */
 	int statusRoi;
+	
+	/** The correspondance canvas. */
 	int[][]correspondanceCanvas;
+	
+	/** The range roi points. */
 	private ArrayList<int[]> rangeRoiPoints;
+	
+	/** The last count 21. */
 	private int lastCount21=0;
+	
+	/** The last count 22. */
 	private int lastCount22=0;
+	
+	/** The last count 1. */
 	private int lastCount1=0;
+	
+	/** The last count 2. */
 	private int lastCount2=0;
+	
+	/** The y mouse range. */
 	private int yMouseRange;
+	
+	/** The maps text. */
 	private String[][][] mapsText;
+	
+	/** The echoes text. */
 	private String[][][] echoesText;
+	
+	/** The x mouse range curve. */
 	private int xMouseRangeCurve;
+	
+	/** The y mouse range curve. */
 	private int yMouseRangeCurve;
+	
+	/** The x mouse drag. */
 	private int xMouseDrag;
+	
+	/** The y mouse drag. */
 	private int yMouseDrag;
+	
+	/** The x mouse start. */
 	private int xMouseStart;
+	
+	/** The y mouse start. */
 	private int yMouseStart;
+	
+	/** The file. */
 	private String file;
+	
+	/** The user roi initial. */
 	private Roi userRoiInitial;
+	
+	/** The T 1 T 2 mixed estimation. */
 	private boolean T1T2MixedEstimation=false;
+	
+	/** The visual factor T 2. */
 	private int visualFactorT2=50;
+	
+	/** The max T 1 T 2 on plot. */
 	private double maxT1T2OnPlot=0;
+	
+	/** The max T 2 on plot. */
 	private double maxT2OnPlot=0;
+	
+	/** The max T 1 on plot. */
 	private double maxT1OnPlot=0;
+	
+	/** The t 1 t 2 tr times. */
 	private double[][][] t1t2TrTimes;
+	
+	/** The t 1 t 2 te times. */
 	private double[][][] t1t2TeTimes;
+	
+	/** The t 1 tr times. */
 	private double[][][] t1TrTimes;
+	
+	/** The t 1 te times. */
 	private double[][][] t1TeTimes;
+	
+	/** The t 2 tr times. */
 	private double[][][] t2TrTimes;
+	
+	/** The t 2 te times. */
 	private double[][][] t2TeTimes;
+	
+	/** The plot can T 1 T 2. */
 	private PlotCanvas plotCanT1T2;
+	
+	/** The max plot YT 1 T 2. */
 	private double maxPlotYT1T2;
+	
+	/** The times T 1 T 2 bubble cute. */
 	private double[][] timesT1T2BubbleCute;
+	
+	/** The last count T 1 T 2. */
 	private int lastCountT1T2;
+	
+	/** The last count T 1. */
 	private int lastCountT1;
+	
+	/** The last count T 2. */
 	private int lastCountT2;
+	
+	/** The is selected curve. */
 	private boolean[][] isSelectedCurve;
+	
+	/** The is selected index. */
 	private boolean[][] isSelectedIndex;
+	
+	/** The target height for up plots and imgs. */
 	private int TARGET_HEIGHT_FOR_UP_PLOTS_AND_IMGS;
+	
+	/** The target height for down plot and imgs. */
 	private int TARGET_HEIGHT_FOR_DOWN_PLOT_AND_IMGS;
+	
+	/** The params panel right TX. */
 	private JPanel[][] paramsPanelRightTX;
+	
+	/** The switch all curves. */
 	private boolean switchAllCurves=false;
+	
+	/** The mem switch. */
 	private int memSwitch;
+	
+	/** The delta sigma. */
 	private int deltaSigma=0;
+	
+	/** The memory bubble text X. */
 	private double memoryBubbleTextX;
+	
+	/** The memory bubble text Y. */
 	private double memoryBubbleTextY;
+	
+	/** The memory bubble text. */
 	private String memoryBubbleText;
+	
+	/** The memory time click plot. */
 	private double memoryTimeClickPlot=0;
+	
+	/** The double click delay. */
 	private double doubleClickDelay=0.4;
+	
+	/** The is focus activated on spectrum. */
 	private boolean isFocusActivatedOnSpectrum;
+	
+	/** The first draw bubbles. */
 	private boolean firstDrawBubbles=true;
+	
+	/** The img roi. */
 	private ImagePlus imgRoi;
+	
+	/** The sig smo bionano. */
 	private String sigSmoBionano;
+	
+	/** The delta T 2. */
 	private int deltaT2=0;
+	
+	/** The noise handling. */
 	private int noiseHandling=2;
+	
+	/** The bin med. */
 	private double[] binMed;
+	
+	/** The bin med T 1. */
 	private double[] binMedT1;
+	
+	/** The normalize PD in middle tab. */
 	private boolean normalizePDInMiddleTab=false;
 
 		
-	/** Entry points and startup functions--------------------------------------------------------------------------------*/
+	/**
+	 *  Entry points and startup functions--------------------------------------------------------------------------------.
+	 *
+	 * @param args the arguments
+	 */
 	public static void main(String[]args) {
 		ImageJ ij=new ImageJ();
 		//				new MRI_HyperCurvesExplorer().runExplorerFromHyperMap(new HyperMap(IJ.openImage("/home/fernandr/Bureau/testWithMapsT1.tif")));
@@ -408,21 +982,39 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		if(true)return;
 	}
 	
+	/**
+	 * Instantiates a new MR I hyper curves explorer.
+	 */
 	public MRI_HyperCurvesExplorer() {
 		super("Vitimage MRI Water tracker ");
 		initTimer=new Timer();
 	}
 	
+	/**
+	 * Run.
+	 *
+	 * @param arg the arg
+	 */
 	public void run(String arg) {
 		System.out.println("RUN CALLED !");
 		runExplorer(null);
 	}
 	
+	/**
+	 * Run explorer from hyper map.
+	 *
+	 * @param hyp the hyp
+	 */
 	public void runExplorerFromHyperMap(HyperMap hyp) {
 		runExplorerFromImage(hyp.getAsImagePlus());
 		VitiDialogs.getYesNoUI("Curve explorer help",getHelpString());	
 	}
 	
+	/**
+	 * Run explorer.
+	 *
+	 * @param imgPath the img path
+	 */
 	public void runExplorer(String imgPath) {
 		ImagePlus fullHyp=null;
 		if (imgPath!=null)fullHyp=IJ.openImage(imgPath);
@@ -430,6 +1022,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		runExplorerFromImage(fullHyp);
 	}
 		
+	/**
+	 * Run explorer from image.
+	 *
+	 * @param fullHyp the full hyp
+	 */
 	public void runExplorerFromImage(ImagePlus fullHyp) {
 		if(!(fullHyp.getType()==ImagePlus.GRAY32))IJ.run(fullHyp,"32-bit","");
 		if(VitimageUtils.isBouture(fullHyp))this.deltaT2=25;
@@ -466,6 +1063,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 
+	/**
+	 * Setup structures.
+	 */
 	public void setupStructures() {
 		timer=new Timer();
 		initializeScreenConstants();		
@@ -549,6 +1149,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		this.visualFactorT2=50;
 	}
 	
+	/**
+	 * Gets the cute times T 1 T 2.
+	 *
+	 * @return the cute times T 1 T 2
+	 */
 	public double[][][][][]getCuteTimesT1T2(){
 		double[][][][]t1t2trte=hyperMap.getT1T2TrTeTimes();// [Time][Curve (T1, puis T2 succ][Choice : Tr, Te or Visual T][actual values]
 		this.t1t2TrTimes=this.hyperMap.getT1T2TrTimes();
@@ -622,6 +1227,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		return tabRet;
 	}
 
+	/**
+	 * Gets the cute times T 2.
+	 *
+	 * @return the cute times T 2
+	 */
 	public double[][][][][]getCuteTimesT2(){
 		double[][][][]t2trte=hyperMap.getT2TrTeTimes();// [Time][Curve (T1, puis T2 succ][Choice : Tr, Te or Visual T][actual values]
 		this.t2TrTimes=this.hyperMap.getT2TrTimes();
@@ -686,6 +1296,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 
 	
 	
+	/**
+	 * Gets the cute times T 1.
+	 *
+	 * @return the cute times T 1
+	 */
 	public double[][][][][]getCuteTimesT1(){
 		double[][][][]t1trte=hyperMap.getT1TrTeTimes();// [Time][Curve (T1, puis T2 succ][Choice : Tr, Te or Visual T][actual values]
 		this.t1TrTimes=this.hyperMap.getT1TrTimes();	
@@ -737,6 +1352,13 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	
 	
+	/**
+	 * T 1 t 2 select cute.
+	 *
+	 * @param dat the dat
+	 * @param time the time
+	 * @return the double[]
+	 */
 	public double[]t1t2selectCute(double[]dat,int time){
 		int n=0;
 		for(int i=0;i<dat.length && i<isSelectedIndex[time].length;i++)if(switchAllCurves || isSelectedIndex[time][i])n++;
@@ -744,14 +1366,36 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		for(int i=0;i<dat.length && i<isSelectedIndex[time].length;i++)if(switchAllCurves || isSelectedIndex[time][i])ret[n++]=dat[i];
 		return ret;
 	}
+	
+	/**
+	 * T 1 t 2 selected curve.
+	 *
+	 * @param tran the tran
+	 * @param time the time
+	 * @return true, if successful
+	 */
 	public boolean t1t2SelectedCurve(int tran,int time) {
 		return (switchAllCurves || isSelectedCurve[time][tran]);
 	}
 	
+	/**
+	 * T 1 selected curve.
+	 *
+	 * @param tran the tran
+	 * @param time the time
+	 * @return true, if successful
+	 */
 	public boolean t1SelectedCurve(int tran,int time) {
 		return (true);
 	}
 
+	/**
+	 * T 1 select cute.
+	 *
+	 * @param dat the dat
+	 * @param time the time
+	 * @return the double[]
+	 */
 	public double[]t1selectCute(double[]dat,int time){
 		int n=0;
 		for(int i=0;i<dat.length && i<isSelectedIndex[time].length;i++)if(switchAllCurves || isSelectedIndex[time][i])n++;
@@ -760,9 +1404,24 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		return ret;
 	}
 	
+	/**
+	 * T 2 selected curve.
+	 *
+	 * @param tran the tran
+	 * @param time the time
+	 * @return true, if successful
+	 */
 	public boolean t2SelectedCurve(int tran,int time) {
 		return (switchAllCurves || isSelectedCurve[time][tran]);
 	}
+	
+	/**
+	 * T 2 select cute.
+	 *
+	 * @param dat the dat
+	 * @param time the time
+	 * @return the double[]
+	 */
 	public double[]t2selectCute(double[]dat,int time){
 		int n=0;
 		for(int i=0;i<dat.length && i<isSelectedIndex[time].length;i++)if(switchAllCurves || isSelectedIndex[time][i])n++;
@@ -774,6 +1433,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 
 	
 	
+	/**
+	 * Start gui.
+	 */
 	public void startGui() {
 	    WindowManager.addWindow(this);
 	    instance = this;
@@ -810,7 +1472,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	
 	
-	/** Gui building helpers--------------------------------------------------------------------------------*/	
+	/**
+	 *  Gui building helpers--------------------------------------------------------------------------------.
+	 */	
 	public void repaintAll() {
 		imgCan1.repaint();
 		imgCan2.repaint();
@@ -820,6 +1484,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		plotCan22.repaint();
 	}
 		
+	/**
+	 * Initialize screen constants.
+	 */
 	public void initializeScreenConstants() {
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int screenY=(int) Math.round(screenSize.getHeight());
@@ -847,6 +1514,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		totalSizeX= DX_IMG+DX_PLOT_1+DX_PLOT_2+2*DELTA_X ;  
 	}
 
+	/**
+	 * Initialize GUI.
+	 */
 	public void initializeGUI() {
 		String name=butNextEcho.getFont().getFamily();
 		if(isBionanoDisplay) {
@@ -1469,6 +2139,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		System.out.println(this.getSize());
 	}
 
+	/**
+	 * Start plots and roi.
+	 */
 	public void startPlotsAndRoi(){
 		IJ.log("Starting Plots");
 		if(!T1T2MixedEstimation) {
@@ -1520,6 +2193,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		plotT22.setLimits(t0T2,t1T2, 0, nTimepoints);
 	}
 	
+	/**
+	 * Actualize cursor.
+	 */
 	public void actualizeCursor() {
 		Overlay overT1;
 		Overlay overT2;
@@ -1591,10 +2267,20 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 	}
 	
+	/**
+	 * Size of cursor.
+	 *
+	 * @return the string
+	 */
 	public String sizeOfCursor() {
 		return "medium";
 	}
 		
+	/**
+	 * Actualize ranging boundaries.
+	 *
+	 * @return the int
+	 */
 	public int actualizeRangingBoundaries() {
 		double borderLeft=isBionanoDisplay ? 56 : 76;
 		double borderRight=isBionanoDisplay ? 14 : 20;
@@ -1613,6 +2299,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		return newTime;
 	}
 	
+	/**
+	 * Close plots and roi.
+	 */
 	public void closePlotsAndRoi(){
 		java.awt.Window win;
 		win=WindowManager.getWindow("T1 curve explorer");
@@ -1639,7 +2328,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 
 	
-	/** Read new data and update estimation and fits--------------------------------------------------------------------------------*/	
+	/**
+	 *  Read new data and update estimation and fits--------------------------------------------------------------------------------.
+	 */	
 	public void computeResultsAgain() {
 		actualizeMeanEstimations();
 		actualizeDisplayedNumbers();
@@ -1656,6 +2347,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	
+	/**
+	 * Actualize spectrum curves.
+	 */
 	public void actualizeSpectrumCurves() {
 		if(T1T2MixedEstimation)actualizeSpectrumCurvesT1T2();
 		else {
@@ -1664,6 +2358,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 	}
 
+	/**
+	 * Actualize mri observations based on data.
+	 */
 	public void actualizeMriObservationsBasedOnData() {
 		System.out.println("ACTUALISATION");
 		System.out.println("Status="+statusRoi);
@@ -1732,6 +2429,12 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 			
 
 
+	/**
+	 * Actualize selected echo.
+	 *
+	 * @param plotType the plot type
+	 * @return the int
+	 */
 	public int actualizeSelectedEcho(int plotType) {
 		double borderLeft=isBionanoDisplay ? 56 : 76;
 		double borderRight=isBionanoDisplay ? 14 : 20;
@@ -1774,6 +2477,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		return newTime;
 	}		
 		
+	/**
+	 * Actualize mean estimations.
+	 */
 	public void actualizeMeanEstimations() {
 		Object[] obj;
 		Timer tt=new Timer();
@@ -1852,6 +2558,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	
 
+	/**
+	 * Compute estimations for all points multi threaded.
+	 */
 	public void computeEstimationsForAllPointsMultiThreaded() {
 		if(T1T2MixedEstimation) {computeEstimationsForAllPointsMultiThreadedT1T2();return;}
 		else {
@@ -1971,6 +2680,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	*/
 	}
 
+	/**
+	 * Compute estimations for all points multi threaded T 1 T 2.
+	 */
 	public void computeEstimationsForAllPointsMultiThreadedT1T2() {
 		//Prepare input data and output places for threads
 		int nThreads=VitimageUtils.getNbCores();
@@ -2051,6 +2763,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 	}
 		
+	/**
+	 * Compute estimations for all points multi threaded T 1.
+	 */
 	public void computeEstimationsForAllPointsMultiThreadedT1() {
 		//Prepare input data and output places for threads
 		int nThreads=VitimageUtils.getNbCores();
@@ -2123,6 +2838,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 	}
 	
+	/**
+	 * Compute estimations for all points multi threaded T 2.
+	 */
 	public void computeEstimationsForAllPointsMultiThreadedT2() {
 		Timer t=new Timer();
 		//Prepare input data and output places for threads
@@ -2213,6 +2931,20 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	
 	
+	/**
+	 * Fit and evaluate T 1 T 2.
+	 *
+	 * @param tabTimesTr the tab times tr
+	 * @param tabTimesTe the tab times te
+	 * @param tabCuteTimesPerCurve the tab cute times per curve
+	 * @param tabData the tab data
+	 * @param sigmaRice the sigma rice
+	 * @param fitAlgorithm the fit algorithm
+	 * @param fitCurveType the fit curve type
+	 * @param nbPts the nb pts
+	 * @param niceCurveComputation the nice curve computation
+	 * @return the object[]
+	 */
 	public Object[] fitAndEvaluateT1T2(double[]tabTimesTr,double[]tabTimesTe,double[][][]tabCuteTimesPerCurve,double[]tabData,double sigmaRice,int fitAlgorithm,int fitCurveType,int nbPts,boolean niceCurveComputation) {
 		int nParams= MRUtils.getNparams(fitCurveType);//(type==0) ? 3 : (type==1 ? 5 : 6);
 		double []estimatedParams=new double[nParams];
@@ -2248,6 +2980,20 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		return new Object[] {estimatedParams,estimatedSigmas, tabFitten,tabFittenCute,accs[0],accs[1],jitter};
 	}
 		
+	/**
+	 * Fit and evaluate T 1.
+	 *
+	 * @param tabTimesTr the tab times tr
+	 * @param tabTimesTe the tab times te
+	 * @param tabCuteTimesPerCurve the tab cute times per curve
+	 * @param tabData the tab data
+	 * @param sigmaRice the sigma rice
+	 * @param fitAlgorithm the fit algorithm
+	 * @param fitCurveType the fit curve type
+	 * @param nbPts the nb pts
+	 * @param niceCurveComputation the nice curve computation
+	 * @return the object[]
+	 */
 	public Object[] fitAndEvaluateT1(double[]tabTimesTr,double[]tabTimesTe,double[][][]tabCuteTimesPerCurve,double[]tabData,double sigmaRice,int fitAlgorithm,int fitCurveType,int nbPts,boolean niceCurveComputation) {
 		int nParams= MRUtils.getNparams(fitCurveType);
 		double []estimatedParams=new double[nParams];
@@ -2273,6 +3019,20 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		return new Object[] {estimatedParams,estimatedSigmas, tabFitten,tabFittenCute,accs[0],accs[1],jitter};
 	}
 	
+	/**
+	 * Fit and evaluate T 2.
+	 *
+	 * @param tabTimesTr the tab times tr
+	 * @param tabTimesTe the tab times te
+	 * @param tabCuteTimesPerCurve the tab cute times per curve
+	 * @param tabData the tab data
+	 * @param sigmaRice the sigma rice
+	 * @param fitAlgorithm the fit algorithm
+	 * @param fitCurveType the fit curve type
+	 * @param nbPts the nb pts
+	 * @param niceCurveComputation the nice curve computation
+	 * @return the object[]
+	 */
 	public Object[] fitAndEvaluateT2(double[]tabTimesTr,double[]tabTimesTe,double[][][]tabCuteTimesPerCurve,double[]tabData,double sigmaRice,int fitAlgorithm,int fitCurveType,int nbPts,boolean niceCurveComputation) {
 		int nParams= MRUtils.getNparams(fitCurveType);
 		double []estimatedParams=new double[nParams];
@@ -2308,12 +3068,21 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 
 	
+	/**
+	 * Gets the fit type.
+	 *
+	 * @param fitType the fit type
+	 * @return the fit type
+	 */
 	public int getFitType(int fitType) {
 		return ((fitType %10)+10*this.noiseHandling);
 	}
 	
 	
 	
+	/**
+	 * Identify ranged data.
+	 */
 	public void identifyRangedData() {
 		if(T1T2MixedEstimation) {
 			identifyRangedDataT1T2();return;
@@ -2359,6 +3128,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 	}
 
+	/**
+	 * Identify ranged data T 1 T 2.
+	 */
 	public void identifyRangedDataT1T2() {
 		this.rangeRoiPoints=new ArrayList<int[]>();
 		if(this.spectrumRangingModeT1) {
@@ -2473,7 +3245,13 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	*/
 		
-	public double[][] computeSpectrumCurveT1T2(int time) {
+	/**
+ * Compute spectrum curve T 1 T 2.
+ *
+ * @param time the time
+ * @return the double[][]
+ */
+public double[][] computeSpectrumCurveT1T2(int time) {
 		
 		final double[]binInf=new double[numberBins];
 		final double[]binSup=new double[numberBins];
@@ -2527,6 +3305,12 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 
 
+	/**
+	 * Compute spectrum curve T 1.
+	 *
+	 * @param time the time
+	 * @return the double[][]
+	 */
 	public double[][] computeSpectrumCurveT1(int time) {
 		final double[]binInf=new double[numberBins];
 		final double[]binSup=new double[numberBins];
@@ -2558,6 +3342,12 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 
+	/**
+	 * Compute spectrum curve T 2.
+	 *
+	 * @param time the time
+	 * @return the double[][]
+	 */
 	public double[][] computeSpectrumCurveT2(int time) {		
 		final double[]binInf=new double[numberBins];
 		final double[]binSup=new double[numberBins];
@@ -2607,7 +3397,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 
 
-	/** Update graphs using new computed results--------------------------------------------------------------------------------*/		
+	/**
+	 *  Update graphs using new computed results--------------------------------------------------------------------------------.
+	 */		
 	public void actualizeFirstPlots() {
 		if(T1T2MixedEstimation) {actualizeFirstPlotsT1T2();return;}
 		else {
@@ -2768,6 +3560,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 			
 	
+	/**
+	 * Actualize first plots T 2.
+	 */
 	public void actualizeFirstPlotsT2() {
 		int incrT2=0;
 		int deltaXt2=0;
@@ -2848,6 +3643,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		lastCountT2=incrT2;
 	}
 
+	/**
+	 * Actualize first plots T 1 T 2.
+	 */
 	public void actualizeFirstPlotsT1T2() {
 		int incrT1T2=0;
 		int deltaXt2=3;
@@ -2931,6 +3729,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		lastCountT1T2=incrT1T2;
 	}
 
+	/**
+	 * Actualize first plots T 1.
+	 */
 	public void actualizeFirstPlotsT1() {
 		int incrT1=0;
 		int deltaXt2=3;
@@ -3009,6 +3810,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 
 	
 	
+	/**
+	 * Actualize second plots.
+	 */
 	public void actualizeSecondPlots() {
 		int incrT1=0;
 		int incrT2=0;
@@ -3180,6 +3984,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		lastCount22=incrT2;
 	}				
 
+	/**
+	 * Actualize spectrum curves T 1 T 2.
+	 */
 	public void actualizeSpectrumCurvesT1T2() {
 		for(int tim=0;tim<this.nTimepoints;tim++) {
 			this.valsSpectrum[tim]=computeSpectrumCurveT1T2(tim);
@@ -3220,6 +4027,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		for(int i=0;i<this.valsSpectrum[0][0].length;i++) {d+=valsSpectrum[0][0][i];}
 	}
 
+	/**
+	 * Actualize spectrum curves T 1.
+	 */
 	public void actualizeSpectrumCurvesT1() {
 		for(int tim=0;tim<this.nTimepoints;tim++) {
 			if(this.valsSpectrumT1==null)this.valsSpectrumT1=new double[this.nTimepoints][][];
@@ -3252,6 +4062,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 	}
 
+	/**
+	 * Actualize spectrum curves T 2.
+	 */
 	public void actualizeSpectrumCurvesT2() {
 		for(int tim=0;tim<this.nTimepoints;tim++) {
 			if(this.valsSpectrumT2==null)this.valsSpectrumT2=new double[this.nTimepoints][][];
@@ -3438,7 +4251,10 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		matSentence+="]\n";
 	}*/
 	
-	public void actualizeDisplayedNumbers() {
+	/**
+ * Actualize displayed numbers.
+ */
+public void actualizeDisplayedNumbers() {
 		//Update colors
 		boolean t1MonoActive=T1T2MixedEstimation ? (switchT1T2==0) : (hasT1 && (switchT1T2==0));
 		boolean t2MonoActive=T1T2MixedEstimation ? (switchT1T2==0) : (hasT2 && (switchT1T2==0));
@@ -3510,6 +4326,12 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 
 	
+	/**
+	 * Export data to csv.
+	 *
+	 * @param dirPath the dir path
+	 * @param basename the basename
+	 */
 	//TODO
 	public void exportDataToCsv(String dirPath,String basename) {
 		String[][]tab;
@@ -3715,6 +4537,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 
 
+	/**
+	 * Display results again.
+	 */
 	public void displayResultsAgain() {
 		imgCan1.getImage().setPosition(cMaps+1,zCor+1,tCor+1);
 		imgCan1.setImageUpdated();
@@ -3744,7 +4569,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	
 
-	/** Gui updating functions and callbacks--------------------------------------------------------------------------------*/	
+	/**
+	 *  Gui updating functions and callbacks--------------------------------------------------------------------------------.
+	 *
+	 * @param e the e
+	 */	
 	@Override
 	public void keyTyped(KeyEvent e) {
 		///////ACTIONS TO CHANGE SIZE OF AREA
@@ -3910,6 +4739,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	
+	/**
+	 * Update switch buttons.
+	 */
 	public void updateSwitchButtons() {
 		
 		if(this.noiseHandling==0) {
@@ -3939,6 +4771,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	
 	
+	/**
+	 * Change tr.
+	 *
+	 * @param up the up
+	 */
 	public void changeTr(boolean up) {
 		double globalIndex=cEchoes;
 		int correspondingFirstEchoGlobalIndex=cEchoes;
@@ -4027,6 +4864,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		cEchoes=retIndex;return;//Game
 	}
 	
+	/**
+	 * Action performed.
+	 *
+	 * @param e the e
+	 */
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource()==buttonSwitchMono) {
@@ -4219,6 +5061,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 	}
 
+	/**
+	 * Gets the help string.
+	 *
+	 * @return the help string
+	 */
 	public String getHelpString() {
 		return (
 		"Curve explorer is a java interface dedicated to T1 and T2 characterization in tissues from packed 4D or 5D HyperMaps (X-Y-Z-Echo-Times).\nType the 'h' key at any time to display this help"+
@@ -4255,6 +5102,13 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		" \n");
 	}
 
+	/**
+	 * Smooth histo.
+	 *
+	 * @param histo the histo
+	 * @param sig the sig
+	 * @return the double[]
+	 */
 	public double[]smoothHisto(double[]histo,int sig){
 		if(sig<=0)return histo;
 		int nbBins=histo.length;
@@ -4285,26 +5139,57 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		return histSmooth;  
 	}
 	
+	/**
+	 * Mouse pressed.
+	 *
+	 * @param e the e
+	 */
 	@Override
 	public void mousePressed(MouseEvent e) {
 	}
 	
+	/**
+	 * Mouse released.
+	 *
+	 * @param e the e
+	 */
 	@Override
 	public void mouseReleased(MouseEvent e) {
 	}
 	
+	/**
+	 * Mouse entered.
+	 *
+	 * @param e the e
+	 */
 	@Override
 	public void mouseEntered(MouseEvent e) {
 	}
 
+	/**
+	 * Mouse exited.
+	 *
+	 * @param e the e
+	 */
 	@Override
 	public void mouseExited(MouseEvent e) {
 	}
 		
+	/**
+	 * Key pressed.
+	 *
+	 * @param e the e
+	 */
 	@Override
 	public void keyPressed(KeyEvent e) {
 	}
 
+    /**
+     * Setup scroll.
+     *
+     * @param ox the ox
+     * @param oy the oy
+     */
     public void setupScroll(int ox, int oy) {
     	Rectangle srcRect = new Rectangle(0, 0, dims[0], dims[1]);
         xMouseStart = ox;
@@ -4313,6 +5198,12 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
         ySrcStart = srcRect.y;
     }
 
+    /**
+     * Update playing.
+     *
+     * @param param the param
+     * @param action the action
+     */
     public void updatePlaying(int param,int action) {
 		System.out.println("Update playing "+param+" , "+action);
     	int type=0;		int nParams=  3; 
@@ -4357,6 +5248,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
  		displayResultsAgain();
     }
     
+	/**
+	 * Mouse clicked.
+	 *
+	 * @param e the e
+	 */
 	public void mouseClicked(MouseEvent e) {
 		for(int i=0;i<titles.length;i++) {
 			if(e.getSource()==titles[i]) {
@@ -4478,6 +5374,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 	}
 		
+	/**
+	 * Key released.
+	 *
+	 * @param e the e
+	 */
 	@Override
 	public void keyReleased(KeyEvent e) {
 		if(imgCan1.cursorOverImage()) currentCanvas=WIN_T1;
@@ -4489,12 +5390,22 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 	}
 
+	/**
+	 * Window closing.
+	 *
+	 * @param paramWindowEvent the param window event
+	 */
 	public void windowClosing(WindowEvent paramWindowEvent)
 	  {
 	    super.windowClosing(paramWindowEvent);
 	    instance = null;
 	  }
 
+	/**
+	 * Mouse wheel moved.
+	 *
+	 * @param e the e
+	 */
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		if(imgCan1.cursorOverImage()) currentCanvas=WIN_T1;
@@ -4564,12 +5475,22 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		displayResultsAgain();
 	}
 
+	/**
+	 * Mouse dragged.
+	 *
+	 * @param e the e
+	 */
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		// TODO Auto-generated method stub
 
 	}
 
+	/**
+	 * Mouse moved.
+	 *
+	 * @param e the e
+	 */
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		// TODO Auto-generated method stub 

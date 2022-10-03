@@ -1,8 +1,10 @@
 package io.github.rocsg.fijirelax.mrialgo;
 
 import java.util.Random;
+
 import io.github.rocsg.fijiyama.common.VitimageUtils;
 
+// TODO: Auto-generated Javadoc
 /** This class provides utilities to estimate MRI relaxation parameters in presence of a Rice noise
  * Rice noise affects the signal in a way that make it complicated to invert : its moments depend on the value of the unaltered signal
  * For more information, refer to Fernandez et al. 2022 FijiRelax: Fast and noise-corrected estimation of MRI relaxation maps in 3D + t (in prep.)
@@ -12,56 +14,111 @@ import io.github.rocsg.fijiyama.common.VitimageUtils;
 public class RiceEstimator {
 
 
-	public static void test() {
-		int N=100;
-		int SNR=200;
-		double signal=735;
-		double sigma=700/Math.sqrt(SNR);
+	/**
+	 * Test of the random Rice simulator
+	 */
+	public static double[] testRandomRiceMeanDrift() {
+		int N=100000;
+		int SNR=2;
+		double signal=700;
+		double sigma=signal/SNR;
 		double[]tab=new double[N];
 		for(int i=0;i<N;i++) {
 			tab[i]=getRandomRiceRealization(signal,sigma);
-			System.out.println(tab[i]);
 		}
-		System.out.println(""+VitimageUtils.statistics1D(tab)[0]+" , "+VitimageUtils.statistics1D(tab)[1]);
+		double mean=VitimageUtils.statistics1D(tab)[0];
+		System.out.println(VitimageUtils.statistics1D(tab)[0]);
+		return new double[] {mean,795.4,4};
 	}
 	
-	public static void main(String[]args) {
-		test();
-		System.exit(0);
-		RiceEstimator rice=getDefaultRiceEstimatorForNormalizedHyperEchoesT1AndT2Images();
+	public static double[] testSimulateAndEstimateRiceSigma() {
 		double sigma=0.05;
 		double[]stats=computeSigmaAndMeanBgFromRiceSigmaStatic(sigma);
-		System.out.println("Sigma rice="+sigma+"  equivalent mean in zero signal="+stats[0]+"  equivalent std in zero signal="+stats[1]);
+		System.out.println(stats[0]);
+		return new double[] {stats[0],0.0626657068,VitimageUtils.EPSILON};
+		//Sigma rice="+sigma+"  equivalent mean in zero signal="+stats[0]+"  equivalent std in zero signal="+stats[1]);
+	}
+
+	
+	public static double []testCorruptAndRecoverSignal() {
+		//Build an estimator.
+		RiceEstimator rice=getDefaultRiceEstimatorForNormalizedHyperEchoesT1AndT2Images();
+		double sigma=0.05;
 		for(double obs=0;obs<1;obs+=0.01) {
-			double mea=besFunkCost(obs, sigma);
-			double sig=besFunkSigma(obs, sigma);
-			System.out.println("Obs="+VitimageUtils.dou(obs)+" Mean="+VitimageUtils.dou(mea)+"  Sigma="+VitimageUtils.dou(sig));
-		}
+			double index=rice.getSigmaCoord(sigma);
+			double coord=rice.getObservationCoord(0.5);
+			System.out.println("Obs="+VitimageUtils.dou(obs)+"  Index="+index+" Coord="+coord);
+		}		
+
+		double[]sigs=rice.estimateSigmas(100,new double[] {120,1000});
+		System.out.println("Sigmas="+sigs[0]+" , "+sigs[1]);
+		
+		
+		double val=computeRiceSigmaFromBackgroundValuesStatic(2,1.2); 
+		val=computeRiceSigmaFromBackgroundValuesStatic(20,1.2); 
+		return new double[] {val, 15.957691,VitimageUtils.EPSILON};
+		
 	}
 	
 	
+	/** The Constant epsilon. */
 	private final static double epsilon=0.00001;
+	
+	/** The Constant debug. */
 	private final static boolean debug=false;
+	
+	/** The sigma rice min. */
 	private double sigmaRiceMin;
+	
+	/** The sigma rice max. */
 	private double sigmaRiceMax;
+	
+	/** The observation min. */
 	private double observationMin;
+	
+	/** The observation max. */
 	private double observationMax;
+	
+	/** The observation range. */
 	private double []observationRange;
+	
+	/** The sigma range. */
 	private double []sigmaRange;
+	
+	/** The n sig. */
 	private int nSig;
+	
+	/** The n obs. */
 	private int nObs;
+	
+	/** The lut. */
 	private double[][][]lut;
 	
 	
 
 	
 	
+	/**
+	 * Gets the default rice estimator for normalized hyper echoes T 1 and T 2 images.
+	 *
+	 * @return the default rice estimator for normalized hyper echoes T 1 and T 2 images
+	 */
 	public static RiceEstimator getDefaultRiceEstimatorForNormalizedHyperEchoesT1AndT2Images() {
 		RiceEstimator rice=new RiceEstimator(0.0001,1,0.0001,20,1000,1000);
 		rice.start();
 		return rice;
 	}
 	
+	/**
+	 * Instantiates a new rice estimator.
+	 *
+	 * @param sigmaRiceMin the sigma rice min
+	 * @param sigmaRiceMax the sigma rice max
+	 * @param observationMin the observation min
+	 * @param observationMax the observation max
+	 * @param nSig the n sig
+	 * @param nObs the n obs
+	 */
 	//TODO : document
 	public RiceEstimator(double sigmaRiceMin,double sigmaRiceMax,double observationMin,double observationMax,int nSig,int nObs) {
 		this.sigmaRiceMax=sigmaRiceMax;
@@ -74,6 +131,9 @@ public class RiceEstimator {
 		this.sigmaRange=new double[nSig];
 	}
 
+	/**
+	 * Start.
+	 */
 	//TODO : document
 	public void start() {
 		buildSigmaRange();
@@ -83,16 +143,22 @@ public class RiceEstimator {
 	
 	
 	
+	/**
+	 * Builds the sigma range.
+	*/
 	//Values of sigma table
 	public void buildSigmaRange() {
-		if(debug)System.out.print("Construction array sigma : ");
 		for(int sig=0;sig<nSig;sig++) {
 			sigmaRange[sig]=sigmaRiceMin+(sig*1.0)*(sigmaRiceMax-sigmaRiceMin)/(nSig-1);
-			if(debug)System.out.print("sig"+sig+"="+sigmaRange[sig]+" , ");
 		}
-		if(debug)System.out.println();
 	}
 	
+	/**
+	 * Gets the sigma coord.
+	 *
+	 * @param sigma the sigma
+	 * @return the sigma coord
+	 */
 	//index of a sigma in the table
 	public double getSigmaCoord(double sigma) {
 		double coord=(sigma-sigmaRiceMin)/(sigmaRiceMax-sigmaRiceMin)*(nSig-1);
@@ -101,6 +167,9 @@ public class RiceEstimator {
 		return coord;
 	}
 	
+	/**
+	 * Builds the observation range.
+	 */
 	//Values of the observations table
 	public void buildObservationRange() {
 		if(debug)System.out.print("Construction array observations : ");
@@ -112,6 +181,12 @@ public class RiceEstimator {
 		if(debug)System.out.println();
 	}
 
+	/**
+	 * Gets the observation coord.
+	 *
+	 * @param observation the observation
+	 * @return the observation coord
+	 */
 	//index of an observation in the table
 	public double getObservationCoord(double observation) {
 		if(observation>=this.observationMax)return nObs-1-epsilon;
@@ -129,6 +204,9 @@ public class RiceEstimator {
 	}
 
 	
+	/**
+	 * Builds the lookup table.
+	 */
 	public void buildLookupTable() {
 		double interMin, interMax,interMed,valMin,valMax,valMed;
 		System.out.print("Building lookup table for estimation of initial signal amplitude using max likelyhood reverse estimation from observations X rice noise ...");
@@ -164,17 +242,38 @@ public class RiceEstimator {
 	}
 			
 	
+	/**
+	 * Estimate sigma.
+	 *
+	 * @param sigmaRice the sigma rice
+	 * @param observation the observation
+	 * @return the double
+	 */
 	public double estimateSigma(double sigmaRice,double observation) {
 		double initialSignal=estimateInitialSignal(sigmaRice,observation);
 		return besFunkSigma(initialSignal,sigmaRice);
 	}
 	
+	/**
+	 * Estimate sigmas.
+	 *
+	 * @param sigmaRice the sigma rice
+	 * @param observations the observations
+	 * @return the double[]
+	 */
 	public double []estimateSigmas(double sigmaRice,double []observations) {
 		double[]ret=new double[observations.length];
 		for(int r=0;r<ret.length;r++)ret[r]=estimateSigma(sigmaRice,observations[r]);
 		return ret;
 	}
 	
+	/**
+	 * Estimate initial signal.
+	 *
+	 * @param sigmaRice the sigma rice
+	 * @param observation the observation
+	 * @return the double
+	 */
 	public double estimateInitialSignal(double sigmaRice,double observation) {
 		double coordObs=getObservationCoord(observation);
 		double coordSig=getSigmaCoord(sigmaRice);
@@ -202,44 +301,73 @@ public class RiceEstimator {
 		return targetValue;
 	}
 	
-	/** 
-	 * Return a first order approximation of initial signal leading to value valFunk, after being corrupted by Rice noise with stddev=sigma 
+	/**
+	 *  
+	 * Return a first order approximation of initial signal leading to value valFunk, after being corrupted by Rice noise with stddev=sigma .
+	 *
 	 * @param valFunk The observed value after noise alteration
 	 * @param sigma The parameter of the Rice noise
 	 * @return First order approximation of the signal, as a double
-	 */
 	static double sigmaWay(double valFunk,double sigma){
 		double ret=valFunk*valFunk-2*sigma*sigma;
 		return (ret<0 ? 0 : Math.sqrt(ret));
 	}
-	
-	/*
-	 * Helper function to ease computing the derivative of the signal as a function of MRI parameters
 	 */
+	
+	/**
+	 * Bes funk cost.
+	 *
+	 * @param d the d
+	 * @param sigma2 the sigma 2
+	 * @return the double
+	 */
+	/*
+	 * Helper function to ease computing the derivative of the signal as a function of MRI parameters*/
 	static double besFunkCost(double d,double sigma2) {
 		if(sigma2<=0)return d;
 		double alpha=d*d/(4*sigma2*sigma2);
 		return (double)(Math.sqrt(Math.PI*sigma2*sigma2/2.0)*( (1+2*alpha)*bessi0NoExp(alpha) + 2*alpha*bessi1NoExp(alpha) ));
 	}
+	
 
-	/*
-	 * Helper function to ease computing the derivative of the signal as a function of MRI parameters
+	/**
+	 * Bes funk sigma.
+	 *
+	 * @param d the d
+	 * @param sigma2 the sigma 2
+	 * @return the double
 	 */
+	/*
+	 * Helper function to ease computing the derivative of the signal as a function of MRI parameters*/
 	static double besFunkSigma(double d,double sigma2) {
 		double alpha=d*d/(4*sigma2*sigma2);
 		return Math.sqrt(2*sigma2*sigma2+d*d  - (Math.PI*sigma2*sigma2/2.0)*Math.pow( (1+2*alpha)*bessi0NoExp(alpha) + 2*alpha*bessi1NoExp(alpha) ,2));
 	}
+	
 
 	
+	/**
+	 * Bes funk deriv.
+	 *
+	 * @param d the d
+	 * @param sigma the sigma
+	 * @return the double
+	 */
 	/*
 	 * Helper function to ease computing the derivative of the signal as a function of MRI parameters
-	 */
+	 
 	static double besFunkDeriv(double d,double sigma) {
 		double alpha=d*d/(4*sigma*sigma);
 		return (double)(Math.sqrt(Math.PI*alpha/2.0)*(bessi0NoExp(alpha) + bessi1NoExp(alpha) ));
 	}
- 
+ */
 	
+	/**
+	 * Bessi 0 no exp.
+	 *
+	 * @param alpha the alpha
+	 * @return the double
+	 */
 	/*
 	 * Function of bessi of 0th order, as given in numerical recipes
 	 */
@@ -260,6 +388,12 @@ public class RiceEstimator {
 	   return (double)ans;
 	}
 
+	/**
+	 * Bessi 1 no exp.
+	 *
+	 * @param alpha the alpha
+	 * @return the double
+	 */
 	/*
 	 * Function of bessi of 1th order, as given in numerical recipes
 	 */
@@ -286,8 +420,9 @@ public class RiceEstimator {
 	 * Estimation of the rice noise stddev from values measured in the background
 	 * assuming that there is no object in such background. The value is computed by two methods, using the mean and stdev of the BG, then the first one is returned
 	 * If the values estimated by the two methods diverge by more than 30 %, display a Warning
-	 * @param double meanBg the mean value measured in the background
-	 * @param double stdBg the std value measured in the background
+	 *
+	 * @param meanBg the mean bg
+	 * @param sigmaBg the sigma bg
 	 * @return The estimated sigma of the Rice noise
 	 */
 	public static double computeRiceSigmaFromBackgroundValuesStatic(double meanBg,double sigmaBg) {
@@ -304,8 +439,8 @@ public class RiceEstimator {
 	/**
 	 * Estimation of the rice noise stddev from values measured in the background
 	 * assuming that there is no object in such background. The value is computed by two methods, using the mean and stdev of the BG, then the two values are returned
-	 * @param double meanBg the mean value measured in the background
-	 * @param double stdBg the std value measured in the background
+	 *
+	 * @param sigmaRice the sigma rice
 	 * @return A double array yielding the estimated sigma in the two methods
 	 */
 	public static double []computeSigmaAndMeanBgFromRiceSigmaStatic(double sigmaRice) {
@@ -317,12 +452,13 @@ public class RiceEstimator {
 
 	
 	/**
-	 * Simulation of Rice Noise over an unaltered signal
-	 * @param double originalSignal the value of the unaltered signal
-	 * @param double sigmaRice the stddev of the Rice noise
-	 * @param int nRepets the number of times to run this simulation before averaging the obtained values
+	 * Simulation of Rice Noise over an unaltered signal.
+	 *
+	 * @param originalSignal the original signal
+	 * @param sigmaRice the sigma rice
+	 * @param nRepets the n repets
 	 * @return A double corresponding to the value of the altered signal
-	 */
+	*/ 
 	public static double getRandomRiceRealization(double originalSignal,double sigmaRice,int nRepets){
 		double acc=0;
 		for(int i=0;i<nRepets;i++) {
@@ -332,9 +468,10 @@ public class RiceEstimator {
 	}
 
 	/**
-	 * Simulation of Rice Noise over an unaltered signal
-	 * @param double originalSignal the value of the unaltered signal
-	 * @param double sigmaRice the stddev of the Rice noise
+	 * Simulation of Rice Noise over an unaltered signal.
+	 *
+	 * @param originalSignal the original signal
+	 * @param sigmaRice the sigma rice
 	 * @return A double corresponding to the value of the altered signal
 	 */
 	public static double getRandomRiceRealization(double originalSignal,double sigmaRice){

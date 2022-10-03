@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.gui;
 
 import java.io.File;
@@ -11,54 +14,123 @@ import ij.plugin.HyperStackConverter;
 import io.github.rocsg.fijirelax.mrialgo.HyperMap;
 import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 
+// TODO: Auto-generated Javadoc
 //TODO : is this class still useful ?
 
 /**
  * The Custom_Format_Importer class is in charge of handling importation MRI data
- * from NIFTI, multiple NIFTI or BRUKER formats
+ * from NIFTI, multiple NIFTI or BRUKER formats.
+ *
  * @author Romain Fernandez (romain.fernandez@cirad.fr)
  * @version 1.2, 15.04.2022
- * 
  */
 public class Custom_Format_Importer{
+	
+	/** The input dir. */
 	private String inputDir="";
+	
+	/** The name observation. */
 	public String nameObservation="";
+	
+	/** The voxs. */
 	private double[]voxs;
+	
+	/** The img T 2 seq. */
 	ImagePlus []imgT2Seq;
+	
+	/** The img T 1 seq. */
 	ImagePlus []imgT1Seq;
+	
+	/** The img T 2 seq test. */
 	ImagePlus []imgT2SeqTest;
+	
+	/** The img T 1 seq test. */
 	ImagePlus []imgT1SeqTest;
+	
+	/** The M 0 map. */
 	ImagePlus M0map;
+	
+	/** The M 0 map 2. */
 	ImagePlus M0map2;
+	
+	/** The T 1 map. */
 	ImagePlus T1map;
+	
+	/** The T 1 map 2. */
 	ImagePlus T1map2;
+	
+	/** The T 2 map. */
 	ImagePlus T2map;
+	
+	/** The T 2 map 2. */
 	ImagePlus T2map2;
+	
+	/** The export file name. */
 	public String exportFileName="";
+	
+	/** The force no man. */
 	boolean forceNoMan=true;
+	
+	/** The make crop. */
 	public boolean makeCrop=false;
+	
+	/** The skip reg for testing. */
 	boolean skipRegForTesting=false;
+	
+	/** The view registration. */
 	boolean viewRegistration=false;
 
+	/** The normalize before computation. */
 	public boolean normalizeBeforeComputation=false;
+	
+	/** The normalize after computation. */
 	public boolean normalizeAfterComputation=false;
 
+	/** The force no bouture trick. */
 	public boolean forceNoBoutureTrick=false;
+	
+	/** The make sorgho trick. */
 	public boolean makeSorghoTrick=false;
+	
+	/** The make bouture trick. */
 	public boolean makeBoutureTrick;
+	
+	/** The forget early reps. */
 	public boolean forgetEarlyReps=false;
+	
+	/** The speedup registration for testing. */
 	public boolean speedupRegistrationForTesting=true;//false;
 	
+	/** The hide message. */
 	public boolean hideMessage=true;
+	
+	/** The dont show nothing. */
 	public boolean dontShowNothing=false;
+	
+	/** The compute multi. */
 	public boolean computeMulti=true;
 	
+	/** The img T 1 T 2. */
 	private ImagePlus[][] imgT1T2;
+	
+	/** The img T 1 T 2 line. */
 	private ImagePlus[] imgT1T2Line;
+	
+	/** The multi M 0. */
 	private ImagePlus multiM0;
+	
+	/** The multi T 1. */
 	private ImagePlus multiT1;
+	
+	/** The name. */
 	private String name;
 	
+	/**
+	 * Instantiates a new custom format importer.
+	 *
+	 * @param inputDir the input dir
+	 * @param name the name
+	 */
 	public Custom_Format_Importer(String inputDir,String name) {
 		this.inputDir=inputDir;
 		this.name=name;
@@ -67,7 +139,8 @@ public class Custom_Format_Importer{
 	
 	/**
 	 * Run the importation, according to defined member fields (name,inputdir)
-	 * and return the imported MRI observation as an HyperMap
+	 * and return the imported MRI observation as an HyperMap.
+	 *
 	 * @return The reconstructed HyperMap
 	 * @see HyperMap
 	 */
@@ -90,9 +163,8 @@ public class Custom_Format_Importer{
 	
 	
 	/**
-	 * Set all data member fields to null
-	 *
-	 * 	 */
+	 * Set all data member fields to null.
+	 */
 	public void makeNullMaps(){
 		multiM0=VitimageUtils.nullImage(imgT1T2Line[0]);
 		multiT1=VitimageUtils.nullImage(imgT1T2Line[0]);
@@ -100,6 +172,12 @@ public class Custom_Format_Importer{
 	}
 	
 
+	/**
+	 * Gets the first image of T 1 T 2 serie.
+	 *
+	 * @param inputDir the input dir
+	 * @return the first image of T 1 T 2 serie
+	 */
 	public Object[] getFirstImageOfT1T2Serie(String inputDir) {
 		String imgPath=inputDir;
 		String[]subFile=null;
@@ -113,6 +191,11 @@ public class Custom_Format_Importer{
 		return new Object[] {IJ.openImage(imgPath),subFile.length};
 	}
 	
+	/**
+	 * Read T 1 T 2.
+	 *
+	 * @return the hyper map
+	 */
 	public HyperMap readT1T2() {
 		System.out.println(inputDir);
 		String[]listFiles=VitimageUtils.stringArraySortByTrValue(new File(inputDir).list());
@@ -174,6 +257,12 @@ public class Custom_Format_Importer{
 	}		
 	
 	
+	/**
+	 * Detect sorgho.
+	 *
+	 * @param img the img
+	 * @return true, if successful
+	 */
 	public boolean detectSorgho(ImagePlus img) {
 		String patientName=VitimageUtils.getPatientName(img);
 		if( patientName.contains("BM") || patientName.contains("SSM")) {
@@ -187,6 +276,12 @@ public class Custom_Format_Importer{
 		return false;
 	}
 
+	/**
+	 * Detect bouture.
+	 *
+	 * @param img the img
+	 * @return true, if successful
+	 */
 	public boolean detectBouture(ImagePlus img) {
 		System.out.println("Investigating if is Bouture");
 		boolean ret=VitimageUtils.isBouture(img);

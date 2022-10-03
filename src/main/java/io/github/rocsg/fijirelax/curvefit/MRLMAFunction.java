@@ -1,8 +1,12 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.curvefit;
 import java.util.Arrays;
 
 import io.github.rocsg.fijirelax.lma.ArrayConverter;
 
+// TODO: Auto-generated Javadoc
 /** 
  * Implement this for your fit function.
  * 
@@ -10,29 +14,58 @@ import io.github.rocsg.fijirelax.lma.ArrayConverter;
  * @version 1.2, 16.11.2006
  */
 public abstract class MRLMAFunction {
+	
 	/**
-	 * @return The <i>y</i>-value of the function.
+	 * Gets the y.
+	 *
 	 * @param x The <i>x</i>-value for which the <i>y</i>-value is calculated.
-	 * @param a The fitting parameters. 
+	 * @param a The fitting parameters.
+	 * @return The <i>y</i>-value of the function.
 	 */
 	public abstract double getY(double x, double[] a);
 	
+	/**
+	 * Gets the y.
+	 *
+	 * @param Tr the tr
+	 * @param Te the te
+	 * @param a the a
+	 * @return the y
+	 */
 	public abstract double getY(double Tr,double Te, double[] a);
 
-	/** 
+	/**
+	 *  
 	 * The method which gives the partial derivates used in the LMA fit.
 	 * If you can't calculate the derivate, use a small <code>a</code>-step (e.g., <i>da</i> = 1e-20)
 	 * and return <i>dy/da</i> at the given <i>x</i> for each fit parameter.
-	 * @return The partial derivate of the function with respect to parameter <code>parameterIndex</code> at <i>x</i>.
+	 *
 	 * @param x The <i>x</i>-value for which the partial derivate is calculated.
 	 * @param a The fitting parameters.
-	 * @param parameterIndex The parameter index for which the partial derivate is calculated. 
+	 * @param parameterIndex The parameter index for which the partial derivate is calculated.
+	 * @return The partial derivate of the function with respect to parameter <code>parameterIndex</code> at <i>x</i>.
 	 */
 	public abstract double getPartialDerivate(double x, double[] a, int parameterIndex);
 
+	/**
+	 * Gets the partial derivate.
+	 *
+	 * @param Tr the tr
+	 * @param Te the te
+	 * @param a the a
+	 * @param parameterIndex the parameter index
+	 * @return the partial derivate
+	 */
 	public abstract double getPartialDerivate(double Tr, double Te,double[] a, int parameterIndex);
 	
-	/** @return Calculated function values with the given x- and parameter-values. */
+	/**
+	 * Generate data.
+	 *
+	 * @param Tr the tr
+	 * @param Te the te
+	 * @param a the a
+	 * @return Calculated function values with the given x- and parameter-values.
+	 */
 	public double[] generateData(double[] Tr,double[] Te, double[] a) {
 		double[] result = new double[Tr.length];
 		for (int i = 0; i < result.length; i++) {
@@ -41,7 +74,14 @@ public abstract class MRLMAFunction {
 		return result;
 	}
 	
-	/** @return Calculated function values with the given x- and parameter-values. */
+	/**
+	 * Generate data.
+	 *
+	 * @param Tr the tr
+	 * @param Te the te
+	 * @param a the a
+	 * @return Calculated function values with the given x- and parameter-values.
+	 */
 	public float[] generateData(float[] Tr,float[] Te, double[] a) {
 		float[] result = new float[Tr.length];
 		for (int i = 0; i < result.length; i++) {
@@ -50,13 +90,26 @@ public abstract class MRLMAFunction {
 		return result;
 	}
 	
-	/** The default weights-array constructor. Override for your purposes. */
+	/**
+	 *  The default weights-array constructor. Override for your purposes.
+	 *
+	 * @param dataPoints the data points
+	 * @return the double[]
+	 */
 	public double[] constructWeights(double[][] dataPoints) {
 		double[] result = new double[dataPoints[0].length];
 		Arrays.fill(result, 1);
 		return result;
 	}
 	
+	/**
+	 * Generate data.
+	 *
+	 * @param Tr the tr
+	 * @param Te the te
+	 * @param a the a
+	 * @return the float[]
+	 */
 	public float[] generateData(float[] Tr, float[] Te,float[] a) {
 		return ArrayConverter.asFloatArray(generateData(ArrayConverter.asDoubleArray(Tr), ArrayConverter.asDoubleArray(Te),ArrayConverter.asDoubleArray(a)));
 	}

@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.mrialgo;
 
 
@@ -17,16 +20,24 @@ import io.github.rocsg.fijirelax.curvefit.LMCurveFitterNoBias;
 import io.github.rocsg.fijirelax.curvefit.LMDualCurveFitterNoBias;
 import io.github.rocsg.fijirelax.curvefit.SimplexDualCurveFitterNoBias;
 
+// TODO: Auto-generated Javadoc
 /**
- * 
- * This class is a utility class to hold many helpers used for simulating MRI echoes, computing rice noise estimation, reading information into TIFF metadata
- *
+ * This class is a utility class to hold many helpers used for simulating MRI echoes, computing rice noise estimation, reading information into TIFF metadata.
  */
 public class MRUtils  {
 	
+	/**
+	 * Instantiates a new MR utils.
+	 */
 	public MRUtils() {	}
 
 	
+	/**
+	 * Forget last T 2.
+	 *
+	 * @param tab the tab
+	 * @return the double[][]
+	 */
 	public static double[][]forgetLastT2(double[][]tab){
 		double[][]tab2=new double[tab.length][];
 		for(int i=0;i<tab.length;i++) {
@@ -36,6 +47,12 @@ public class MRUtils  {
 		return tab2;
 	}
 	
+	/**
+	 * Forget last T 2.
+	 *
+	 * @param tab the tab
+	 * @return the double[][][]
+	 */
 	public static double[][][]forgetLastT2(double[][][]tab){
 		//System.out.println("Forget last T2 building : "+tab.length +" x  "+tab[0].length+" x "+(tab[0][0].length-1));
 		double[][][]tab2=new double[tab.length][][];
@@ -50,6 +67,18 @@ public class MRUtils  {
 	}
 	
 	
+	/**
+	 * Simulate echoes T 2 relax.
+	 *
+	 * @param maps the maps
+	 * @param Tr the tr
+	 * @param Te the te
+	 * @param nRepetitions the n repetitions
+	 * @param typeAcq the type acq
+	 * @param sigma the sigma
+	 * @param nameSimul the name simul
+	 * @return the image plus
+	 */
 	public static ImagePlus simulateEchoesT2Relax(ImagePlus maps,double Tr,double[]Te,int nRepetitions,MRDataType typeAcq,double sigma,String nameSimul) {
 		double[]tabTr=new double[Te.length];
 		MRDataType[]tab=new MRDataType[Te.length];
@@ -57,6 +86,18 @@ public class MRUtils  {
 		return simulateEchoesT1T2Relax(maps,tabTr,Te,nRepetitions,tab,sigma,nameSimul) ;
 	}
 
+	/**
+	 * Simulate echoes T 1 relax.
+	 *
+	 * @param maps the maps
+	 * @param Tr the tr
+	 * @param Te the te
+	 * @param nRepetitions the n repetitions
+	 * @param typeAcq the type acq
+	 * @param sigma the sigma
+	 * @param nameSimul the name simul
+	 * @return the image plus
+	 */
 	public static ImagePlus simulateEchoesT1Relax(ImagePlus maps,double[]Tr,double Te,int nRepetitions,MRDataType typeAcq,double sigma,String nameSimul) {
 		double[]tabTe=new double[Tr.length];
 		MRDataType[]tab=new MRDataType[Tr.length];
@@ -64,6 +105,18 @@ public class MRUtils  {
 		return simulateEchoesT1T2Relax(maps,Tr,tabTe,nRepetitions,tab,sigma,nameSimul) ;
 	}
 	
+	/**
+	 * Simulate echoes T 1 T 2 relax.
+	 *
+	 * @param hyperMap the hyper map
+	 * @param Tr the tr
+	 * @param Te the te
+	 * @param nRepetitions the n repetitions
+	 * @param typeAcq the type acq
+	 * @param sigma the sigma
+	 * @param nameSimul the name simul
+	 * @return the image plus
+	 */
 	public static ImagePlus simulateEchoesT1T2Relax(ImagePlus hyperMap,double[]Tr,double[]Te,int nRepetitions,MRDataType []typeAcq,double sigma,String nameSimul) {
 		double maxMag=0;
 		double maxTr=0;
@@ -79,7 +132,10 @@ public class MRUtils  {
 		}
 		hasT1T2=hasT1 && hasT2;
 		if(!hasT1T2) nMapsOutput=3;
-		else nMapsOutput=4;
+		else {
+			nMapsOutput=4;
+			nMapsInput=4;
+		}
 		int nEchoes=Tr.length;
 		ImagePlus[]maps=VitimageUtils.stacksFromHyperstackFastBis(hyperMap);
 		ImagePlus[]tab=new ImagePlus[nEchoes+nMapsOutput];
@@ -101,8 +157,13 @@ public class MRUtils  {
 					for(int y=0;y<dimY;y++) {
 						int pix=y*dimX+x;
 						double acc=0;
-						for(int r=0;r<nRepetitions;r++)acc+=RiceEstimator.getRandomRiceRealization(
-							MRUtils.getFitFunctionValue(Tr[i], Te[i],new double[] {mapVals[0][pix],mapVals[1][pix],mapVals[2][pix]}, 0, MRUtils.T1T2_MONO_RICE),sigma);	
+						for(int r=0;r<nRepetitions;r++) {
+							acc+=RiceEstimator.getRandomRiceRealization(
+									MRUtils.getFitFunctionValue(
+											Tr[i], Te[i],new double[] {mapVals[0][pix],mapVals[1][pix],mapVals[2][pix]}, 0, MRUtils.T1T2_MONO_RICE
+									),sigma
+								);	
+						}
 						echoVals[i][pix]=(float)(acc/nRepetitions); 
 						if(echoVals[i][pix]>maxMag)maxMag=echoVals[i][pix];
 					}
@@ -125,7 +186,7 @@ public class MRUtils  {
 		for(int c=nMapsOutput;c<nMapsOutput+nEchoes;c++) {
 			int cc=c-nMapsOutput;
 			for(int z=0;z<dimZ;z++) {
-				hyper.getStack().setSliceLabel(""+typeAcq[cc]+"_"+nameSimul+"_TR="+VitimageUtils.dou(Tr[cc])+"_TE="+VitimageUtils.dou(Te[cc])+"_SIGMARICE="+VitimageUtils.dou(sigma),
+				hyper.getStack().setSliceLabel(""+typeAcq[0]+"_"+nameSimul+"_TR="+VitimageUtils.dou(Tr[cc])+"_TE="+VitimageUtils.dou(Te[cc])+"_SIGMARICE="+VitimageUtils.dou(sigma),
 						VitimageUtils.getCorrespondingSliceInHyperImage(hyper, c, z, 0));
 			}
 			hyper.setC(c+1);
@@ -169,6 +230,18 @@ public class MRUtils  {
 		return hyper;
 	}	
 	
+	/**
+	 * Compute T 1 T 2 map multi thread slices.
+	 *
+	 * @param imgsTemp the imgs temp
+	 * @param mask the mask
+	 * @param sigmaSmoothing the sigma smoothing
+	 * @param fitType the fit type
+	 * @param algType the alg type
+	 * @param debug the debug
+	 * @param forgetFirstT2 the forget first T 2
+	 * @return the image plus[]
+	 */
 	public static ImagePlus[] computeT1T2MapMultiThreadSlices(final ImagePlus[]imgsTemp,ImagePlus mask,double sigmaSmoothing,int fitType,int algType, boolean debug,boolean forgetFirstT2) {
 		double[]voxs=VitimageUtils.getVoxelSizes(imgsTemp[0]);
 		int[]dims=VitimageUtils.getDimensions(imgsTemp[0]);		final int X=dims[0];		final int Y=dims[1];		final int Z=dims[2];  final int YZ=Y*Z;
@@ -360,7 +433,12 @@ public class MRUtils  {
 
 
 
-	/** TODO : Should go elsewhere, in VitimageUtils for example*/
+	/**
+	 *  TODO : Should go elsewhere, in VitimageUtils for example.
+	 *
+	 * @param tab the tab
+	 * @return the double[]
+	 */
 	public static double[] doubleArraySort(double[]tab) {
 		double[]tabRet=new double[tab.length];
 		ArrayList<Double> list=new ArrayList<Double>();
@@ -370,7 +448,15 @@ public class MRUtils  {
 		return tabRet;
 	}
 
-	/** Check data type in slice labels. */
+	/**
+	 *  Check data type in slice labels.
+	 *
+	 * @param img the img
+	 * @param c the c
+	 * @param z the z
+	 * @param f the f
+	 * @return the data type of this magnetic resonance slice
+	 */
 	public static MRDataType getDataTypeOfThisMagneticResonanceSlice(ImagePlus img,int c,int z,int f) {
 		String label=img.getStack().getSliceLabel(VitimageUtils.getCorrespondingSliceInHyperImage(img,c,z,f) );		
 		int nbCat=0;
@@ -390,6 +476,15 @@ public class MRUtils  {
 		return dataT;
 	}
 	
+	/**
+	 * Read cap values in slice label.
+	 *
+	 * @param img the img
+	 * @param c the c
+	 * @param z the z
+	 * @param t the t
+	 * @return the double[]
+	 */
 	public static double[] readCapValuesInSliceLabel(ImagePlus img,int c, int z, int t) {
 		double []ret=new double[2];
 		String label=img.getStack().getSliceLabel(VitimageUtils.getCorrespondingSliceInHyperImage(img, c, z, t));
@@ -403,6 +498,12 @@ public class MRUtils  {
 		return ret;
 	}
 
+	/**
+	 * Mean.
+	 *
+	 * @param tab the tab
+	 * @return the double
+	 */
 	protected static double mean(double[] tab) {
 		double m=0;
 		for(int i=0;i<tab.length;i++) m+=tab[i];
@@ -410,21 +511,49 @@ public class MRUtils  {
 	}
 
 	
+	/**
+	 * Sigma way.
+	 *
+	 * @param valFunk the val funk
+	 * @param sigma the sigma
+	 * @return the double
+	 */
 	///////////////// Helpers for rice noise estimation, and integration of the distribution function mean value when estimating T1 T2 from magnitude signal ////////////////////
 	public static double sigmaWay(double valFunk,double sigma){
 		return valFunk*valFunk-2*sigma*sigma;
 	}
+
+	/**
+	 * Bes funk cost.
+	 *
+	 * @param value the value
+	 * @param sigma the sigma
+	 * @return the double
+	 */
 
 	public static double besFunkCost(double value,double sigma) {
 		double alpha=value*value/(4*sigma*sigma);
 		return Math.sqrt(Math.PI*sigma*sigma/2.0)*( (1+2*alpha)*bessi0NoExp(alpha) + 2*alpha*bessi1NoExp(alpha) );
 	}	
 
+	/**
+	 * Bes funk deriv.
+	 *
+	 * @param value the value
+	 * @param sigma the sigma
+	 * @return the double
+	 */
 	public static double besFunkDeriv(double value,double sigma) {
 		double alpha=value*value/(4*sigma*sigma);
 		return Math.sqrt(Math.PI*alpha/2.0)*(bessi0NoExp(alpha) + bessi1NoExp(alpha) );
 	}
 
+	/**
+	 * Bessi 0 no exp.
+	 *
+	 * @param x the x
+	 * @return the double
+	 */
 	//Fonction de bessel modifiee de premiere espece d'ordre 2
 	public static double bessi0NoExp( double x ){
 	   double ax,ans;
@@ -441,6 +570,12 @@ public class MRUtils  {
 	   return ans;
 	}
 
+	/**
+	 * Bessi 1 no exp.
+	 *
+	 * @param x the x
+	 * @return the double
+	 */
 	//Fonction de bessel modifiee de premiere espece d'ordre 1
 	public static double bessi1NoExp( double x){
 		double ax,ans;
@@ -465,7 +600,14 @@ public class MRUtils  {
 	
 	
 	///////////////// HELPERS FOR COMPUTING, ACCESSING READ / WRITE TO THE TR, TE, SIGMA PARAMETERS FROM THE IMAGE OR THE SLICE LABEL ////////////////////
-	/** Estimate rice noise in each slice from the background values*/
+	/**
+	 *  Estimate rice noise in each slice from the background values.
+	 *
+	 * @param img the img
+	 * @param keepOldString the keep old string
+	 * @param optionalAdditionalPrefix the optional additional prefix
+	 * @param makeBoutureTrick the make bouture trick
+	 */
 	public static void computeTeTrAndRiceSigmaOfEachSliceAndWriteItInTheLabels(ImagePlus img,boolean keepOldString,String optionalAdditionalPrefix,boolean makeBoutureTrick) {
 		int nbC=img.getNChannels();
 		int nbZ=img.getNSlices();
@@ -488,9 +630,14 @@ public class MRUtils  {
 		}
 	}
 	
-	/**	This routine compute the background stats in eight little square near the border
+	/**
+	 * 	This routine compute the background stats in eight little square near the border
 	 * Before estimation, the 3 ones with the highest values are discarded
-	 * because there is often the object somewhere on the border, or the capillary*/
+	 * because there is often the object somewhere on the border, or the capillary.
+	 *
+	 * @param imgP the img P
+	 * @return the background stats from processor
+	 */
 	public static double[]getBackgroundStatsFromProcessor(ImageProcessor imgP) {
 		int dimX=imgP.getWidth();
 		int dimY=imgP.getHeight();
@@ -538,6 +685,12 @@ public class MRUtils  {
 		return valsRetBis;
 	}	
 	
+	/**
+	 * Gets the background stats from processor tight.
+	 *
+	 * @param imgP the img P
+	 * @return the background stats from processor tight
+	 */
 	public static double[]getBackgroundStatsFromProcessorTight(ImageProcessor imgP) {
 		int dimX=imgP.getWidth();
 		int dimY=imgP.getHeight();
@@ -590,7 +743,12 @@ public class MRUtils  {
 
 	
 	
-	/** Extract Tr, Te or Sigma values from the relaxation images */
+	/**
+	 *  Extract Tr, Te or Sigma values from the relaxation images.
+	 *
+	 * @param imgTr the img tr
+	 * @return the tr from 3 D relaxation image tab
+	 */
 	public static double[]getTrFrom3DRelaxationImageTab(ImagePlus[]imgTr){
 		double[]tab=new double[imgTr.length];
 		for(int i=0;i<imgTr.length;i++) {
@@ -599,9 +757,14 @@ public class MRUtils  {
 		return tab;
 	}
 
-	/** Extract Tr, Te or Sigma values from the relaxation images 
+	/**
+	 *  Extract Tr, Te or Sigma values from the relaxation images 
 	 * There is a need it to be a tab along Z because, whereas Te is te same all Z long,
-	 * it deserves the bouture hack, to correct the fact that the device introduces a Delta Te with Z*/
+	 * it deserves the bouture hack, to correct the fact that the device introduces a Delta Te with Z.
+	 *
+	 * @param imgTr the img tr
+	 * @return the te from 3 D relaxation image tab
+	 */
 	public static double[][]getTeFrom3DRelaxationImageTab(ImagePlus[]imgTr){
 		double[][]tab=new double[imgTr[0].getNSlices()][imgTr.length];
 		for(int i=0;i<imgTr.length;i++) {
@@ -612,18 +775,55 @@ public class MRUtils  {
 		return tab;
 	}
 	
+	/**
+	 * Read tr in slice label.
+	 *
+	 * @param img the img
+	 * @param c the c
+	 * @param z the z
+	 * @param f the f
+	 * @return the double
+	 */
 	public static double readTrInSliceLabel(ImagePlus img,int c, int z, int f) {
 		return readValueOfSigmaTrTeInSliceLabel(img, PARAM_TR, c, z, f);
 	}
 
+	/**
+	 * Read sigma in slice label.
+	 *
+	 * @param img the img
+	 * @param c the c
+	 * @param z the z
+	 * @param f the f
+	 * @return the double
+	 */
 	public static double readSigmaInSliceLabel(ImagePlus img,int c, int z, int f) {
 		return readValueOfSigmaTrTeInSliceLabel(img, PARAM_SIGMA, c, z, f);
 	}
 
+	/**
+	 * Read te in slice label.
+	 *
+	 * @param img the img
+	 * @param c the c
+	 * @param z the z
+	 * @param f the f
+	 * @return the double
+	 */
 	public static double readTeInSliceLabel(ImagePlus img,int c, int z, int f) {
 		return readValueOfSigmaTrTeInSliceLabel(img, PARAM_TE, c, z, f);
 	}
 	
+	/**
+	 * Read value of sigma tr te in slice label.
+	 *
+	 * @param img the img
+	 * @param prm0Sigma_1Tr_2Te the prm 0 sigma 1 tr 2 te
+	 * @param c the c
+	 * @param z the z
+	 * @param f the f
+	 * @return the double
+	 */
 	public static double readValueOfSigmaTrTeInSliceLabel(ImagePlus img,int prm0Sigma_1Tr_2Te,int c,int z,int f) {
 		String tit=img.getStack().getSliceLabel(VitimageUtils.getCorrespondingSliceInHyperImage(img,c,z,f) );
 		String[]datas=tit.replace("__","_").split("_");
@@ -638,6 +838,15 @@ public class MRUtils  {
 		return 0;
 	}
 
+	/**
+	 * Modify sigma.
+	 *
+	 * @param hyperImg the hyper img
+	 * @param c the c
+	 * @param z the z
+	 * @param t the t
+	 * @param newSigma the new sigma
+	 */
 	public static void modifySigma(ImagePlus hyperImg,int c,int z,int t,double newSigma) {
 		String label=hyperImg.getStack().getSliceLabel(VitimageUtils.getCorrespondingSliceInHyperImage(hyperImg, c, z, t));
 		String[]strTab=label.split("_");
@@ -657,8 +866,13 @@ public class MRUtils  {
 	
 	
 	
-	/** Helper to compute sigma Rice mean over the successive echoes image
-	 * If one of the sigma is +-30% from the mean, a warning is sent to the log console*/
+	/**
+	 *  Helper to compute sigma Rice mean over the successive echoes image
+	 * If one of the sigma is +-30% from the mean, a warning is sent to the log console.
+	 *
+	 * @param imgTr the img tr
+	 * @return the sigma from 3 D relaxation image tab
+	 */
 	public static double[]getSigmaFrom3DRelaxationImageTab(ImagePlus[]imgTr){
 		double[]tab=new double[imgTr[0].getNSlices()];
 		double[]tabTemp=new double[imgTr.length];
@@ -676,7 +890,14 @@ public class MRUtils  {
 
 
 	
-	/** Helper to make a linspace for display of the relaxation curves */
+	/**
+	 *  Helper to make a linspace for display of the relaxation curves.
+	 *
+	 * @param valMin the val min
+	 * @param valMax the val max
+	 * @param step the step
+	 * @return the proportional times
+	 */
 	public static double []getProportionalTimes(double valMin, double valMax,double step){
 		double[]tab=new double[(int)(Math.ceil((double)0.00001+((valMax-valMin)/step)))];
 		for (int i=0;i<tab.length;i++){
@@ -690,8 +911,23 @@ public class MRUtils  {
 	
 	
 	///////////////// Helpers for accessing signal in magnitude image with successive echoes, in a given roi ////////////////////
-	/** Give the average decay signal of the voxels in the neighbouring of v(xCor,yCor,curZ,curTime
-	 * The neighbouring is a parallepiped of size (2*crossWidth+1) along X-Y and (2*crossThick+1) along Z*/
+	/**
+	 *  Give the average decay signal of the voxels in the neighbouring of v(xCor,yCor,curZ,curTime
+	 * The neighbouring is a parallepiped of size (2*crossWidth+1) along X-Y and (2*crossThick+1) along Z.
+	 *
+	 * @param imgIn the img in
+	 * @param xCor the x cor
+	 * @param yCor the y cor
+	 * @param curT the cur T
+	 * @param totalT the total T
+	 * @param curZ the cur Z
+	 * @param totalZ the total Z
+	 * @param nEchoesExpected the n echoes expected
+	 * @param crossWidth the cross width
+	 * @param crossThick the cross thick
+	 * @param gaussianWeighting the gaussian weighting
+	 * @return the data for voxel
+	 */
 	public static double[]getDataForVoxel(ImagePlus imgIn,int xCor,int yCor,int curT,int totalT,int curZ,int totalZ,int nEchoesExpected,int crossWidth,int crossThick,boolean gaussianWeighting){
 		double[][]tabData=getFullDataForVoxel(imgIn, xCor, yCor, curT, totalT, curZ, totalZ, nEchoesExpected, crossWidth, crossThick);
 		double[]tabRet=new double[nEchoesExpected];
@@ -699,8 +935,22 @@ public class MRUtils  {
 		return tabRet;
 	}
 
-	/** Give the magnitude decay signal of the voxels in the neighbouring of v(xCor,yCor,curZ,curTime
-	 * The neighbouring is a parallepiped of size (2*crossWidth+1) along X-Y and (2*crossThick+1) along Z*/
+	/**
+	 *  Give the magnitude decay signal of the voxels in the neighbouring of v(xCor,yCor,curZ,curTime
+	 * The neighbouring is a parallepiped of size (2*crossWidth+1) along X-Y and (2*crossThick+1) along Z.
+	 *
+	 * @param imgIn the img in
+	 * @param xCor the x cor
+	 * @param yCor the y cor
+	 * @param curT the cur T
+	 * @param totalT the total T
+	 * @param curZ the cur Z
+	 * @param totalZ the total Z
+	 * @param nEchoesExpected the n echoes expected
+	 * @param crossWidth the cross width
+	 * @param crossThick the cross thick
+	 * @return the full data for voxel
+	 */
 	public static double[][]getFullDataForVoxel(ImagePlus imgIn,int xCor,int yCor,int curT,int totalT,int curZ,int totalZ,int nEchoesExpected,int crossWidth,int crossThick){
 		int xMax=imgIn.getWidth();
 		int yMax=imgIn.getHeight();
@@ -736,8 +986,23 @@ public class MRUtils  {
 		return data;
 	}
 	
-	/** Give the coords of the voxels in the neighbouring of v(xCor,yCor,curZ,curTime
-	 * The neighbouring is a parallepiped of size (2*crossWidth+1) along X-Y and (2*crossThick+1) along Z*/
+	/**
+	 *  Give the coords of the voxels in the neighbouring of v(xCor,yCor,curZ,curTime
+	 * The neighbouring is a parallepiped of size (2*crossWidth+1) along X-Y and (2*crossThick+1) along Z.
+	 *
+	 * @param imgIn the img in
+	 * @param xCor the x cor
+	 * @param yCor the y cor
+	 * @param curT the cur T
+	 * @param totalT the total T
+	 * @param curZ the cur Z
+	 * @param totalZ the total Z
+	 * @param nEchoesExpected the n echoes expected
+	 * @param crossWidth the cross width
+	 * @param crossThick the cross thick
+	 * @param gaussianWeighting the gaussian weighting
+	 * @return the coords of corresponding voxels used in estimation around this point
+	 */
 	public static int[][]getCoordsOfCorrespondingVoxelsUsedInEstimationAroundThisPoint(ImagePlus imgIn,int xCor,int yCor,int curT,int totalT,int curZ,int totalZ,int nEchoesExpected,int crossWidth,int crossThick,boolean gaussianWeighting){
 		int xMax=imgIn.getWidth();
 		int yMax=imgIn.getHeight();
@@ -772,10 +1037,25 @@ public class MRUtils  {
 		return data;
 	}
 
-	/** Give the average decay signal of the voxels in the neighbouring of v(xCor,yCor,curZ,curTime
+	/**
+	 *  Give the average decay signal of the voxels in the neighbouring of v(xCor,yCor,curZ,curTime
 	 * The neighbouring is a parallepiped of size (2*crossWidth+1) along X-Y and (2*crossThick+1) along Z
 	 * 
-	 * This method is surnumerary : with assumption of non using of sigma, it can be done with the other one*/	
+	 * This method is surnumerary : with assumption of non using of sigma, it can be done with the other one.
+	 *
+	 * @param imgIn the img in
+	 * @param xCor the x cor
+	 * @param yCor the y cor
+	 * @param curT the cur T
+	 * @param totalT the total T
+	 * @param curZ the cur Z
+	 * @param totalZ the total Z
+	 * @param nEchoesExpected the n echoes expected
+	 * @param crossWidth the cross width
+	 * @param crossThick the cross thick
+	 * @param gaussianWeighting the gaussian weighting
+	 * @return the data for voxel gaussian
+	 */	
 	public static double[]getDataForVoxelGaussian(ImagePlus imgIn,int xCor,int yCor,int curT,int totalT,int curZ,int totalZ,int nEchoesExpected,int crossWidth,int crossThick,boolean gaussianWeighting){
 		if(gaussianWeighting) {IJ.showMessage("Not applicable : gaussian weighting. Abort");gaussianWeighting=false;}
 		int xMax=imgIn.getWidth();
@@ -856,8 +1136,20 @@ public class MRUtils  {
 	
 	
 	///////////////// Fitting utilities    /////////////////////////////////////////////////////////////////////////////////////////// ////////////////////	
-	/** Compute a simple T1 or T2 fit, or a T1T2 crossfit, using Simplex or Levenberg-Marquardt, 
-	 *  and estimate a MONO or BI exponential, corrupted by rice Noise.*/ 
+	/**
+	 *  Compute a simple T1 or T2 fit, or a T1T2 crossfit, using Simplex or Levenberg-Marquardt, 
+	 *  and estimate a MONO or BI exponential, corrupted by rice Noise.
+	 *
+	 * @param tabTrTimesTemp the tab tr times temp
+	 * @param tabTeTimesTemp the tab te times temp
+	 * @param tabData the tab data
+	 * @param fitType the fit type
+	 * @param algType the alg type
+	 * @param nbIter the nb iter
+	 * @param sigma the sigma
+	 * @param debug the debug
+	 * @return the object[]
+	 */ 
 	public static Object[]makeFit(final double[]tabTrTimesTemp, final double[]tabTeTimesTemp, double[]tabData,int fitType,int algType,int nbIter,double sigma,boolean debug){
 		double[]estimatedParams;
 		double[]tabTrTimes=new double[tabTrTimesTemp.length];
@@ -884,8 +1176,23 @@ public class MRUtils  {
 		return new Object[] {estimatedParams,earlyBreak};
 	}	
 	
-	/** Compute a simple T1 or T2 fit, or a T1T2 crossfit,
-	 *  but compute also the distribution of estimated parameters when applying randomized modifications of the relaxation data */	
+	/**
+	 *  Compute a simple T1 or T2 fit, or a T1T2 crossfit,
+	 *  but compute also the distribution of estimated parameters when applying randomized modifications of the relaxation data.
+	 *
+	 * @param tabTrTimes the tab tr times
+	 * @param tabTeTimes the tab te times
+	 * @param tabData the tab data
+	 * @param fitType the fit type
+	 * @param algType the alg type
+	 * @param nbIter the nb iter
+	 * @param sigma the sigma
+	 * @param nRepetMonteCarlo the n repet monte carlo
+	 * @param nAveragePts the n average pts
+	 * @param riceEstimator the rice estimator
+	 * @param debug the debug
+	 * @return the double[][]
+	 */	
 	public static double[][]makeFitMonteCarlo(double[]tabTrTimes, double[]tabTeTimes, double[]tabData,int fitType,int algType,int nbIter,double sigma,int nRepetMonteCarlo,int nAveragePts,RiceEstimator riceEstimator,boolean debug){
 		Random rand=new Random();
 		int nParams=getNparams(fitType);
@@ -936,14 +1243,28 @@ public class MRUtils  {
 		return ret;
 	}
 	
-	/** Compute fitting results : estimated curve corresponding to the parameters estimated, accuracy of fit, khi2, and corresponding pvalue */	
+	/**
+	 *  Compute fitting results : estimated curve corresponding to the parameters estimated, accuracy of fit, khi2, and corresponding pvalue.
+	 *
+	 * @param Tr the tr
+	 * @param Te the te
+	 * @param param the param
+	 * @param sigma the sigma
+	 * @param fitType the fit type
+	 * @return the double[]
+	 */	
 	public static double[] fittenRelaxationCurve(double[]Tr,double[]Te,double []param,double sigma,int fitType){
 		double[]tab=new double[Te.length];
 		for(int indT=0;indT<Te.length;indT++) tab[indT]=getFitFunctionValue(Tr[indT],Te[indT],param,sigma,fitType);
 		return tab;
 	}
 
-	/** Get the number of parameters used by this model*/
+	/**
+	 *  Get the number of parameters used by this model.
+	 *
+	 * @param fitType the fit type
+	 * @return the nparams
+	 */
 	public static int getNparams(int fitType){
 		int ret=0;
 		switch(fitType) {
@@ -974,7 +1295,16 @@ public class MRUtils  {
 		return ret;
 	}
 	
-	/** Get the number value of the fit function given the parameters and the observation times*/
+	/**
+	 *  Get the number value of the fit function given the parameters and the observation times.
+	 *
+	 * @param trecov the trecov
+	 * @param techo the techo
+	 * @param param the param
+	 * @param sigma the sigma
+	 * @param fitType the fit type
+	 * @return the fit function value
+	 */
 	public static double getFitFunctionValue(double trecov,double techo,double []param,double sigma,int fitType){
 		double ret=0;
 			switch(fitType) {
@@ -1005,10 +1335,23 @@ public class MRUtils  {
 		return ret;
 	}
 
-	/** Compute normalised khi2 according to the sigma parameter of the Rice noise
+	/**
+	 *  Compute normalised khi2 according to the sigma parameter of the Rice noise
 	 * the number of points averaged for the estimation is used to estimate sigma of the sum
 	 * Another interesting point is that sigma is reestimated locally for each magnitude value
-	 * as the rice sigma is not equal to the observed sigma for different values of the magnitude*/
+	 * as the rice sigma is not equal to the observed sigma for different values of the magnitude.
+	 *
+	 * @param tabData the tab data
+	 * @param tabTrTimes the tab tr times
+	 * @param tabTeTimes the tab te times
+	 * @param sigma the sigma
+	 * @param estimatedParams the estimated params
+	 * @param fitType the fit type
+	 * @param debug the debug
+	 * @param riceEstimator the rice estimator
+	 * @param nbPoints the nb points
+	 * @return the double[]
+	 */
 	public static double[] fittingAccuracies(double[] tabData,double[] tabTrTimes,double[] tabTeTimes,double sigma,double[] estimatedParams,int fitType,boolean debug,RiceEstimator riceEstimator,int nbPoints){		
 		int N_PARAMS=getNparams(fitType);
 		double []realP=fittenRelaxationCurve(tabTrTimes,tabTeTimes,estimatedParams,sigma,fitType);
@@ -1023,6 +1366,13 @@ public class MRUtils  {
  		return new double[] {khi2Ret,pVal*100};
 	}
 	
+	/**
+	 * Gets the pvalue.
+	 *
+	 * @param khi2 the khi 2
+	 * @param freedomDegrees the freedom degrees
+	 * @return the pvalue
+	 */
 	public static double getPvalue(double khi2,int freedomDegrees){
 		if (freedomDegrees<1)return MRUtils.infinity;
 		ChiSquaredDistribution x2 = new ChiSquaredDistribution( freedomDegrees );
@@ -1030,23 +1380,48 @@ public class MRUtils  {
 		return -1;
 	}
 	
+	/**
+	 * Convert bionano M 0 in percentage.
+	 *
+	 * @param m0 the m 0
+	 * @param doIt the do it
+	 * @return the double
+	 */
 	public static double convertBionanoM0InPercentage(double m0,boolean doIt) {
 		if(doIt)return (m0/maxM0BionanoForNormalization);
 		else return m0;
 	}
 	
+	/**
+	 * Copy tab.
+	 *
+	 * @param tab the tab
+	 * @return the boolean[]
+	 */
 	public static boolean[]copyTab(boolean[]tab){
 		boolean[]tab2=new boolean[tab.length];
 		for(int i=0;i<tab.length;i++)tab2[i]=tab[i];
 		return tab2;
 	}
 
+	/**
+	 * Copy tab.
+	 *
+	 * @param tab the tab
+	 * @return the double[]
+	 */
 	public static double[]copyTab(double[]tab){
 		double[]tab2=new double[tab.length];
 		for(int i=0;i<tab.length;i++)tab2[i]=tab[i];
 		return tab2;
 	}
 	
+	/**
+	 * Copy tab.
+	 *
+	 * @param tab the tab
+	 * @return the int[]
+	 */
 	public static int[]copyTab(int[]tab){
 		int[]tab2=new int[tab.length];
 		for(int i=0;i<tab.length;i++)tab2[i]=tab[i];
@@ -1057,9 +1432,15 @@ public class MRUtils  {
 	
 	
 	
-	/** A routine to normalize a z-stack along the z-axis, to compensate for the field effect. 
+	/**
+	 *  A routine to normalize a z-stack along the z-axis, to compensate for the field effect. 
 	 * Interestingly (or weirdly, let's see), this method detects the capillary and do 
-	 * the normalization of the capillary area and the rest of the image separately*/
+	 * the normalization of the capillary area and the rest of the image separately
+	 *
+	 * @param imgsEchoes the imgs echoes
+	 * @param imgMask the img mask
+	 * @return the image plus[]
+	 */
 	public static ImagePlus[] normalizeBeforeComputation(ImagePlus []imgsEchoes,ImagePlus imgMask) {
 		ImagePlus []tabRet=VitimageUtils.imageTabCopy(imgsEchoes);
 		ImagePlus imgSum=VitimageUtils.sumOfImages(imgsEchoes);
@@ -1124,85 +1505,205 @@ public class MRUtils  {
 	
 	
 
+	/** The Constant epsilon. */
 	public static final double epsilon=10E-10;
+	
+	/** The Constant infinity. */
 	public static final double infinity=1/epsilon;
+	
+	/** The Constant ERROR_VALUE. */
 	public static final int ERROR_VALUE= 0;
+	
+	/** The Constant ERROR_KHI2. */
 	public static final int ERROR_KHI2= 9999;
+	
+	/** The Constant SIMPLEX. */
 	public static final int SIMPLEX = 1;
+    
+    /** The Constant LM. */
     public static final int LM=2;
+    
+    /** The Constant fititems2. */
     public final static String[] fititems2={"Simplex","Levenberg-Marquardt"};
+    
+    /** The Constant constitems2. */
     public final static int[] constitems2={SIMPLEX,LM};
+    
+    /** The Constant MSEC. */
     public static final int MSEC=11;
+    
+    /** The Constant SEC. */
     public static final int SEC=12;
+	
+	/** The Constant timeunits. */
 	public final static String[] timeunits={"ms", "s"};
+    
+    /** The Constant timeitems. */
     public final static int[] timeitems={MSEC, SEC};
 
+    /** The Constant TWOPOINTS. */
     public static final int TWOPOINTS=300;
 
+    /** The Constant T1_MONO. */
     public static final int T1_MONO =1; //T1 exponential : PD  (1- exp(-tr/T1))
+    
+    /** The Constant T2_MONO. */
     public static final int T2_MONO =2; // T2 exponential : M0 exp(-te/T2)
+    
+    /** The Constant T2_MULTI. */
     public static final int T2_MULTI=3; // Two components exponential : PD1 exp(-te/T21) + PD2 exp(-te/T22)
+	
+	/** The Constant T1T2_MONO. */
 	public static final int T1T2_MONO = 4; //T1-T2 cycle with a single T2 component : PD exp(-te/T2) (1- exp(-tr/T1))
+	
+	/** The Constant T1T2_MULTI. */
 	public static final int T1T2_MULTI = 5; //T1-T2 cycle with two T2 component : ( PD1exp(-te/T21) + PD2exp(-te/T22) ) (1- exp(-tr/T1))
 
+	/** The Constant T1_MONO_BIAS. */
 	public static final int T1_MONO_BIAS =11;//The same, with an additive offset 
+    
+    /** The Constant T2_MONO_BIAS. */
     public static final int T2_MONO_BIAS =12; 
+    
+    /** The Constant T2_MULTI_BIAS. */
     public static final int T2_MULTI_BIAS=13;
+	
+	/** The Constant T1T2_MONO_BIAS. */
 	public static final int T1T2_MONO_BIAS = 14; 
+	
+	/** The Constant T1T2_MULTI_BIAS. */
 	public static final int T1T2_MULTI_BIAS = 15; 
 
+	/** The Constant T1_MONO_RICE. */
 	public static final int T1_MONO_RICE =21;//The same, with an estimated rice noise contribution
+    
+    /** The Constant T2_MONO_RICE. */
     public static final int T2_MONO_RICE =22;
+    
+    /** The Constant T2_MULTI_RICE. */
     public static final int T2_MULTI_RICE=23; 
+	
+	/** The Constant T1T2_MONO_RICE. */
 	public static final int T1T2_MONO_RICE = 24; 
+	
+	/** The Constant T1T2_MULTI_RICE. */
 	public static final int T1T2_MULTI_RICE = 25;
 	
 	
+	/** The Constant T1T2_BIONANO. */
 	public static final int T1T2_BIONANO = 30; //Calcul de T1 par la méthode des polynomes, calcul de T2 par la méthode des deux points
+	
+	/** The Constant T1T2_DEFAULT_T2_MONO_RICE. */
 	public static final int T1T2_DEFAULT_T2_MONO_RICE=31;//Amendement de T1T2 avec un delta T2 de 25 ms
+	
+	/** The Constant T1T2_DEFAULT_T2_MULTI_RICE. */
 	public static final int T1T2_DEFAULT_T2_MULTI_RICE=32;//Amendement de T1T2 avec un delta T2 de 25 ms
+	
+	/** The min delta chi 2. */
 	public static double minDeltaChi2=1E-6;
 
+	/** The Constant PARAM_SIGMA. */
 	public static final int PARAM_SIGMA=31;
+	
+	/** The Constant PARAM_TR. */
 	public static final int PARAM_TR=32;
+	
+	/** The Constant PARAM_TE. */
 	public static final int PARAM_TE=33;
+    
+    /** The Constant DELTA_TE_BOUTURE_TRICK. */
     public static final double DELTA_TE_BOUTURE_TRICK=20;
     
  
+    /** The Constant factorT1M0MaxRatio. */
     public static final double factorT1M0MaxRatio=3;
+    
+    /** The Constant factorT1MinRatio. */
     public static final double factorT1MinRatio=1;
+    
+    /** The Constant factorT1MaxRatio. */
     public static final double factorT1MaxRatio=3;
 
+    /** The Constant factorT2M0MaxRatio. */
     public static final double factorT2M0MaxRatio=3;
+    
+    /** The Constant factorT2MinRatio. */
     public static final double factorT2MinRatio=1;
+    
+    /** The Constant factorT2MaxRatio. */
     public static final double factorT2MaxRatio=3;
+	
+	/** The Constant THRESHOLD_RATIO_BETWEEN_MAX_ECHO_AND_SIGMA_RICE. */
 	public static final double THRESHOLD_RATIO_BETWEEN_MAX_ECHO_AND_SIGMA_RICE=5.25;//1.25 stands for mean Rayleigh and 4 for the three std around the mean;
+	
+	/** The Constant THRESHOLD_RATIO_BETWEEN_MEAN_ECHO_AND_SIGMA_RICE. */
 	public static final double THRESHOLD_RATIO_BETWEEN_MEAN_ECHO_AND_SIGMA_RICE=2;
     
 	
+	/** The max khi 2. */
 	protected static double maxKhi2=5;
+	
+	/** The max khi 2 MONO. */
 	protected static double maxKhi2MONO=10E8;
+	
+	/** The max khi 2 after fit. */
 	protected static float maxKhi2AfterFit=10;
 
+    /** The Constant minAcceptableBionanoT1. */
     public static final double minAcceptableBionanoT1=500;
+	
+	/** The Constant minAcceptableBionanoT1Bouture. */
 	public static final double minAcceptableBionanoT1Bouture=100;
+	
+	/** The Constant minAcceptableBionanoT2. */
 	public static final double minAcceptableBionanoT2=10;
+	
+	/** The Constant N_ITER_T1T2. */
 	public static final int N_ITER_T1T2=400;
+	
+	/** The Constant maxAcceptableBionanoM0. */
 	public static final double maxAcceptableBionanoM0=2*MRUtils.maxM0BionanoForNormalization;
+	
+	/** The Constant maxAcceptableBionanoT2. */
 	public static final double maxAcceptableBionanoT2=500;
+	
+	/** The Constant maxDisplayedBionanoT2. */
 	public static final int maxDisplayedBionanoT2=150;
+	
+	/** The Constant maxDisplayedBionanoT1. */
 	public static final int maxDisplayedBionanoT1=3200;
+	
+	/** The Constant maxDisplayedBionanoM0. */
 	public static final int maxDisplayedBionanoM0=8666;
+	
+	/** The Constant maxDisplayedBionanoGE3D. */
 	public static final int maxDisplayedBionanoGE3D=20000;
+	
+	/** The Constant maxM0BionanoForNormalization. */
 	public static final int maxM0BionanoForNormalization=6500;
+	
+	/** The Constant maxDisplayedPDratio. */
 	public static final double maxDisplayedPDratio=1.05;
+	
+	/** The Constant maxDisplayedT1ratio. */
 	public static final double maxDisplayedT1ratio=1.5;
+	
+	/** The Constant maxDisplayedT2ratio. */
 	public static final double maxDisplayedT2ratio=0.7;
+	
+	/** The Constant THRESHOLD_BOUTURE_FACTOR. */
 	public static final double THRESHOLD_BOUTURE_FACTOR=0.5;
+	
+	/** The Constant maxAcceptableBionanoT1. */
 	public static final int maxAcceptableBionanoT1=3500;
+    
+    /** The use boundaries. */
     public static boolean useBoundaries=false;
+	
+	/** The Constant DEFAULT_N_ITER_T1T2. */
 	protected static final int DEFAULT_N_ITER_T1T2 = 500;
 	
+	/** The Constant minPossibleMaxT1. */
 	public static final int minPossibleMaxT1=3500;
     
     

@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.curvefit;
 
 import java.util.ArrayList;
@@ -7,56 +10,157 @@ import io.github.rocsg.fijiyama.common.VitimageUtils;
 import ij.macro.Interpreter;
 import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class SimplexDualCurveFitterNoBias.
+ */
 public class SimplexDualCurveFitterNoBias{
+	
+	/** The iterations break. */
 	public boolean iterationsBreak=false;
+	
+	/** The debug. */
 	private boolean debug=true;
+	
+	/** The estimate delta te. */
 	public boolean estimateDeltaTe=false;
+	
+	/** The Constant debugBionano. */
 	public static final boolean debugBionano=false;
+	
+	/** The iter factor. */
 	public static  int iterFactor = 1000;
+	
+	/** The sigma. */
 	protected double sigma;   
+	
+	/** The Constant alpha. */
 	private static final double alpha = -1.0;	  // reflection coefficient
+	
+	/** The Constant beta. */
 	private static final double beta = 0.5;	  // contraction coefficient
+	
+	/** The Constant gamma. */
 	private static final double gamma = 2.0;	  // expansion coefficient
+	
+	/** The Constant root2. */
 	private static final double root2 = 1.414214; // square root of 2
 	
+	/** The fit. */
 	protected int fit;                // Number of curve type to fit
+	
+	/** The mag data. */
 	protected double[] trData,teData, magData;  // x,y data to fit
+	
+	/** The num points. */
 	protected int numPoints;          // number of data points
+	
+	/** The num params. */
 	protected int numParams;          // number of parametres
+	
+	/** The num vertices. */
 	protected int numVertices;        // numParams+1 (includes sumLocalResiduaalsSqrd)
+	
+	/** The worst. */
 	private int worst;			// worst current parametre estimates
+	
+	/** The next worst. */
 	private int nextWorst;		// 2nd worst current parametre estimates
+	
+	/** The best. */
 	private int best;			// best current parametre estimates
+	
+	/** The simp. */
 	protected double[][] simp; 		// the simplex (the last element of the array at each vertice is the sum of the square of the residuals)
+	
+	/** The next. */
 	protected double[] next;		// new vertex to be tested
+	
+	/** The num iter. */
 	private int numIter;		// number of iterations so far
+	
+	/** The max iter. */
 	private int maxIter; 	// maximum number of iterations per restart
+	
+	/** The restarts. */
 	private int restarts; 	// number of times to restart simplex after first soln.
+	
+	/** The default restarts. */
 	private static int defaultRestarts = 2;  // default number of restarts
+	
+	/** The n restarts. */
 	private int nRestarts;  // the number of restarts that occurred
+	
+	/** The max error. */
 	private static double maxError = 1e-5;    // maximum error tolerance
+	
+	/** The initial params. */
 	private double[] initialParams;  // user specified initial parameters
+	
+	/** The time. */
 	private long time;  //elapsed time in ms
+	
+	/** The custom formula. */
 	private String customFormula;
+	
+	/** The custom param count. */
 	private static int customParamCount;
+	
+	/** The initial values. */
 	private double[] initialValues;
+	
+	/** The macro. */
 	private Interpreter macro;
+	
+	/** The bionano params. */
 	private double[] bionanoParams;
+	
+	/** The mag data 2 D. */
 	private double[][]magData2D;
+	
+	/** The tab tr vals. */
 	private double[]tabTrVals;
+	
+	/** The tab te vals. */
 	private double[]tabTeVals;
+	
+	/** The tab tr series length. */
 	private int []tabTrSeriesLength;
+	
+	/** The t 2. */
 	private double t2;
+	
+	/** The m 0 t 2. */
 	private double m0t2;
+	
+	/** The r 2. */
 	private double r2;
+	
+	/** The bionano factor. */
 	private double bionanoFactor=1+Math.exp(-0.25)+Math.exp(-0.5)+Math.exp(-0.75);
+	
+	/** The t 1. */
 	private double t1;
+	
+	/** The m 0 t 1. */
 	private double m0t1;
 	
+	/** The parameters boundaries. */
 	private double[][] parametersBoundaries;
+	
+	/** The min delta chi 2. */
 	private double minDeltaChi2;
 
-    /** Construct a new SimplexCurveFitter. */
+    /**
+     *  Construct a new SimplexCurveFitter.
+     *
+     * @param trData the tr data
+     * @param teData the te data
+     * @param magData the mag data
+     * @param fitType the fit type
+     * @param sigma the sigma
+     * @param debu the debu
+     */
     public SimplexDualCurveFitterNoBias (double[] trData, double[]teData,double[] magData, int fitType,double sigma,boolean debu) {
     	this.debug=debu;
     	this.sigma=sigma;
@@ -68,19 +172,38 @@ public class SimplexDualCurveFitterNoBias{
         initialize(fit);
     }
     
+    /**
+     * Sets the iter factor.
+     *
+     * @param maxIterations the new iter factor
+     */
     public void setIterFactor(int maxIterations) {
     	iterFactor=maxIterations;
     }
     
+    /**
+     * Do fit.
+     */
     public void doFit() {
     	doFit(fit);
     }
     
+    /**
+     * Do fit.
+     *
+     * @param fitType the fit type
+     */
     public void doFit(int fitType) {
     	if(fitType==MRUtils.T1T2_BIONANO) {computeBioNano();return;}  	
     	doFit(fitType, false);
     }
     
+    /**
+     * Do fit.
+     *
+     * @param fitType the fit type
+     * @param showSettings the show settings
+     */
     public void doFit(int fitType, boolean showSettings) {
         int saveFitType = fitType;
         fit = fitType;
@@ -176,16 +299,31 @@ public class SimplexDualCurveFitterNoBias{
         fitType = saveFitType;
     }
         
+    /**
+     * Gets the default parameters boundaries.
+     *
+     * @param fitType the fit type
+     * @return the default parameters boundaries
+     */
     public double[][] getDefaultParametersBoundaries(int fitType) {
     	double[][]parametersBoundaries=new double[MRUtils.getNparams(fitType)+1][2];
     	for(int i=0;i<parametersBoundaries.length;i++)parametersBoundaries[i]=new double[] {-MRUtils.infinity,MRUtils.infinity};
     	return parametersBoundaries;
     }
     
+    /**
+     * Sets the min delta chi 2.
+     *
+     * @param delta the new min delta chi 2
+     */
     public void setMinDeltaChi2(double delta) {minDeltaChi2 = delta;}
 
 
-    /** Initialise the simplex */
+    /**
+     *  Initialise the simplex.
+     *
+     * @param fitType the fit type
+     */
     protected void initialize(int fitType) {
         // Calculate some things that might be useful for predicting parametres
         numParams = MRUtils.getNparams(fitType);
@@ -440,7 +578,11 @@ public class SimplexDualCurveFitterNoBias{
         }
     }
         
-    /** Restart the simplex at the nth vertex */
+    /**
+     *  Restart the simplex at the nth vertex.
+     *
+     * @param n the n
+     */
     void restart(int n) {
         // Copy nth vertice of simplex to first vertice
         for (int i = 0; i < numParams; i++) {
@@ -484,6 +626,11 @@ public class SimplexDualCurveFitterNoBias{
         nRestarts++;
     }
         
+    /**
+     * Show simplex.
+     *
+     * @param iter the iter
+     */
     // Display simplex [Iteration: s0(p1, p2....), s1(),....] in Log window
     void showSimplex(int iter) {
         ij.IJ.log("" + iter);
@@ -496,25 +643,48 @@ public class SimplexDualCurveFitterNoBias{
     }
         
         
-	/** Returns formula value for parameters 'p' at 'x' */
+	/**
+	 *  Returns formula value for parameters 'p' at 'x'.
+	 *
+	 * @param p the p
+	 * @param tr the tr
+	 * @param te the te
+	 * @return the double
+	 */
 	public double f(double[] p, double tr,double te) {
 		return f(fit, p, tr,te);
 	}
 
 	
-   /** Returns 'fit' formula value for parameters "p" at "x" */
+   /**
+    *  Returns 'fit' formula value for parameters "p" at "x".
+    *
+    * @param fit the fit
+    * @param p the p
+    * @param tr the tr
+    * @param te the te
+    * @return the double
+    */
     public double f(int fit, double[] p, double tr,double te) {
     	return MRUtils.getFitFunctionValue(tr, te, p, sigma, fit);
     }
     
-    /** Get the set of parameter values from the best corner of the simplex */
+    /**
+     *  Get the set of parameter values from the best corner of the simplex.
+     *
+     * @return the params
+     */
     public double[] getParams() {
         if(fit==MRUtils.T1T2_BIONANO)return bionanoParams;
     	order();
         return simp[best];
     }
     
-	/** Returns residuals array ie. differences between data and curve. */
+	/**
+	 *  Returns residuals array ie. differences between data and curve.
+	 *
+	 * @return the residuals
+	 */
 	public double[] getResiduals() {
 		int saveFit = fit;
 		double[] params = getParams();
@@ -525,6 +695,11 @@ public class SimplexDualCurveFitterNoBias{
 		return residuals;
 	}
     
+    /**
+     * Gets the sum residuals sqr.
+     *
+     * @return the sum residuals sqr
+     */
     /* Last "parametre" at each vertex of simplex is sum of residuals
      * for the curve described by that vertex
      */
@@ -533,7 +708,11 @@ public class SimplexDualCurveFitterNoBias{
         return sumResidualsSqr;
     }
     
-    /**  Returns the standard deviation of the residuals. */
+    /**
+     *   Returns the standard deviation of the residuals.
+     *
+     * @return the sd
+     */
     public double getSD() {
     	double[] residuals = getResiduals();
 		int n = residuals.length;
@@ -546,14 +725,17 @@ public class SimplexDualCurveFitterNoBias{
 		return Math.sqrt(stdDev/(n-1.0));
     }
     
-    /** Returns R^2, where 1.0 is best.
-    <pre>
-     r^2 = 1 - SSE/SSD
-     
-     where:	 SSE = sum of the squares of the errors
-                 SSD = sum of the squares of the deviations about the mean.
-    </pre>
-    */
+    /**
+     *  Returns R^2, where 1.0 is best.
+     *     <pre>
+     *      r^2 = 1 - SSE/SSD
+     *      
+     *      where:	 SSE = sum of the squares of the errors
+     *                  SSD = sum of the squares of the deviations about the mean.
+     *     </pre>
+     *
+     * @return the r squared
+     */
     public double getRSquared() {
         double sumY = 0.0;
         for (int i=0; i<numPoints; i++) sumY += magData[i];
@@ -567,7 +749,11 @@ public class SimplexDualCurveFitterNoBias{
         return rSquared;
     }
 
-    /**  Get a measure of "goodness of fit" where 1.0 is best. */
+    /**
+     *   Get a measure of "goodness of fit" where 1.0 is best.
+     *
+     * @return the fit goodness
+     */
     public double getFitGoodness() {
         double sumY = 0.0;
         for (int i = 0; i < numPoints; i++) sumY += magData[i];
@@ -584,13 +770,21 @@ public class SimplexDualCurveFitterNoBias{
         return fitGoodness;
     }
     
-    /** Get a string description of the curve fitting results
+    /**
+     *  Get a string description of the curve fitting results
      * for easy output.
+     *
+     * @param d the d
+     * @return the double
      */
         
     double sqr(double d) { return d * d; }
     
-	/** Adds sum of square of residuals to end of array of parameters */
+	/**
+	 *  Adds sum of square of residuals to end of array of parameters.
+	 *
+	 * @param x the x
+	 */
 	void sumResiduals (double[] x) {
 		x[numParams] = 0.0;
 		for (int i=0; i<numPoints; i++) {
@@ -598,13 +792,17 @@ public class SimplexDualCurveFitterNoBias{
 		}
 	}
 
-    /** Keep the "next" vertex */
+    /**
+     *  Keep the "next" vertex.
+     */
     void newVertex() {
     	for (int i = 0; i < numVertices; i++)
             simp[worst][i] = next[i];
     }
     
-    /** Find the worst, nextWorst and best current set of parameter estimates */
+    /**
+     *  Find the worst, nextWorst and best current set of parameter estimates.
+     */
     void order() {
         for (int i = 0; i < numVertices; i++) {
             if (simp[i][numParams] < simp[best][numParams])	best = i;
@@ -618,40 +816,64 @@ public class SimplexDualCurveFitterNoBias{
         }
     }
 
-    /** Get number of iterations performed */
+    /**
+     *  Get number of iterations performed.
+     *
+     * @return the iterations
+     */
     public int getIterations() {
         return numIter;
     }
     
-    /** Get maximum number of iterations allowed */
+    /**
+     *  Get maximum number of iterations allowed.
+     *
+     * @return the max iterations
+     */
     public int getMaxIterations() {
         return maxIter;
     }
     
-    /** Set maximum number of iterations allowed */
+    /**
+     *  Set maximum number of iterations allowed.
+     *
+     * @param x the new max iterations
+     */
     public void setMaxIterations(int x) {
         maxIter = x;
     }
     
-    /** Get number of simplex restarts to do */
+    /**
+     *  Get number of simplex restarts to do.
+     *
+     * @return the restarts
+     */
     public int getRestarts() {
         return defaultRestarts;
     }
     
-    /** Set number of simplex restarts to do */
+    /**
+     *  Set number of simplex restarts to do.
+     *
+     * @param n the new restarts
+     */
     public void setRestarts(int n) {
         defaultRestarts = n;
     }
 
-	/** Sets the initial parameters, which override the default initial parameters. */
+	/**
+	 *  Sets the initial parameters, which override the default initial parameters.
+	 *
+	 * @param params the new initial parameters
+	 */
 	public void setInitialParameters(double[] params) {
 		initialParams = params;
 	}
 
     /**
      * Gets index of highest value in an array.
-     * 
-     * @param              Double array.
+     *
+     * @param array the array
      * @return             Index of highest value.
      */
     public static int getMax(double[] array) {
@@ -666,18 +888,38 @@ public class SimplexDualCurveFitterNoBias{
         return index;
     }
     
+	/**
+	 * Gets the te points.
+	 *
+	 * @return the te points
+	 */
 	public double[] getTePoints() {
 		return teData;
 	}
 	
+	/**
+	 * Gets the tr points.
+	 *
+	 * @return the tr points
+	 */
 	public double[] getTrPoints() {
 		return trData;
 	}
 
+	/**
+	 * Gets the mag points.
+	 *
+	 * @return the mag points
+	 */
 	public double[] getMagPoints() {
 		return magData;
 	}
 	
+	/**
+	 * Gets the fit.
+	 *
+	 * @return the fit
+	 */
 	public int getFit() {
 		return fit;
 	}
@@ -687,6 +929,9 @@ public class SimplexDualCurveFitterNoBias{
 	
 	
     
+    /**
+     * Compute bio nano.
+     */
     public void computeBioNano(){
     	initialize2DTab();
     	inspect2DTab();
@@ -695,6 +940,9 @@ public class SimplexDualCurveFitterNoBias{
     	computeT1Bionano();
     }
     
+	/**
+	 * Initialize 2 D tab.
+	 */
 	public void initialize2DTab(){
     	ArrayList<Double>listTr=new ArrayList<Double>();
     	ArrayList<Double>listTe=new ArrayList<Double>();
@@ -731,6 +979,9 @@ public class SimplexDualCurveFitterNoBias{
 		if(debugBionano)System.out.println("Nul ?"+(magData2D==null));
 	}	
 	
+	/**
+	 * Inspect 2 D tab.
+	 */
 	public void inspect2DTab() {
 		if(debugBionano)System.out.println("Nul ?"+(magData2D==null));
 		for(int i=0;i<magData2D.length;i++) {
@@ -742,10 +993,16 @@ public class SimplexDualCurveFitterNoBias{
 		if(debugBionano)System.out.println();
 	}
 
+	/**
+	 * Inspect T 2 estimated values.
+	 */
 	public void inspectT2EstimatedValues() {
 		if(debugBionano)System.out.println("T2 vas computed. Values : T2="+this.t2+"  , R2="+this.r2+"  , M0="+this.m0t2);
 	}
 	
+	/**
+	 * Compute T 2 bionano.
+	 */
 	public void computeT2Bionano() {
 		int indexTr10000=magData2D.length-1;
 		t2=0;
@@ -763,6 +1020,9 @@ public class SimplexDualCurveFitterNoBias{
 	}	
 	
 	
+	/**
+	 * Compute T 1 bionano.
+	 */
 	public void computeT1Bionano() {
 		if(debugBionano)System.out.println("\n\nT1 COMPUTATION");
 		//T1 COMPUTATION
@@ -847,6 +1107,12 @@ public class SimplexDualCurveFitterNoBias{
     }
     
 	
+	/**
+	 * Mean hampel.
+	 *
+	 * @param tab the tab
+	 * @return the double
+	 */
 	public double meanHampel(double[]tab) {
 		if(tab.length==1)return tab[0];
 		//copy in tab with no nan

@@ -1,13 +1,34 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.lma;//Initially joalho.data.lma, see  https://zenodo.org/record/4281064
 
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class ArrayConverter.
+ */
 public class ArrayConverter {
+	
+	/**
+	 * The Class SeparatedData.
+	 */
 	public static class SeparatedData {
+		
+		/** The y data points. */
 		public double[] yDataPoints;
+		
+		/** The x data points. */
 		public double[][] xDataPoints;	
 	}
 	
 	
+	/**
+	 * As double array.
+	 *
+	 * @param a the a
+	 * @return the double[][]
+	 */
 	public static double[][] asDoubleArray(float[][] a) {
 		double[][] result = new double[a.length][];
 		for (int i = 0; i < a.length; i++) {
@@ -21,11 +42,23 @@ public class ArrayConverter {
 		return result;
 	}
 	
+	/**
+	 * As double array.
+	 *
+	 * @param a the a
+	 * @return the double[]
+	 */
 	public static double[] asDoubleArray(float[] a) {
 		if (a == null) return null;
 		return asDoubleArray(new float[][] {a})[0];
 	}
 	
+	/**
+	 * As float array.
+	 *
+	 * @param a the a
+	 * @return the float[]
+	 */
 	public static float[] asFloatArray(double[] a) {
 		float[] result = new float[a.length];
 		for (int i = 0; i < a.length; i++) {
@@ -41,6 +74,9 @@ public class ArrayConverter {
 	 * =><br>
 	 * yDataPoints    = y0 y1 y2 ... yN<br>
 	 * xDataPoints[i] = xi0 xi1 xi2 ... xi[K-1]<br>
+	 *
+	 * @param dataPoints the data points
+	 * @return the separated data
 	 */
 	public static SeparatedData separateMultiDimDataToXY(double[][] dataPoints) {
 		SeparatedData result = new SeparatedData();
@@ -62,6 +98,10 @@ public class ArrayConverter {
 	 * xDataPoints[i] = xi0 xi1 xi2 ... xi[K-1]<br>
 	 * =><br>
 	 * result[j] = yj xj0 xj1 xj2 ... xj[K-1]<br>
+	 *
+	 * @param yDataPoints the y data points
+	 * @param xDataPoints the x data points
+	 * @return the double[][]
 	 */
 	public static double[][] combineMultiDimDataPoints(double[] yDataPoints, double[][] xDataPoints) {
 		double[][] result = new double[yDataPoints.length][xDataPoints.length + 1];
@@ -81,6 +121,10 @@ public class ArrayConverter {
 	 * xDataPoints[i] = xi0 xi1 xi2 ... xi[K-1]<br>
 	 * =><br>
 	 * result[j] = yj xj0 xj1 xj2 ... xj[K-1]<br>
+	 *
+	 * @param yDataPoints the y data points
+	 * @param xDataPoints the x data points
+	 * @return the double[][]
 	 */
 	public static double[][] combineMultiDimDataPoints(float[] yDataPoints, float[][] xDataPoints) {
 		double[][] result = new double[yDataPoints.length][xDataPoints.length + 1];
@@ -93,6 +137,12 @@ public class ArrayConverter {
 		return result;
 	}
 	
+	/**
+	 * Transpose.
+	 *
+	 * @param a the a
+	 * @return the double[][]
+	 */
 	public static double[][] transpose(double[] a) {
 		double[][] result = new double[a.length][1];
 		for (int i = 0; i < a.length; i++) {

@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.curvefit;
 
 import io.github.rocsg.fijirelax.lma.ArrayConverter;
@@ -13,6 +16,7 @@ import java.util.Arrays;
 import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 
 
+// TODO: Auto-generated Javadoc
 /**
  * A class which implements the <i>Levenberg-Marquardt Algorithm</i>
  * (LMA) fit for non-linear, multidimensional parameter space
@@ -72,26 +76,62 @@ public class MRLMA extends LMA{
 	 */
 	public double[] weights;
 	
+	/** The alpha. */
 	public LMAMatrix alpha;
+	
+	/** The beta. */
 	public double[] beta;
+	
+	/** The da. */
 	public double[] da;
+	
+	/** The lambda. */
 	public double lambda = 0.001;
+	
+	/** The lambda factor. */
 	public double lambdaFactor = 10;
+	
+	/** The incremented chi 2. */
 	public double incrementedChi2;
+	
+	/** The incremented parameters. */
 	public double[] incrementedParameters;
+	
+	/** The iteration count. */
 	public int iterationCount;
+	
+	/** The chi 2. */
 	public double chi2=0;
+	
+	/** The npts. */
 	public int npts;
+	
+	/** The nparams. */
 	public int nparams;
+	
+	/** The sigma. */
 	public double sigma;
 	
+	/** The min delta chi 2. */
 	// default end conditions
 	public double minDeltaChi2 = 1e-7;
+	
+	/** The max iterations. */
 	public int maxIterations = 200;
+	
+	/** The parameter bounds. */
 	private float[][] parameterBounds;
+	
+	/** The debug. */
 	private boolean debug=false;
+	
+	/** The previous chi 2. */
 	private double previousChi2=0;
+	
+	/** The factor khi 2. */
 	private double factorKhi2;
+	
+	/** The iterations break. */
 	public boolean iterationsBreak=false;
 	
 	
@@ -103,11 +143,12 @@ public class MRLMA extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of data points, M is the number of fit parameters.
 	 * Call <code>fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in an array, <code>double[0 = x, 1 = y][point index]</code>.
 	 * Size must be <code>double[2][N]</code>.
+	 * @param bounds the bounds
 	 */
 	public MRLMA(final LMAFunction function, double[] parameters, double[][] dataPoints, float[][]bounds) {
 		super(function, parameters, dataPoints, function.constructWeights(dataPoints));
@@ -121,11 +162,13 @@ public class MRLMA extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of data points, M is the number of fit parameters.
 	 * Call <code>fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in an array, <code>double[0 = x, 1 = y][point index]</code>.
 	 * Size must be <code>double[2][N]</code>.
+	 * @param weights the weights
+	 * @param bounds the bounds
 	 */
 	public MRLMA(final LMAFunction function, double[] parameters, double[][] dataPoints, double[] weights, float[][]bounds) {
 		super (
@@ -158,11 +201,12 @@ public class MRLMA extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of data points, M is the number of fit parameters.
 	 * Call <code>fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in an array, <code>float[0 = x, 1 = y][point index]</code>.
 	 * Size must be <code>float[2][N]</code>.
+	 * @param bounds the bounds
 	 */
 	public MRLMA(final LMAFunction function, float[] parameters, float[][] dataPoints, float[][]bounds) {
 		super(
@@ -180,7 +224,7 @@ public class MRLMA extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of data points, M is the number of fit parameters.
 	 * Call <code>fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in an array, <code>float[0 = x, 1 = y][point index]</code>.
@@ -188,6 +232,7 @@ public class MRLMA extends LMA{
 	 * @param weights The weights, normally given as: <code>weights[i] = 1 / sigma_i^2</code>.
 	 * If you have a bad data point, set its weight to zero.
 	 * If the given array is null, a new array is created with all elements set to 1.
+	 * @param bounds the bounds
 	 */
 	public MRLMA(final LMAFunction function, float[] parameters, float[][] dataPoints, float[] weights, float[][]bounds) {
 		super(
@@ -204,7 +249,7 @@ public class MRLMA extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in two dimensional array where each array, dataPoints[i],
@@ -215,6 +260,7 @@ public class MRLMA extends LMA{
 	 * dataPoints[1] = y1 x10 x11 x12 ... x1[K-1]<br>
 	 * ...<br>
 	 * dataPoints[N] = yN xN0 xN1 xN2 ... x[N-1][K-1]
+	 * @param bounds the bounds
 	 */
 	public MRLMA(LMAMultiDimFunction function, float[] parameters, float[][] dataPoints, float[][]bounds) {
 		super (
@@ -232,17 +278,13 @@ public class MRLMA extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
-	 * @param function The model function to be fitted. Input parameter sizes K and M.
-	 * @param parameters The initial guess for the fit parameters, length M.
-	 * @param dataPoints The data points in two dimensional array where each array, dataPoints[i],
-	 * contains one y-value followed by the corresponding x-array values.
-	 * I.e., the arrays should look like this:
-	 * <p>
-	 * dataPoints[0] = y0 x00 x01 x02 ... x0[K-1]<br>
-	 * dataPoints[1] = y1 x10 x11 x12 ... x1[K-1]<br>
-	 * ...<br>
-	 * dataPoints[N] = yN xN0 xN1 xN2 ... x[N-1][K-1]
+	 *
+	 * @param func the func
+	 * @param params the params
+	 * @param data the data
+	 * @param bounds the bounds
+	 * @param deb the deb
+	 * @param sig the sig
 	 */
 	public MRLMA(LMAMultiDimFunction func, double[] params, double[][] data,float[][]bounds,boolean deb,double sig) {
 		super (
@@ -275,11 +317,12 @@ public class MRLMA extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param yDataPoints The y-data points in an array.
 	 * @param xDataPoints The x-data points for each y data point, double[y-index][x-index]
+	 * @param bounds the bounds
 	 */
 	public MRLMA(LMAMultiDimFunction function, double[] parameters, float[] yDataPoints, float[][] xDataPoints, float[][]bounds) {
 		super (
@@ -298,11 +341,12 @@ public class MRLMA extends LMA{
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param yDataPoints The y-data points in an array.
 	 * @param xDataPoints The x-data points for each y data point, double[y-index][x-index]
+	 * @param bounds the bounds
 	 */
 	public MRLMA(LMAMultiDimFunction function, double[] parameters, double[] yDataPoints, double[][] xDataPoints, float[][]bounds) {
 		super (
@@ -320,7 +364,7 @@ public class MRLMA extends LMA{
 	/**
 	 * Initiates the fit. N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in two dimensional array where each array, dataPoints[i],
@@ -336,6 +380,7 @@ public class MRLMA extends LMA{
 	 * If you have a bad data point, set its weight to zero.
 	 * If the given array is null, a new array is created with all elements set to 1.
 	 * @param alpha An LMAMatrix instance. Must be initiated to (M x M) size.
+	 * @param bounds the bounds
 	 */
 	public MRLMA(LMAMultiDimFunction function, float[] parameters, float[][] dataPoints, float[] weights, LMAMatrix alpha, float[][]bounds) {
 		super(
@@ -351,7 +396,7 @@ public class MRLMA extends LMA{
 	/**
 	 * Initiates the fit. N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in two dimensional array where each array, dataPoints[i],
@@ -367,6 +412,7 @@ public class MRLMA extends LMA{
 	 * If you have a bad data point, set its weight to zero.
 	 * If the given array is null, a new array is created with all elements set to 1.
 	 * @param alpha An LMAMatrix instance. Must be initiated to (M x M) size.
+	 * @param bounds the bounds
 	 */
 	public MRLMA(LMAMultiDimFunction function, double[] parameters, double[][] dataPoints, double[] weights, LMAMatrix alpha, float[][]bounds) {
 		super(function,parameters,dataPoints,weights,alpha);
@@ -381,7 +427,7 @@ public class MRLMA extends LMA{
 	/**
 	 * Initiates the fit. N is the number of y-data points, K is the dimension of the fit function and
 	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
-	 * 
+	 *
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param yDataPoints The y-data points in an array.
@@ -392,6 +438,7 @@ public class MRLMA extends LMA{
 	 * If you have a bad data point, set its weight to zero. If the given array is null,
 	 * a new array is created with all elements set to 1.
 	 * @param alpha An LMAMatrix instance. Must be initiated to (M x M) size.
+	 * @param bounds the bounds
 	 */
 	public MRLMA(LMAMultiDimFunction function, double[] parameters, double[] yDataPoints, double[][] xDataPoints, double[] weights, LMAMatrix alpha, float[][]bounds) {
 		super(function,parameters,xDataPoints,weights,alpha);
@@ -402,10 +449,13 @@ public class MRLMA extends LMA{
 	
 	
 	
-	/** 
+	/**
+	 *  
 	 * The default fit. If used after calling fit(lambda, minDeltaChi2, maxIterations),
 	 * uses those values. The stop condition is fetched from <code>this.stop()</code>.
 	 * Override <code>this.stop()</code> if you want to use another stop condition.
+	 *
+	 * @throws InvertException the invert exception
 	 */
 	public void fit() throws LMAMatrix.InvertException {
 		iterationCount = 0;
@@ -443,6 +493,9 @@ public class MRLMA extends LMA{
 		printEndReport();
 	}
 	
+	/**
+	 * Prints the end report.
+	 */
 	private void printEndReport() {
 		if (verbose) {
 			System.out.println(" ***** FIT ENDED ***** ");
@@ -458,9 +511,15 @@ public class MRLMA extends LMA{
 		}
 	}
 	
-	/** 
+	/**
+	 *  
 	 * Initializes and starts the fit. The stop condition is fetched from <code>this.stop()</code>.
 	 * Override <code>this.stop()</code> if you want to use another stop condition.
+	 *
+	 * @param lambda the lambda
+	 * @param minDeltaChi2 the min delta chi 2
+	 * @param maxIterations the max iterations
+	 * @throws InvertException the invert exception
 	 */
 	public void fit(double lambda, double minDeltaChi2, int maxIterations) throws LMAMatrix.InvertException {
 		this.lambda = lambda;
@@ -469,9 +528,12 @@ public class MRLMA extends LMA{
 		fit();
 	}
 	
-	/** 
+	/**
+	 *  
 	 * The stop condition for the fit.
 	 * Override this if you want to use another stop condition.
+	 *
+	 * @return true, if successful
 	 */
 	public boolean stop() {
 		if(iterationCount > maxIterations)iterationsBreak=true;
@@ -487,6 +549,8 @@ public class MRLMA extends LMA{
 	 * Solves the increments array (<code>this.da</code>) using alpha and beta.
 	 * Then updates the <code>this.incrementedParameters</code> array.
 	 * NOTE: Inverts alpha. Call at least <code>updateAlpha()</code> before calling this.
+	 *
+	 * @throws InvertException the invert exception
 	 */
 	protected void solveIncrements() throws LMAMatrix.InvertException {
 		alpha.invert(); // throws InvertException if matrix is singular
@@ -499,6 +563,9 @@ public class MRLMA extends LMA{
 	}
 	
 	/**
+	 * Calculate chi 2.
+	 *
+	 * @param a the a
 	 * @return The calculated evalution function value (chi2) for the given parameter array.
 	 * NOTE: Does not change the value of chi2.
 	 */
@@ -523,6 +590,8 @@ public class MRLMA extends LMA{
 	}
 	
 	/**
+	 * Calculate chi 2.
+	 *
 	 * @return The calculated evaluation function value for the current fit parameters.
 	 * NOTE: Does not change the value of chi2.
 	 */
@@ -531,6 +600,8 @@ public class MRLMA extends LMA{
 	}
 	
 	/**
+	 * Calculate incremented chi 2.
+	 *
 	 * @return The calculated evaluation function value for the incremented parameters (da + a).
 	 * NOTE: Does not change the value of chi2.
 	 */
@@ -547,7 +618,11 @@ public class MRLMA extends LMA{
 		}
 	}
 	
-	/** 
+	/**
+	 *  
+	 *
+	 * @param row the row
+	 * @param col the col
 	 * @return An calculated lambda weighted element for the alpha-matrix.
 	 * NOTE: Does not change the value of alpha-matrix.
 	 */
@@ -571,7 +646,10 @@ public class MRLMA extends LMA{
 		}
 	}
 	
-	/** 
+	/**
+	 *  
+	 *
+	 * @param row the row
 	 * @return An calculated element for the beta-matrix.
 	 * NOTE: Does not change the value of beta-matrix.
 	 */
@@ -586,7 +664,11 @@ public class MRLMA extends LMA{
 		return result;
 	}
 	
-	/** @return Estimate for goodness of fit, used for binned data, Sum[(y_data - y_fit)^2 / y_data] */
+	/**
+	 * Gets the relative chi 2.
+	 *
+	 * @return Estimate for goodness of fit, used for binned data, Sum[(y_data - y_fit)^2 / y_data]
+	 */
 	public float getRelativeChi2() {
 		float result = 0;
 		for (int i = 0; i < yDataPoints.length; i++) {
@@ -598,7 +680,11 @@ public class MRLMA extends LMA{
 		return result;
 	}
 	
-	/** @return Estimate for goodness of fit, Sum[|y_data - y_fit| / y_fit] / n */
+	/**
+	 * Gets the mean relative error.
+	 *
+	 * @return Estimate for goodness of fit, Sum[|y_data - y_fit| / y_fit] / n
+	 */
 	public float getMeanRelativeError() {
 		float result = 0;
 		for (int i = 0; i < yDataPoints.length; i++) {
@@ -611,13 +697,20 @@ public class MRLMA extends LMA{
 		return result / (float) yDataPoints.length;
 	}
 	
-	/** @return Estimate for goodness of fit, Sum[(y_data - y_fit)^2] / n */
+	/**
+	 * Chi 2 goodness.
+	 *
+	 * @return Estimate for goodness of fit, Sum[(y_data - y_fit)^2] / n
+	 */
 	public float chi2Goodness() {
 		return (float) (chi2 / (double) (yDataPoints.length - parameters.length));
 	}
 	
 	/**
 	 * Checks that the given array in not null, filled with zeros or contain negative weights.
+	 *
+	 * @param length the length
+	 * @param weights the weights
 	 * @return A valid weights array.
 	 */
 	protected double[] checkWeights(int length, double[] weights) {
@@ -644,7 +737,10 @@ public class MRLMA extends LMA{
 	}
 	
 	/**
+	 * Gets the covariance matrix of standard errors in parameters.
+	 *
 	 * @return The covariance matrix of the fit parameters.
+	 * @throws InvertException the invert exception
 	 * @throws LMAMatrix.InvertException if the inversion of alpha fails.
 	 * Note that even if the fit does NOT throw the invert exception,
 	 * this method can still do it, because here alpha is inverted with lambda = 0.
@@ -675,7 +771,10 @@ public class MRLMA extends LMA{
 	}
 	
 	/**
+	 * Gets the standard errors of parameters.
+	 *
 	 * @return The estimated standard errors of the fit parameters.
+	 * @throws InvertException the invert exception
 	 * @throws LMAMatrix.InvertException if the inversion of alpha fails.
 	 * Note that even if the fit does NOT throw the invert exception,
 	 * this method can still do it, because here alpha is inverted with lambda = 0.

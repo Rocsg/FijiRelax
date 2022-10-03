@@ -1,7 +1,11 @@
+/*
+ * 
+ */
 package io.github.rocsg.fijirelax.lma;//Initially joalho.data.lma, see  https://zenodo.org/record/4281064
 
 import java.util.Arrays;
 
+// TODO: Auto-generated Javadoc
 /**
  * Implement this <i>multidimensional</i> function y = (x[], a[]) for your fit purposes.
  * Used with <code>LMAMultiDim</code>. For simpler, one dimensional fit functions you can use
@@ -11,32 +15,39 @@ import java.util.Arrays;
  * @version 1.0, 23.03.2007
  */
 public abstract class LMAMultiDimFunction {
+	
+	/** The temp. */
 	private final double[] temp = new double[1]; 
 	
 	/**
-	 * @return The <i>y</i>-value of the function.
+	 * Gets the y.
+	 *
 	 * @param x The <i>x</i>-values for which the <i>y</i>-value is calculated.
-	 * @param a The fitting parameters. 
+	 * @param a The fitting parameters.
+	 * @return The <i>y</i>-value of the function.
 	 */
 	public abstract double getY(double x[], double[] a);
 	
-	/** 
+	/**
+	 *  
 	 * The method which gives the partial derivates used in the LMA fit.
 	 * If you can't calculate the derivate, use a small <code>a</code>-step (e.g., <i>da</i> = 1e-20)
 	 * and return <i>dy/da</i> at the given <i>x</i> for each fit parameter.
-	 * @return The partial derivate of the function with respect to parameter <code>parameterIndex</code> at <i>x</i>.
+	 *
 	 * @param x The <i>x</i>-value for which the partial derivate is calculated.
 	 * @param a The fitting parameters.
-	 * @param parameterIndex The parameter index for which the partial derivate is calculated. 
+	 * @param parameterIndex The parameter index for which the partial derivate is calculated.
+	 * @return The partial derivate of the function with respect to parameter <code>parameterIndex</code> at <i>x</i>.
 	 */
 	public abstract double getPartialDerivate(double x[], double[] a, int parameterIndex);
 	
 	/**
 	 * A convenience method for the one dimensional case.
 	 * Not used by the fit algorithm.
-	 * @return The <i>y</i>-value of the function.
+	 *
 	 * @param x The <i>x</i> value for which the <i>y</i>-value is calculated.
-	 * @param a The fitting parameters. 
+	 * @param a The fitting parameters.
+	 * @return The <i>y</i>-value of the function.
 	 */
 	public final double getY(double x, double a[]) {
 		temp[0] = x;
@@ -44,6 +55,8 @@ public abstract class LMAMultiDimFunction {
 	}
 	
 	/**
+	 * Generate data.
+	 *
 	 * @param lma A LMA object from which x- and parameter-values
 	 * are extracted for calculating function values. 
 	 * @return Calculated function values with the lma x- and
@@ -55,6 +68,8 @@ public abstract class LMAMultiDimFunction {
 	}
 	
 	/**
+	 * Generate data.
+	 *
 	 * @param x The x-arrays for which the y-values are calculated, double[function value index][x-index]
 	 * @param a The fit parameters, double[fit parameter index]
 	 * @return Calculated function values with the given x- and parameter-values, double[function value index].
@@ -82,6 +97,8 @@ public abstract class LMAMultiDimFunction {
 	}
 	
 	/**
+	 * Generate data.
+	 *
 	 * @param x float[function value index][x-index]
 	 * @param a double[fit parameter index]
 	 * @return Calculated function values with the given x- and parameter-values.
@@ -108,18 +125,36 @@ public abstract class LMAMultiDimFunction {
 		return result;
 	}
 
-	/** The default weights-array constructor. Override for your purposes. */
+	/**
+	 *  The default weights-array constructor. Override for your purposes.
+	 *
+	 * @param dataPoints the data points
+	 * @return the double[]
+	 */
 	public double[] constructWeights(double[][] dataPoints) {
 		double[] result = new double[dataPoints.length];
 		Arrays.fill(result, 1);
 		return result;
 	}
 	
+	/**
+	 * Generate data.
+	 *
+	 * @param x the x
+	 * @param a the a
+	 * @return the float[]
+	 */
 	public float[] generateData(float[][] x, float[] a) {
 		return ArrayConverter.asFloatArray(generateData(ArrayConverter.asDoubleArray(x), ArrayConverter.asDoubleArray(a)));
 	}
 	
-	/** One dimensional convenience method. */
+	/**
+	 *  One dimensional convenience method.
+	 *
+	 * @param x the x
+	 * @param a the a
+	 * @return the float[]
+	 */
 	public float[] generateData(float[] x, float[] a) {
 		return ArrayConverter.asFloatArray(generateData(ArrayConverter.asDoubleArray(x), ArrayConverter.asDoubleArray(a)));
 	}
