@@ -40,6 +40,8 @@ public class Test_FijiRelaxPackage {
 	public void test_01_Trial()throws Exception{
 		if(!completeTest)return;
 		
+		
+		
 		assertEquals(0, 0,0);
 	}
 
