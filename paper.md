@@ -35,10 +35,19 @@ Quantitative Magnetic Resonance Imaging (MRI) is a relevant phenotyping techniqu
 FijiRelax is a Fiji plugin allowing calculation and exploration of 3D + t relaxation parameter maps from a series of multi-echo spin-echo sequences. It is available through a graphical user interface and scriptable in BeanShell. It is a generic tool capable of processing a wide variety of MRI images ranging from a plant stem to a human brain. Its performance was compared to other open-source solutions. FijiRelax was measured to be 100 times faster than equivalent open-access software in MatLab [@karakuzu2020qmrlab] and Python (see \autoref{fig:figure1}). Therefore, it is well suited to the processing of both high-throughput experiments using the scripting mode. FijiRelax provides an efficient and generic tool to facilitate the time-lapse analysis of resonance magnetic images and their application to plant and animal biology, as well as medicine (see \autoref{fig:figure1}). 
 
 FijiRelax was designed to be used by both researchers and by students in courses on magnetical resonance imaging. It provides a graphical explorer enabling the visualization of PD-weighted T1 and T2 distribution over customizable areas of interest, using mono- or bi-exponential fit. In 5D hypermaps, all timeframe distributions can be displayed simultaneously, giving access to valuable information on the evolution of water distribution in tissues during the monitoring period.
-The plugin code is hosted in a public github repository [@fijirelaxgithub]. A comprehensive documentation can be found in the Imagej FijiRelax plugin page [@fijirelaxPluginPage], with step-by-step installation instructions, and hands-on tutorials built upon the test dataset hosted at Zenodo  [@fijirelaxDataset]. The plugin is distributed through the official Fiji release, and as a pre-compiled library hosted at maven central repository [@fijirelaxMaven], with a documented API [@fijirelaxAPI].
+The plugin code is hosted in a public github repository ([Github repository](https://github.com/rocsg/fijirelax)). A comprehensive documentation can be found in the Imagej plugin pages ([FijiRelax plugin page](https://imagej.net/plugins/fijirelax)), with step-by-step installation instructions, and hands-on tutorials built upon the test dataset hosted at Zenodo  [@fijirelaxDataset]. The plugin is distributed through the official Fiji release, and as a pre-compiled library hosted at maven central repository ([FijiRelax jar](https://search.maven.org/artifact/io.github.rocsg/fijirelax)), with a documented API ([FijiRelax API](https://javadoc.io/doc/io.github.rocsg/fijirelax/latest/index.html)).
 
 FijiRelax efficiently operates with widely different data (see \autoref{fig:figure1}) and is suited to large 3D datasets and time-lapse experiments. We believe FijiRelax will very likely facilitate the implementation of quantitative MRI approaches to open new routes in MRI-based tissue phenotyping.
 
+
+
+
+
+
+
+
+
+[OpenCV](https://opencv.org/)
 
 
 # Acknowledgements
