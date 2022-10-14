@@ -1,6 +1,7 @@
 ## Documentation and latest stable build
 [![javadoc](https://javadoc.io/badge2/io.github.rocsg/fijirelax/javadoc.svg)](https://javadoc.io/doc/io.github.rocsg/fijirelax)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.rocsg/fijirelax.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.github.rocsg%22%20AND%20a:%22fijirelax%22)
+[![DOI](https://zenodo.org/badge/334968337.svg)](https://zenodo.org/badge/latestdoi/334968337)
 
 
 ## Summary
