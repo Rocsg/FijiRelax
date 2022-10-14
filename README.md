@@ -96,12 +96,12 @@ First a 3d registration is computed to align precisely the successive images, us
 
 ## Citing this work
 
-- Romain Fernandez, Cédric Moisy, Christophe Goze-Bac, Maïda Cardoso, Rahima Sidi-Boulenouar, Jean-Luc Verdeil, 2021  «FijiRelax: Fast and noise-corrected estimation of MRI relaxation maps in 3D + t» *under review*
+- Romain Fernandez and Cédric Moisy, 2022  «FijiRelax: Fast and noise-corrected estimation of MRI relaxation maps in 3D + t» *under review*
 
 ## Software dependencies acknowledgements
 
 - Johannes Schindelin et al for [Fiji](/software/fiji) (Schindelin et al., 2012)
-- Karl Schmidt for MRI Analysis Calculator and CurveFitters
+- Karl Schmidt and Dimiter Prodanov for MRI Analysis Calculator and CurveFitters
 
 ## License
 
