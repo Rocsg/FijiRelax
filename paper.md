@@ -37,7 +37,7 @@ FijiRelax is a generic tool capable of processing a wide variety of MRI images r
 
 * Spatial drift correction by automatic registration using Fijiyama libraries [@fernandez2021fijiyama] before map computation (see \autoref{fig:figure1}-c). 
 
-* Handling a 2D/3D time-series, capture data and acquisition metadata and storing it in a single TIFF file called HyperMap which can be visualized with Fiji and investigated with the FijiRelax curve explorer (see the 2D to 5D workflow in \autoref{fig:figure1}-e) 
+* Handling a 2D/3D time-series, capture data and acquisition metadata and storing it as a single TIFF file ("HyperMap"), which can be visualized with Fiji and investigated with the FijiRelax curve explorer (see the 2D/3D to 5D workflow in \autoref{fig:figure1}-e).
 
 With these capabilities, this plugin is suitable for studies in low signal-to-noise situations such as microscopic MRI and time-lapse MRI. 
 
@@ -47,7 +47,7 @@ FijiRelax has been designed for three types of scientists: i) end-users using a 
 
 * **Advanced users**: This mode can be used by scientists with programming skills. Load the sample BeanShell scripts provided in the Zenodo archive by dragging them into the Fiji interface and run the scripts to reproduce the results shown in \autoref{fig:figure1}: import a dataset, convert it to an HyperMap (see \autoref{fig:figure1}-e), compute the parameter maps. Then, adapt these scripts to your needs, including processing your own data and batch-processing multiple experiments.
 
-* **Developers**: for programmers fluent with Java and Maven. Start by exploring the FijiRelax API: [API Overview](https://javadoc.io/doc/io.github.rocsg/fijirelax/latest/index.html). Build your own tools on top of the FijiRelax library, provided as a jar file hosted at maven central repository ([Artifact](https://search.maven.org/artifact/io.github.rocsg/fijirelax)), by indicating FijiRelax as a dependency in your POM file. FijiRelax is hosted on a github public repository ([https://github.com/rocsg/fijirelax](https://github.com/rocsg/fijirelax)) and developers can offer to contribute to its development, and extend it by requesting features or proposing new features.
+* **Developers**: for programmers fluent with Java and Maven. Start by exploring the FijiRelax API: [API Overview](https://javadoc.io/doc/io.github.rocsg/fijirelax/latest/index.html). Build your own tools on top of the FijiRelax library, provided as a jar file hosted at maven central repository ([Artifact](https://search.maven.org/artifact/io.github.rocsg/fijirelax)), by indicating FijiRelax as a dependency in your POM file and run the unit tests. FijiRelax is hosted on a github public repository ([https://github.com/rocsg/fijirelax](https://github.com/rocsg/fijirelax)) and developers can offer to contribute to its development, and extend it by requesting features, or proposing new features.
 
 FijiRelax works efficiently with a wide range of data (see \autoref{fig:figure1}-b) and is suitable for large 3D datasets and time-lapse experiments. We believe that FijiRelax will facilitate the implementation of quantitative MRI approaches to open new avenues in MRI-based tissue phenotyping.
 
