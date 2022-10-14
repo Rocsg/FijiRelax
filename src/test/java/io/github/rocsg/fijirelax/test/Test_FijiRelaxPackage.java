@@ -11,7 +11,7 @@ import io.github.rocsg.fijiyama.common.VitimageUtils;
 import io.github.rocsg.fijirelax.mrialgo.HyperMap;
 import io.github.rocsg.fijirelax.mrialgo.MRDataType;
 import io.github.rocsg.fijirelax.mrialgo.MRUtils;
-import io.github.rocsg.fijirelax.mrialgo.NoiseManagement;ec
+import io.github.rocsg.fijirelax.mrialgo.NoiseManagement;
 import io.github.rocsg.fijirelax.mrialgo.RiceEstimator;
 
 import java.io.File;
@@ -50,8 +50,6 @@ public class Test_FijiRelaxPackage {
 		if(!completeTest)return;
 		String path="src/test/resources/data/test_1/SimulatedData_echoes.tif";
 		ImagePlus img=IJ.openImage(path);
-		img.show();
-		img.close();
 	}
 
 	
@@ -189,8 +187,6 @@ public class Test_FijiRelaxPackage {
 		lowerBound=VitimageUtils.minOfImage(diff);
 		upperBound=VitimageUtils.maxOfImage(diff);		
 		ImageJ ij=new ImageJ();
-		resultExpected.show();
-		resultDicom.show();
 		assertEquals(lowerBound, 0,VitimageUtils.EPSILON);
 		assertEquals(upperBound, 0,VitimageUtils.EPSILON);
 	}

@@ -419,6 +419,7 @@ public class HyperMap {
 		}
 		
 		
+		IJ.run(img, "Flip Vertically", "stack");
 		HyperMap hyper=new HyperMap(img);
 		hyper.adjustContrast();
 		return hyper;
