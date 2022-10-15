@@ -2,7 +2,7 @@
 [![javadoc](https://javadoc.io/badge2/io.github.rocsg/fijirelax/4.0.2/javadoc.svg)](https://javadoc.io/doc/io.github.rocsg/fijirelax/4.0.2)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.rocsg/fijirelax.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.github.rocsg%22%20AND%20a:%22fijirelax%22)
 [![DOI](https://zenodo.org/badge/334968337.svg)](https://zenodo.org/badge/latestdoi/334968337)
-
+[![status](https://joss.theoj.org/papers/cdbd91c8fed50d89c7afbf83840d07a4/status.svg)](https://joss.theoj.org/papers/cdbd91c8fed50d89c7afbf83840d07a4)
 
 ## Summary
 
