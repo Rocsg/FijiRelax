@@ -38,9 +38,8 @@ import ij.plugin.Memory;
 import ij.plugin.frame.PlugInFrame;
 import io.github.rocsg.fijirelax.mrialgo.HyperMap;
 
-// TODO: Auto-generated Javadoc
 /**
- * The PlugInFrame inherited object which run the FijiRelax GUI, when called from the Fiji interface.
+ * The PlugInFrame holding the main window the FijiRelax GUI, when called from the Fiji interface.
  *
  * @author Romain Fernandez (romain.fernandez@cirad.fr)
  * @version 1.2, 15.04.2022
@@ -233,32 +232,13 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		ImageJ ij=new ImageJ();
 		FijiRelax_Gui fj=new FijiRelax_Gui();
 		fj.run("");
-		fj.automaticTest();
+//		fj.automaticTest();
 	}
 
-	/**
-	 * Test.
-	 */
-	public static void test() {
-		ImagePlus img=IJ.openImage("/home/fernandr/Bureau/Traitements/Sorgho/Series_temporelles/All_timeseries/BM1_Timeseries.tif");
-		img.show();	
-	}
 	
 	
 	/**
-	 * Automatic test.
-	 */
-	public void automaticTest() {
-		//startFromTestImage("/home/fernandr/Bureau/test.tif");
-		//startFromTestImage("/home/fernandr/Bureau/test.tif");
-//		startFromTestImage("/home/fernandr/Bureau/test.tif");
-		//startFromTestImage("/home/fernandr/Bureau/Traitements/Sorgho/Series_temporelles/All_timeseries/BM1_Timeseries.tif");
-		//startFromTestImage("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Tests_Refactoring/3_Computed_Maps/hyper.tif");
-//		startFromTestImage("/home/fernandr/Bureau/FijiRelax_PrepaDOI/Tests_Refactoring/1_Imported/hyper.tif");
-	}
-	
-	/**
-	 * Constructor of the class. Starts the interface setup
+	 * Constructor of the class. 
 	 */
 
 	public FijiRelax_Gui() {
@@ -437,9 +417,9 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	
 	
 	/**
-	 * Action performed.
+	 * Action performed. Starting point for buttons callbacks
 	 *
-	 * @param e the e
+	 * @param e the event
 	 */
 	/* Performed actions called from the interface --------------------------------------------------------------------------------*/	
 	@Override
@@ -459,11 +439,10 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 	
 	/**
-	 * Run action export.
+	 * Run exporting image to disk
 	 */
 	public void runActionExport() {
 		this.addLog("Export image.", 1);
-//try
 		String path=VitiDialogs.saveImageUIPath("Export current Hypermap to tif or nifti file", "hyperMap");
 		if(path.endsWith("tif")){
 			IJ.saveAsTiff(this.currentHypermap.getAsImagePlus(),path);
@@ -476,11 +455,10 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		else {
 			IJ.showMessage("Unrecognized file format for exportation : "+path);
 		}
-//	}catch(Exception e) {IJ.showMessage("Sorry, it seems that the importation does not went well. Please, contact our support : romain.fernandez@cirad.fr");e.printStackTrace();}
 	}
 	
 	/**
-	 * Run action import.
+	 * Run importing image from disk
 	 */
 	public void runActionImport() {		
 		this.addLog("Import image.", 1);
@@ -539,7 +517,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 
 	/**
-	 * Run action registration.
+	 * Run register image sequences
 	 */
 	public void runActionRegistration() {
  		if(currentHypermap==null)return;
@@ -554,31 +532,12 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 
 	/**
-	 * Run action compute.
+	 * Run compute maps
 	 */
 	public void runActionCompute() {
  		if(currentHypermap==null)return;
 		this.addLog("Compute maps.", 1);
 		HyperMap tmp=HyperMap.hyperMapFactory(this.currentHypermap);
-   		/*if(VitiDialogs.getYesNoUI("Simulate ?", "Do you want to simulate parameters influence on an image crop ?")) {
-   			final ExecutorService exec = Executors.newFixedThreadPool(1);
-   			exec.submit(new Runnable() {
-   				public void run()  {	
-   					lock();
-   					int cropRad=50;
-		   			int cropX=tmp.X/2;
-		   			int cropY=tmp.Y/2;
-		       		ImagePlus res=tmp.simulateMapComputation(cropX-cropRad,cropY-cropRad,cropX+cropRad,cropY+cropRad,viewSlice,viewSlice);
-		       		IJ.showMessage("Computation results with various parameters (Z slicer to change parameters)\nParameters are written in the image label (top line)");
-		       		res.show();
-		       		res.setTitle("Computation simulation");
-		       		res.setPosition(VitimageUtils.getCorrespondingSliceInHyperImage(res, 0, 1, 0));
-		       		VitimageUtils.setImageWindowSizeTo(res,500);
-		       		unlock();
-   		   		}
-   			});
-   			return;
-   		}*///TODO : simulate computation parameters effects
 		Object[]dialogPrm=	openComputeDialog();
    		if(dialogPrm[0]==null){addLog("Maps computation cancelled", 0);return;}
    		double[]params=(double[]) dialogPrm[0];
@@ -590,7 +549,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 	
 	/**
-	 * Run action outliers.
+	 * Run outliers correction
 	 */
 	public void runActionOutliers() {
 		if(currentHypermap==null)return;
@@ -635,7 +594,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 
 	/**
-	 * Run action abort.
+	 * Run abort current action
 	 */
 	public void runActionAbort() {
 		this.addLog("Abort.", 0);
@@ -656,7 +615,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 
 	/**
-	 * Run action explorer.
+	 * Run the curve explorer
 	 */
 	public void runActionExplorer() {
 		if(this.currentHypermap==null)IJ.showMessage("No Hypermap opened");
@@ -668,14 +627,14 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 		
 	/**
-	 * Run action stress.
+	 * Run the unstressing popup
 	 */
 	public void runActionStress(){
 		VitimageUtils.getRelaxingPopup("",true);
 	}
 	
 	/**
-	 * Run action sos.
+	 * Run the sos popup
 	 */
 	public void runActionSos(){
 		String textToDisplay="<html>"+saut;
@@ -694,7 +653,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 	
 	/**
-	 * Run action open.
+	 * Run the action for opening an Hypermap
 	 */
 	public void runActionOpen() {
 		ImagePlus imgNew=VitiDialogs.chooseOneImageUI("Hypermap selection", "Choose nifti or tif hypermap");
@@ -711,7 +670,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 	
 	/**
-	 * Start from test image.
+	 * Developer function, useful to quickstart from a test image.
 	 *
 	 * @param testPath the test path
 	 */
@@ -920,7 +879,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 
 	/**
-	 * Update view.
+	 * Update the view. A new hypermap is generated and appears upon the last one
 	 */
 	public void updateView() {
 		this.addLog("Updating view", 0);
@@ -970,7 +929,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 	
 	/**
-	 * Gets the img view text.
+	 * Gets the title of what should be the current image
 	 *
 	 * @param st the st
 	 * @return the img view text
@@ -980,7 +939,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 	
 	/**
-	 * Close all views.
+	 * Close all the images opened
 	 */
 	public void closeAllViews() {
 		for(ImagePlus img : imgShowedList) {if(img!=null)img.close();};
@@ -1016,7 +975,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	}
 	
 	/**
-	 * Gets the relative optimal position for 2 D view.
+	 * Gets the relative optimal position on screen for 2 D view.
 	 *
 	 * @return the relative optimal position for 2 D view
 	 */
@@ -1039,7 +998,6 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	/**
 	 * Lock.
 	 */
-	/* Minor helpers --------------------------------------------------------------------------------*/	
 	public void lock() {
 		this.lock=true;
 	}
@@ -1054,7 +1012,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	/**
 	 * Enable.
 	 *
-	 * @param but the but
+	 * @param but the button to enable
 	 */
 	public void enable(int but) {
 		setState(new int[] {but},true);
@@ -1063,7 +1021,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	/**
 	 * Disable.
 	 *
-	 * @param but the but
+	 * @param but the button to disable
 	 */
 	public void disable(int but) {
 		setState(new int[] {but},false);
@@ -1072,7 +1030,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	/**
 	 * Enable.
 	 *
-	 * @param tabBut the tab but
+	 * @param tabBut the tab of buttons to enable
 	 */
 	public void enable(int[]tabBut) {
 		setState(tabBut,true);
@@ -1081,7 +1039,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	/**
 	 * Disable.
 	 *
-	 * @param tabBut the tab but
+	 * @param tabBut the tab of buttons to disable
 	 */
 	public void disable(int[]tabBut) {
 		setState(tabBut,false);
@@ -1090,7 +1048,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	/**
 	 * Sets the state.
 	 *
-	 * @param tabBut the tab but
+	 * @param tabBut the tab of buttons to set their state (enabled or disabled)
 	 * @param state the state
 	 */
 	public void setState(int[]tabBut,boolean state) {

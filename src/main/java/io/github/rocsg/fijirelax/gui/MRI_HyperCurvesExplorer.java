@@ -60,15 +60,8 @@ import io.github.rocsg.fijirelax.mrialgo.HyperMap;
 import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 import io.github.rocsg.fijirelax.mrialgo.RiceEstimator;
 
-// TODO: Auto-generated Javadoc
 /**
- * The Class MRI_HyperCurvesExplorer.
- *
- * @author Rocsg
- * MRI_HyperCurvesExplorer is a user-friendly tool for exploration of T1 T2 relaxation curves coming from T1 and T2 sequence
- * 
- * Acknowledgements :
- * Maida Cardoso and Christophe Goze for data and explanations about T1 and T2 time
+ * MRI_HyperCurvesExplorer is the PlugInFrame describing the curve explorer of FijiRelax, an user-friendly tool for exploration of T1 T2 relaxation curves coming from T1 and T2 sequence
  */
 
 
@@ -419,7 +412,6 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	int curEc2;
 
 /** The gaussian weighting. */
-//	int nRepetMonteCarlo=0;
 	boolean gaussianWeighting=false;
 	
 	/** The max curves. */
@@ -964,8 +956,8 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 
 		
 	/**
-	 *  Entry points and startup functions--------------------------------------------------------------------------------.
-	 *
+	 *  Main function 
+	 *  
 	 * @param args the arguments
 	 */
 	public static void main(String[]args) {
@@ -983,7 +975,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	/**
-	 * Instantiates a new MR I hyper curves explorer.
+	 * Instantiates a new MRI hyper curves explorer.
 	 */
 	public MRI_HyperCurvesExplorer() {
 		super("Vitimage MRI Water tracker ");
@@ -991,7 +983,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	/**
-	 * Run.
+	 * Run the explorer
 	 *
 	 * @param arg the arg
 	 */
@@ -1001,7 +993,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	/**
-	 * Run explorer from hyper map.
+	 * Run explorer by specifying an Hypermap to explore
 	 *
 	 * @param hyp the hyp
 	 */
@@ -1011,9 +1003,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	/**
-	 * Run explorer.
+	 * Run explorer by specifying an HyperMap to explore
 	 *
-	 * @param imgPath the img path
+	 * @param imgPath the path to the HyperMap
 	 */
 	public void runExplorer(String imgPath) {
 		ImagePlus fullHyp=null;
@@ -1023,9 +1015,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 		
 	/**
-	 * Run explorer from image.
+	 * Run explorer from a ImagePlus containing an HyperMap
 	 *
-	 * @param fullHyp the full hyp
+	 * @param fullHyp the ImagePlus
 	 */
 	public void runExplorerFromImage(ImagePlus fullHyp) {
 		if(!(fullHyp.getType()==ImagePlus.GRAY32))IJ.run(fullHyp,"32-bit","");
@@ -1064,7 +1056,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 
 	/**
-	 * Setup structures.
+	 * Setup the structures of the GUI.
 	 */
 	public void setupStructures() {
 		timer=new Timer();
@@ -1150,9 +1142,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	/**
-	 * Gets the cute times T 1 T 2.
+	 * Gets the cute times T1 T2 which are an interpolation of the actual MRI data, in order to generate smooth curves corresponding to estimate exponential parameters
 	 *
-	 * @return the cute times T 1 T 2
+	 * @return the cute times T1 T2
 	 */
 	public double[][][][][]getCuteTimesT1T2(){
 		double[][][][]t1t2trte=hyperMap.getT1T2TrTeTimes();// [Time][Curve (T1, puis T2 succ][Choice : Tr, Te or Visual T][actual values]
@@ -1228,9 +1220,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 
 	/**
-	 * Gets the cute times T 2.
+	 * Gets the cute times T2 which are an interpolation of the actual MRI data, in order to generate smooth curves corresponding to estimate exponential parameters
 	 *
-	 * @return the cute times T 2
+	 * @return the cute times T2
 	 */
 	public double[][][][][]getCuteTimesT2(){
 		double[][][][]t2trte=hyperMap.getT2TrTeTimes();// [Time][Curve (T1, puis T2 succ][Choice : Tr, Te or Visual T][actual values]
@@ -1297,7 +1289,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	
 	/**
-	 * Gets the cute times T 1.
+	 * Gets the cute times T1 which are an interpolation of the actual MRI data, in order to generate smooth curves corresponding to estimate exponential parameters
 	 *
 	 * @return the cute times T 1
 	 */
@@ -1353,7 +1345,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	
 	/**
-	 * T 1 t 2 select cute.
+	 * Selecting which T1/T2 data should be displayed
 	 *
 	 * @param dat the dat
 	 * @param time the time
@@ -1368,7 +1360,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	/**
-	 * T 1 t 2 selected curve.
+	 * Getting if T1/T2 data should be displayed
 	 *
 	 * @param tran the tran
 	 * @param time the time
@@ -1379,7 +1371,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	/**
-	 * T 1 selected curve.
+	 * Getting if T1/T2 data should be displayed
 	 *
 	 * @param tran the tran
 	 * @param time the time
@@ -1390,7 +1382,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 
 	/**
-	 * T 1 select cute.
+	 * Getting if T1/T2 data should be displayed
 	 *
 	 * @param dat the dat
 	 * @param time the time
@@ -1405,7 +1397,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	/**
-	 * T 2 selected curve.
+	 * Getting if T1/T2 data should be displayed
 	 *
 	 * @param tran the tran
 	 * @param time the time
@@ -1416,7 +1408,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	/**
-	 * T 2 select cute.
+	 * Getting if T1/T2 data should be displayed
 	 *
 	 * @param dat the dat
 	 * @param time the time
@@ -1434,7 +1426,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	
 	/**
-	 * Start gui.
+	 * Start the GUI.
 	 */
 	public void startGui() {
 	    WindowManager.addWindow(this);
@@ -1473,7 +1465,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	
 	/**
-	 *  Gui building helpers--------------------------------------------------------------------------------.
+	 *  Calling the sequence of GUI building helpers--------------------------------------------------------------------------------.
 	 */	
 	public void repaintAll() {
 		imgCan1.repaint();
@@ -2140,7 +2132,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 
 	/**
-	 * Start plots and roi.
+	 * Start plotting the spectral density and the ROI over HyperMap.
 	 */
 	public void startPlotsAndRoi(){
 		IJ.log("Starting Plots");
@@ -2194,7 +2186,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	/**
-	 * Actualize cursor.
+	 * Actualize the ROI Cursor
 	 */
 	public void actualizeCursor() {
 		Overlay overT1;
@@ -2268,7 +2260,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	/**
-	 * Size of cursor.
+	 * Get cursor size.
 	 *
 	 * @return the string
 	 */
@@ -2277,9 +2269,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 		
 	/**
-	 * Actualize ranging boundaries.
+	 * Actualize ranging boundaries for display selection in the spectrum
 	 *
-	 * @return the int
+	 * @return the selected time (corresponding to click coordinates)
 	 */
 	public int actualizeRangingBoundaries() {
 		double borderLeft=isBionanoDisplay ? 56 : 76;
@@ -2348,7 +2340,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	
 	/**
-	 * Actualize spectrum curves.
+	 * Actualize spectrum curves. Chain-called when clicking
 	 */
 	public void actualizeSpectrumCurves() {
 		if(T1T2MixedEstimation)actualizeSpectrumCurvesT1T2();
@@ -2359,7 +2351,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 
 	/**
-	 * Actualize mri observations based on data.
+	 * Actualize mri observations based on data of the ROI or the clicked area
 	 */
 	public void actualizeMriObservationsBasedOnData() {
 		System.out.println("ACTUALISATION");
@@ -2430,7 +2422,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 
 
 	/**
-	 * Actualize selected echo.
+	 * Actualize selected echo, when scrolling the mouse
 	 *
 	 * @param plotType the plot type
 	 * @return the int
@@ -2478,7 +2470,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}		
 		
 	/**
-	 * Actualize mean estimations.
+	 * Actualize mean when data changed (ROI or cursor clicked)
 	 */
 	public void actualizeMeanEstimations() {
 		Object[] obj;
@@ -2573,115 +2565,12 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				System.out.println("Compute T2 multi thread");
 				computeEstimationsForAllPointsMultiThreadedT2();
 			}
-			if(true)return;
+			return;
 		}
-		/*		//Prepare input data and output places for threads
-		int nThreads=VitimageUtils.getNbCores();
-		Thread[]threads=VitimageUtils.newThreadArray(nThreads);
-		int[][]listVoxOnThreads=VitimageUtils.listForThreads(this.nPtsCur, nThreads);
-		AtomicInteger atomNumThread=new AtomicInteger(0);
-		AtomicInteger curProcessedBlock=new AtomicInteger(0);
-		final double[][][][][]dataParams=new double[nThreads][][][][];
-		final double[][][][][]estimatedParams=new double[nThreads][][][][];
-		final int finalFitAlgorithm=this.fitAlgorithm;
-		final int finalRepetMonteCarlo=this.nRepetMonteCarlo;
-		final int nData=this.nPtsCur;
-		final int nTimes=this.nTimepoints;
-		for(int nt=0;nt<nThreads;nt++) {
-			dataParams[nt]=new double[listVoxOnThreads[nt].length][][][];
-			estimatedParams[nt]=new double[listVoxOnThreads[nt].length][][][];
-			for(int nVo=0;nVo<listVoxOnThreads[nt].length;nVo++) {
-				dataParams[nt][nVo]=new double[this.nTimepoints][][];
-				estimatedParams[nt][nVo]=new double[this.nTimepoints][][];
-				for(int nTime=0;nTime<this.nTimepoints;nTime++) {
-					dataParams[nt][nVo][nTime]=new double[6][];
-					dataParams[nt][nVo][nTime][0]=t1Times[nTime][zCor];
-					dataParams[nt][nVo][nTime][1]=dataTimelapseFull[nTime][listVoxOnThreads[nt][nVo]][0];
-					dataParams[nt][nVo][nTime][2]=new double[] {hyperMap.tabSigmasT1Seq[nTime][zCor]+deltaSigma};
-					dataParams[nt][nVo][nTime][3]=t2Times[nTime][zCor];
-					dataParams[nt][nVo][nTime][4]=dataTimelapseFull[nTime][listVoxOnThreads[nt][nVo]][1];
-					dataParams[nt][nVo][nTime][5]=new double[] {hyperMap.tabSigmasT2Seq[nTime][zCor]+deltaSigma};
-				}
-			}
-		}
-
-	
-		
-		//Run threads
-		for (int ithread = 0; ithread < nThreads; ithread++) {  
-			threads[ithread] = new Thread() {  { setPriority(Thread.NORM_PRIORITY); }  
-				public void run() {  
-					try {
-						int numThread=atomNumThread.getAndIncrement();
-						for (int numVo=0;numVo<dataParams[numThread].length;numVo++) {
-							int numBl=curProcessedBlock.getAndIncrement();
-							if(nData>10 && (numBl%(nData/50)==0))System.out.println(" "+VitimageUtils.dou((numBl*100.0)/nData)+"%");
-							for (int numTime=0;numTime<nTimes;numTime++) {
-								double[][]tempParams=new double[2][8];
-						 		//Estimer T1 Monocomp
-								Object[] obj=fitAndEvaluate(dataParams[numThread][numVo][numTime][0],null,dataParams[numThread][numVo][numTime][1],dataParams[numThread][numVo][numTime][2][0],finalFitAlgorithm,getFitType(MRUtils.T1_MONO_RICE),finalRepetMonteCarlo,1,false);
-								tempParams[0][0]=((double[])obj[0])[0];
-								tempParams[0][1]=((double[])obj[0])[1];
-								tempParams[0][2]=((double) obj[6])>=9999 ? 0 : 1;
-								double khiT1Mono=(double) obj[4];
-						
-						 		//Estimer T1 Bicomp
-						 		obj=fitAndEvaluate(dataParams[numThread][numVo][numTime][0],null,dataParams[numThread][numVo][numTime][1],dataParams[numThread][numVo][numTime][2][0],finalFitAlgorithm,getFitType(MRUtils.T1_MONO_RICE),finalRepetMonteCarlo,1,false);
-						 		tempParams[0][3]=((double[])obj[0])[0];
-						 		tempParams[0][4]=((double[])obj[0])[1];
-						 		tempParams[0][5]=((double[])obj[0])[2];
-						 		tempParams[0][6]=((double[])obj[0])[3];
-						 		tempParams[0][7]=((double) obj[6])>=9999 ? 0 : 1;
-								double khiT1Bi=(double) obj[4];
-
-								//Estimer T2 Monocomp
-						 		obj=fitAndEvaluate(dataParams[numThread][numVo][numTime][3],null,dataParams[numThread][numVo][numTime][4],dataParams[numThread][numVo][numTime][5][0],finalFitAlgorithm,getFitType(MRUtils.T2_MONO_RICE),finalRepetMonteCarlo,1,false);	
-						 		tempParams[1][0]=((double[])obj[0])[0];
-						 		tempParams[1][1]=((double[])obj[0])[1];
-						 		tempParams[1][2]=((double) obj[6])>=9999 ? 0 : 1;
-								double khiT2Mono=(double) obj[4];
-
-						 		//Estimer T2 Bicomp
-						 		obj=fitAndEvaluate(dataParams[numThread][numVo][numTime][3],null,dataParams[numThread][numVo][numTime][4],dataParams[numThread][numVo][numTime][5][0],finalFitAlgorithm,getFitType(MRUtils.T2_MULTI_RICE),finalRepetMonteCarlo,1,false);
-						 		tempParams[1][3]=((double[])obj[0])[0];
-						 		tempParams[1][4]=((double[])obj[0])[1];
-						 		tempParams[1][5]=((double[])obj[0])[2];
-						 		tempParams[1][6]=((double[])obj[0])[3];
-						 		tempParams[1][7]=((double) obj[6])>=9999 ? 0 : 1;
-								double khiT2Bi=(double) obj[4];
-
-								//Select best T1
-								if(khiT1Mono<=khiT1Bi && tempParams[0][2]==1)tempParams[0][7]=0;
-								if(khiT1Mono>khiT1Bi && tempParams[0][7]==1)tempParams[0][2]=0;		 		
-								//Select best T2
-								if(khiT2Mono<=khiT2Bi && tempParams[1][2]==1)tempParams[1][7]=0;
-								if(khiT2Mono>khiT2Bi && tempParams[1][7]==1)tempParams[1][2]=0;		 		
-								estimatedParams[numThread][numVo][numTime]=tempParams;
-							}							
-						}
-					} catch(Exception ie) {ie.printStackTrace();}
-				} 
-			};  		
-		}				
-		VitimageUtils.startAndJoin(threads);
-
-		
-		//Gather results
-		pointsEstimations=new double[this.nTimepoints][this.nPtsCur][2][8];
-		for(int nt=0;nt<nThreads;nt++) {
-			for(int nVo=0;nVo<listVoxOnThreads[nt].length;nVo++) {
-				for(int nTime=0;nTime<this.nTimepoints;nTime++) {
-					pointsEstimations[nTime][listVoxOnThreads[nt][nVo]]=estimatedParams[nt][nVo][nTime];
-				}
-			}
-		}
-	}
-	
-	*/
 	}
 
 	/**
-	 * Compute estimations for all points multi threaded T 1 T 2.
+	 * Multi-threaded estimations of curve parameters using all data points, estimating a T1T2 joint fit
 	 */
 	public void computeEstimationsForAllPointsMultiThreadedT1T2() {
 		//Prepare input data and output places for threads
@@ -2764,7 +2653,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 		
 	/**
-	 * Compute estimations for all points multi threaded T 1.
+	 * Multi-threaded estimations of curve parameters using all data points, estimating a T1 recovery fit
 	 */
 	public void computeEstimationsForAllPointsMultiThreadedT1() {
 		//Prepare input data and output places for threads
@@ -2839,7 +2728,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	/**
-	 * Compute estimations for all points multi threaded T 2.
+	 * Multi-threaded estimations of curve parameters using all data points, estimating a T2 recovery fit
 	 */
 	public void computeEstimationsForAllPointsMultiThreadedT2() {
 		Timer t=new Timer();
@@ -2932,18 +2821,18 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	
 	/**
-	 * Fit and evaluate T 1 T 2.
+	 * Fit selected equations and evaluate their accuracy by updating displayed Khi2 values.
 	 *
-	 * @param tabTimesTr the tab times tr
-	 * @param tabTimesTe the tab times te
-	 * @param tabCuteTimesPerCurve the tab cute times per curve
-	 * @param tabData the tab data
+	 * @param tabTimesTr the recovery times
+	 * @param tabTimesTe the echo times
+	 * @param tabCuteTimesPerCurve tab of interpolated time points for esthetic curve display
+	 * @param tabData the actual magnitude data
 	 * @param sigmaRice the sigma rice
 	 * @param fitAlgorithm the fit algorithm
-	 * @param fitCurveType the fit curve type
-	 * @param nbPts the nb pts
-	 * @param niceCurveComputation the nice curve computation
-	 * @return the object[]
+	 * @param fitCurveType the fit curve type (among fijirelax.mrialgo.MRDataType)
+	 * @param nbPts the number of points involved in the computation
+	 * @param niceCurveComputation boolean flag to set for getting smooth curve computation
+	 * @return an Object[] containing {estimatedParams,estimatedSigmas, tabFitten,tabFittenCute,accuracy1, accuracy2,jitter};
 	 */
 	public Object[] fitAndEvaluateT1T2(double[]tabTimesTr,double[]tabTimesTe,double[][][]tabCuteTimesPerCurve,double[]tabData,double sigmaRice,int fitAlgorithm,int fitCurveType,int nbPts,boolean niceCurveComputation) {
 		int nParams= MRUtils.getNparams(fitCurveType);//(type==0) ? 3 : (type==1 ? 5 : 6);
@@ -2981,18 +2870,18 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 		
 	/**
-	 * Fit and evaluate T 1.
+	 * Fit selected equations and evaluate their accuracy by updating displayed Khi2 values.
 	 *
-	 * @param tabTimesTr the tab times tr
-	 * @param tabTimesTe the tab times te
-	 * @param tabCuteTimesPerCurve the tab cute times per curve
-	 * @param tabData the tab data
+	 * @param tabTimesTr the recovery times
+	 * @param tabTimesTe the echo times
+	 * @param tabCuteTimesPerCurve tab of interpolated time points for esthetic curve display
+	 * @param tabData the actual magnitude data
 	 * @param sigmaRice the sigma rice
 	 * @param fitAlgorithm the fit algorithm
-	 * @param fitCurveType the fit curve type
-	 * @param nbPts the nb pts
-	 * @param niceCurveComputation the nice curve computation
-	 * @return the object[]
+	 * @param fitCurveType the fit curve type (among fijirelax.mrialgo.MRDataType)
+	 * @param nbPts the number of points involved in the computation
+	 * @param niceCurveComputation boolean flag to set for getting smooth curve computation
+	 * @return an Object[] containing {estimatedParams,estimatedSigmas, tabFitten,tabFittenCute,accuracy1, accuracy2,jitter};
 	 */
 	public Object[] fitAndEvaluateT1(double[]tabTimesTr,double[]tabTimesTe,double[][][]tabCuteTimesPerCurve,double[]tabData,double sigmaRice,int fitAlgorithm,int fitCurveType,int nbPts,boolean niceCurveComputation) {
 		int nParams= MRUtils.getNparams(fitCurveType);
@@ -3020,18 +2909,18 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 	
 	/**
-	 * Fit and evaluate T 2.
+	 * Fit selected equations and evaluate their accuracy by updating displayed Khi2 values.
 	 *
-	 * @param tabTimesTr the tab times tr
-	 * @param tabTimesTe the tab times te
-	 * @param tabCuteTimesPerCurve the tab cute times per curve
-	 * @param tabData the tab data
+	 * @param tabTimesTr the recovery times
+	 * @param tabTimesTe the echo times
+	 * @param tabCuteTimesPerCurve tab of interpolated time points for esthetic curve display
+	 * @param tabData the actual magnitude data
 	 * @param sigmaRice the sigma rice
 	 * @param fitAlgorithm the fit algorithm
-	 * @param fitCurveType the fit curve type
-	 * @param nbPts the nb pts
-	 * @param niceCurveComputation the nice curve computation
-	 * @return the object[]
+	 * @param fitCurveType the fit curve type (among fijirelax.mrialgo.MRDataType)
+	 * @param nbPts the number of points involved in the computation
+	 * @param niceCurveComputation boolean flag to set for getting smooth curve computation
+	 * @return an Object[] containing {estimatedParams,estimatedSigmas, tabFitten,tabFittenCute,accuracy1, accuracy2,jitter};
 	 */
 	public Object[] fitAndEvaluateT2(double[]tabTimesTr,double[]tabTimesTe,double[][][]tabCuteTimesPerCurve,double[]tabData,double sigmaRice,int fitAlgorithm,int fitCurveType,int nbPts,boolean niceCurveComputation) {
 		int nParams= MRUtils.getNparams(fitCurveType);
@@ -3069,7 +2958,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 
 	
 	/**
-	 * Gets the fit type.
+	 * Gets the fit type as an int:(fitType %10)+10*this.noiseHandling)
 	 *
 	 * @param fitType the fit type
 	 * @return the fit type
@@ -3081,7 +2970,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	
 	
 	/**
-	 * Identify ranged data.
+	 * Identify the ranged data in the spectrum, depending on the actual defined interval (in blue in the plot)
 	 */
 	public void identifyRangedData() {
 		if(T1T2MixedEstimation) {
@@ -3129,7 +3018,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	}
 
 	/**
-	 * Identify ranged data T 1 T 2.
+	 * Identify the ranged data in the spectrum, depending on the actual defined interval (in blue in the plot), when using cross-fitting T1T2
 	 */
 	public void identifyRangedDataT1T2() {
 		this.rangeRoiPoints=new ArrayList<int[]>();
@@ -3186,70 +3075,13 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		}
 	}
 	
-/*	public double[][] computeSpectrumCurve(int time) {
-		if(T1T2MixedEstimation) {return computeSpectrumCurveT1T2(time);}
-		int numberBins=150 /(1) ;//over 3 decades it makes every 1.2% or every 10 %
-		final double[]binInf=new double[numberBins];
-		final double[]binSup=new double[numberBins];
-		final double[]binMed=new double[numberBins];
-		double[]histoM0T1=new double[numberBins];
-		double[]histoM0T2=new double[numberBins];
-		double [][]output=new double[3][numberBins];
-		double minBin=t0T2;
-		double maxBin=t1T1;
-		double multFromMinToMax=maxBin/minBin;
-		for(int i=0;i<numberBins;i++) {
-			binInf[i]=minBin*Math.pow(multFromMinToMax, i*1.0/numberBins);
-			binSup[i]=minBin*Math.pow(multFromMinToMax, (i+1)*1.0/numberBins);
-			binMed[i]=binSup[i]*0.5+binInf[i]*0.5;
-		}
-		//Bin results
-		
-		
-		for(int p=0;p<this.nPtsCur;p++) {
-			if(pointsEstimations[time][p][0][2]==1) {//Fit T1 mono is ok
-				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][1]<binSup[bin]) && (pointsEstimations[time][p][0][1]>=binInf[bin]) ) {
-					histoM0T1[bin]+=pointsEstimations[time][p][0][0];
-				}
-			}
-			if(pointsEstimations[time][p][0][7]>=1) {//Fit T1 bicomp is ok
-				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][4]<binSup[bin]) && (pointsEstimations[time][p][0][4]>=binInf[bin]) ) {
-					histoM0T1[bin]+=pointsEstimations[time][p][0][3];
-				}
-				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][0][6]<binSup[bin]) && (pointsEstimations[time][p][0][6]>=binInf[bin]) ) {
-					histoM0T1[bin]+=pointsEstimations[time][p][0][5];
-				}
-			}
 
-			
-			if(pointsEstimations[time][p][1][2]>=1) {//Fit T2 mono is ok
-				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][1][1]<binSup[bin]) && (pointsEstimations[time][p][1][1]>=binInf[bin]) ) {
-					histoM0T2[bin]+=pointsEstimations[time][p][1][0];
-				}
-			}
-			if(pointsEstimations[time][p][1][7]>=1) {//Fit T2 bicomp is ok
-				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][1][4]<binSup[bin]) && (pointsEstimations[time][p][1][4]>=binInf[bin]) ) {
-					histoM0T2[bin]+=pointsEstimations[time][p][1][3];
-				}
-				for(int bin=0;bin<numberBins;bin++)if( (pointsEstimations[time][p][1][6]<binSup[bin]) && (pointsEstimations[time][p][1][6]>=binInf[bin]) ) {
-					histoM0T2[bin]+=pointsEstimations[time][p][1][5];
-				}
-			}
-		}
-				
-		//Smooth this histogram with a factor to be defined, maybe depending on the estimation error on parameters
-		output[0]=smoothHisto(histoM0T1,gaussianSpectrum);
-		output[1]=smoothHisto(histoM0T2,gaussianSpectrum);
-		output[2]=binMed;
-		return output;
-	}
-	*/
 		
-	/**
- * Compute spectrum curve T 1 T 2.
+/**
+ * Compute spectrum curve T1 T2, used when cross-fitting
  *
- * @param time the time
- * @return the double[][]
+ * @param time the selected timepoint
+ * @return the double[][] containing spectral data of T1 and T2 relaxations
  */
 public double[][] computeSpectrumCurveT1T2(int time) {
 		
@@ -3305,12 +3137,12 @@ public double[][] computeSpectrumCurveT1T2(int time) {
 	}
 
 
-	/**
-	 * Compute spectrum curve T 1.
-	 *
-	 * @param time the time
-	 * @return the double[][]
-	 */
+/**
+ * Compute spectrum curve T1 .
+ *
+ * @param time the selected timepoint
+ * @return the double[][] containing spectral data of T1 and T2 relaxations
+ */
 	public double[][] computeSpectrumCurveT1(int time) {
 		final double[]binInf=new double[numberBins];
 		final double[]binSup=new double[numberBins];
@@ -3343,10 +3175,10 @@ public double[][] computeSpectrumCurveT1T2(int time) {
 	
 
 	/**
-	 * Compute spectrum curve T 2.
+	 * Compute spectrum curve T1 .
 	 *
-	 * @param time the time
-	 * @return the double[][]
+	 * @param time the selected timepoint
+	 * @return the double[][] containing spectral data of T1 and T2 relaxations
 	 */
 	public double[][] computeSpectrumCurveT2(int time) {		
 		final double[]binInf=new double[numberBins];
@@ -3407,161 +3239,11 @@ public double[][] computeSpectrumCurveT1T2(int time) {
 			if(hasT2)actualizeFirstPlotsT2();
 			return;
 		}
-		
-		/*
-		int incrT1=0;
-		int incrT2=0;
-		int deltaXt2=3;
-		int bubbleSize=isBionanoDisplay ? 30 : 40;
-		if(this.autoSizingTimePlots) {
-			maxPlotYT1=VitimageUtils.max(dataTimelapseT1[tCor])*1.3;
-			maxPlotYT2=VitimageUtils.max(dataTimelapseT2[tCor])*1.3;
-		}
-
-		
-		
-		//BUBBLE SHOWING CURRENT ECHO
-		if(cEchoes<this.t1Times[tCor].length) {
-			plotT1.setColor(bubbleColor);
-	        plotT1.setLineWidth(bubbleSize);
-	        plotT1.replace(incrT1++, "line",new double[]{t1Times[tCor][cEchoes],t1Times[tCor][cEchoes]},new double[]{dataTimelapseT1[tCor][cEchoes],dataTimelapseT1[tCor][cEchoes]});//Afficher le mean+sigma
-//	        System.out.println("T1="+t1Times[tCor][cEchoes]);
-		}
-		else {
-			plotT2.setColor(bubbleColor);
-	        plotT2.setLineWidth(bubbleSize);
-	        plotT2.replace(incrT2++, "line",new double[]{t2Times[tCor][cEchoes-this.t1Times[tCor].length],t2Times[tCor][cEchoes-this.t1Times[tCor].length]},new double[]{dataTimelapseT2[tCor][cEchoes-this.t1Times[tCor].length],dataTimelapseT2[tCor][cEchoes-this.t1Times[tCor].length]});
-		}
-	
-		
-		
-		
-		///////////////// T1 FITTING CURVES
-        //NOISE
-        plotT1.setLineWidth(1);
-		double[]statsNoise=RiceEstimator.computeSigmaAndMeanBgFromRiceSigmaStatic(hyperMap.tabSigmasT1Seq[tCor][zCor]+deltaSigma);
-		double nSum=(statusRoi==2) ? Math.sqrt(this.nPtsCur) : (1+crossWidth);
-		this.meanNoiseT1Cur=statsNoise[0];
-		this.sigmaNoiseT1Cur=statsNoise[1];
-		plotT1.setColor(Color.black);
-        plotT1.setLineWidth(2);
-		plotT1.replace(incrT1++, "line",new double[]{0,maxT1},new double[]{statsNoise[0],statsNoise[0]});//Afficher le mean+sigma
-        plotT1.setLineWidth(1);
-		plotT1.replace(incrT1++, "line",new double[]{0,maxT1},new double[]{statsNoise[0]+statsNoise[1]/nSum,statsNoise[0]+statsNoise[1]/nSum});//Afficher le mean+sigma
-		plotT1.replace(incrT1++, "line",new double[]{0,maxT1},new double[]{statsNoise[0]-statsNoise[1]/nSum,statsNoise[0]-statsNoise[1]/nSum});//Afficher le mean-sigma
-
-		
-
-        
-
-		//OBSERVATIONS IRM
-        plotT1.setLineWidth(2);
-		plotT1.setColor(crossColor );
-		plotT1.replace(incrT1++,"x",t1Times[tCor],dataTimelapseT1[tCor]);//Afficher les points IRM
-        plotT1.setLineWidth(1);
-		for(int t=0;t<this.t1Times[tCor].length;t++)plotT1.replace(incrT1++, "line",new double[]{this.t1Times[tCor][t]-deltaXt2,this.t1Times[tCor][t]-deltaXt2},new double[]{dataTimelapseT1[tCor][t]-dataTimelapseT1Sigmas[tCor][t],dataTimelapseT1[tCor][t]+dataTimelapseT1Sigmas[tCor][t]});//Afficher le T2
-
-        //FIT T1 Mono
-        plotT1.setColor((jitterT1Mono[tCor]>=9999) ? Color.gray : curveT1Mono);        
-        plotT1.setLineWidth(1+thickCurve);
-        plotT1.replace(incrT1++, "line",timesT1Cute,tabFittenT1MonoCute[tCor]);//Afficher la courbe 
-        plotT1.setLineWidth(3);
-        //FIT T1 Bicomp
-        plotT1.setColor((jitterT1Bicomp[tCor]>=9999) ? Color.gray : curveT1Bicomp);        
-        plotT1.setLineWidth(1+thickCurve);
-        plotT1.replace(incrT1++, "line",timesT1Cute,tabFittenT1BicompCute[tCor]);//Afficher la courbe 
-        plotT1.setLineWidth(3);
-        //Quite a hack, in order that if both are on the same trajectories, that obviously the two components will be gray, that is not handsome to be displayed
-        plotT1.setColor((jitterT1Mono[tCor]>=9999) ? Color.gray : curveT1Mono);        
-        plotT1.setLineWidth(1+thickCurve);
-        plotT1.replace(incrT1++, "line",timesT1Cute,tabFittenT1MonoCute[tCor]);//Afficher la courbe 
-        plotT1.setLineWidth(3);
-       
-
-        //PARAMS ESTIMATED
-        plotT1.setLineWidth(3);
-        plotT1.setColor((jitterT1Mono[tCor]>=9999) ? Color.gray : curveT1Mono);        
-		plotT1.replace(incrT1++, "line",new double[]{0,(double)(paramsTimelapseT1[tCor][1])},new double[]{maxPlotYT1*0.85,maxPlotYT1*0.85});//Afficher le T1
-        plotT1.setColor((jitterT1Bicomp[tCor]>=9999) ? Color.gray : curveT1Bicomp);        
-		plotT1.replace(incrT1++, "line",new double[]{0,(double)(paramsTimelapseT1[tCor][3])},new double[]{maxPlotYT1*0.90,maxPlotYT1*0.90});//Afficher le T1 court
-		plotT1.replace(incrT1++, "line",new double[]{0,(double)(paramsTimelapseT1[tCor][5])},new double[]{maxPlotYT1*0.80,maxPlotYT1*0.80});//Afficher le T1
-
-        
-        //LEGENDE T1 AND GLOBAL PLOT DESIGN
-        plotT1.setLineWidth(1);
-		String strLegendT1="";
-		for(int hh=0;hh<1;hh++) strLegendT1+="\n";
-		strLegendT1+="Noise +-sigma"+"\n"+"\n"+"\n"+"Spin-echo signal"+"\n-Fit one exp.\n-Fit two exp.\nbla\nbla";
-		plotT1.setLimits(0, maxT1, 0,maxPlotYT1);
-		plotT1.setColor(new Color(150,150 ,150) );
-		plotT1.addLegend(strLegendT1,"bottom-right");
-		plotCan1.setPlot(plotT1);	
-
-		
-		
-		
-		
-	
-		///////////////// T2 FITTING CURVES
-		//NOISE LEVEL
-		statsNoise=RiceEstimator.computeSigmaAndMeanBgFromRiceSigmaStatic(hyperMap.tabSigmasT2Seq[tCor][zCor]+deltaSigma);
-		this.meanNoiseT2Cur=statsNoise[0];
-		this.sigmaNoiseT2Cur=statsNoise[1];
-		nSum=Math.sqrt(this.nPtsCur);
-		plotT2.setColor(Color.black);
-		plotT2.setLineWidth(2);
-		plotT2.replace(incrT2++, "line",new double[]{0,maxT2},new double[]{statsNoise[0],statsNoise[0]});//Afficher le mean+sigma
-		plotT2.setLineWidth(1);
-		plotT2.replace(incrT2++, "line",new double[]{0,maxT2},new double[]{statsNoise[0]+statsNoise[1]/nSum,statsNoise[0]+statsNoise[1]/nSum});//Afficher le mean+sigma
-		plotT2.replace(incrT2++, "line",new double[]{0,maxT2},new double[]{statsNoise[0]-statsNoise[1]/nSum,statsNoise[0]-statsNoise[1]/nSum});//Afficher le mean-sigma
-
-        //DONNEES IRM
-		plotT2.setLineWidth(2);
-		plotT2.setColor(crossColor);
-		plotT2.replace(incrT2++,"x",t2Times[tCor],dataTimelapseT2[tCor]);
-        plotT2.setLineWidth(1);
-		for(int t=0;t<this.t2Times[tCor].length;t++)plotT2.replace(incrT2++, "line",new double[]{this.t2Times[tCor][t],this.t2Times[tCor][t]},new double[]{dataTimelapseT2[tCor][t]-dataTimelapseT2Sigmas[tCor][t],dataTimelapseT2[tCor][t]+dataTimelapseT2Sigmas[tCor][t]});
-      
-        //COURBES FITTED
-        plotT2.setColor((jitterT2Mono[tCor]>=9999) ? Color.gray : curveT2Mono);
-        plotT2.setLineWidth(1+thickCurve);
-        plotT2.replace(incrT2++, "line",timesT2Cute,tabFittenT2MonoCute[tCor]);//Afficher la courbe monocomp
-        plotT2.setColor((jitterT2Bicomp[tCor]>=9999) ? Color.gray : curveT2Bicomp);
-        plotT2.setLineWidth(1+thickCurve);
-        plotT2.replace(incrT2++, "line",timesT2Cute,tabFittenT2BicompCute[tCor]);//Afficher la courbe bicomp
-        plotT2.setColor((jitterT2Mono[tCor]>=9999) ? Color.gray : curveT2Mono);
-        plotT2.setLineWidth(1+thickCurve);
-        plotT2.replace(incrT2++, "line",timesT2Cute,tabFittenT2MonoCute[tCor]);//Afficher la courbe monocomp
-      
-        //PARAM T2 MONO ET STD MONO
-        plotT2.setLineWidth(3);
-        plotT2.setColor((jitterT2Mono[tCor]>=9999) ? Color.gray : curveT2Mono);
-		plotT2.replace(incrT2++, "line",new double[]{0,(double)(paramsTimelapseT2[tCor][1])},new double[]{maxPlotYT2*0.85,maxPlotYT2*0.85});//Afficher le T2
-        plotT2.setColor((jitterT2Bicomp[tCor]>=9999) ? Color.gray : curveT2Bicomp);
-		plotT2.replace(incrT2++, "line",new double[]{0,paramsTimelapseT2[tCor][3]},new double[]{maxPlotYT2*0.90,maxPlotYT2*0.90});//Afficher le T2
-		plotT2.replace(incrT2++, "line",new double[]{0,paramsTimelapseT2[tCor][5]},new double[]{maxPlotYT2*0.80,maxPlotYT2*0.80});//Afficher le T2
-
-        //LEGENDE
-		plotT2.setLineWidth(1);
-		String strLegendT2="\n\nNoise +-sigma\nMRI T2 relaxation"+"\nFit one exp.\nFit two exp.";
-		plotT2.setLimits(0, maxT2, 0,maxPlotYT2);
-		plotT2.setColor(new Color(150,150 ,150) );
-		plotT2.addLegend(strLegendT2,"bottom-right");
-		plotCan2.setPlot(plotT2);
-
-		plotT1.setLineWidth(1);
-		for(int cur=incrT1;cur<lastCount1;cur++)plotT1.replace(cur, "line", new double[] {-1,-1}, new double[] {-1,-1});
-		plotT2.setLineWidth(1);
-		for(int cur=incrT2;cur<lastCount2;cur++)plotT2.replace(cur, "line", new double[] {-1,-1}, new double[] {-1,-1});
-		lastCount1=incrT1;
-		lastCount2=incrT2;
-		*/
-	
 	}
 			
 	
 	/**
-	 * Actualize first plots T 2.
+	 * Actualize plots of T2 spectrum.
 	 */
 	public void actualizeFirstPlotsT2() {
 		int incrT2=0;
@@ -3730,7 +3412,7 @@ public double[][] computeSpectrumCurveT1T2(int time) {
 	}
 
 	/**
-	 * Actualize first plots T 1.
+	 * Actualize plots of T1 spectrum.
 	 */
 	public void actualizeFirstPlotsT1() {
 		int incrT1=0;
@@ -3811,7 +3493,7 @@ public double[][] computeSpectrumCurveT1T2(int time) {
 	
 	
 	/**
-	 * Actualize second plots.
+	 * Actualize Secondary plots.
 	 */
 	public void actualizeSecondPlots() {
 		int incrT1=0;
@@ -3893,37 +3575,6 @@ public double[][] computeSpectrumCurveT1T2(int time) {
 	 		plotT21.setLineWidth(6);
 	 		plotT22.setLineWidth(6);
 
-/*
-	 		//Draw markers T1
-			plotT21.setColor((jitterT1Bicomp[tim]>=9999) ? Color.lightGray : curveT1Bicomp);
-	 		radius=0.05+0.5*paramsTimelapseT1[tim][2]/MRUtils.maxM0BionanoForNormalization;
-	 		radius=Math.min(0.9, Math.max(0.05, radius));
-			plotT21.replace(incrT1++, "line",new double[] {paramsTimelapseT1[tim][3],paramsTimelapseT1[tim][3]},new double[] {tim+0.02,tim+0.02+radius});//Afficher la courbe
-	 		radius=0.05+0.5*paramsTimelapseT1[tim][4]/MRUtils.maxM0BionanoForNormalization;
-	 		radius=Math.min(0.9, Math.max(0.05, radius));
-			plotT21.replace(incrT1++, "line",new double[] {paramsTimelapseT1[tim][5],paramsTimelapseT1[tim][5]},new double[] {tim+0.02,tim+0.02+radius});//Afficher la courbe
-
-			plotT21.setColor((jitterT1Mono[tim]>=9999) ? Color.gray : curveT1Mono);
-	 		radius=0.05+0.5*paramsTimelapseT1[tim][0]/MRUtils.maxM0BionanoForNormalization;
-	 		radius=Math.min(0.9, Math.max(0.05, radius));
-			plotT21.replace(incrT1++, "line",new double[] {paramsTimelapseT1[tim][1],paramsTimelapseT1[tim][1]},new double[] {tim+0.02,tim+0.02+radius});//Afficher la courbe
-
-			
-	 		//Draw markers T2
-			plotT22.setColor((jitterT2Mono[tim]>=9999) ? Color.gray : curveT2Mono);
-	 		radius=0.05+0.5*paramsTimelapseT2[tim][0]/MRUtils.maxM0BionanoForNormalization;
-	 		radius=Math.min(0.9, Math.max(0.05, radius));
-			plotT22.replace(incrT2++, "line",new double[] {paramsTimelapseT2[tim][1],paramsTimelapseT2[tim][1]},new double[] {tim+0.02,tim+0.02+radius});//Afficher la courbe
-
-			plotT22.setColor((jitterT2Bicomp[tim]>=9999) ? Color.lightGray : curveT2Bicomp);
-	 		radius=0.05+0.5*paramsTimelapseT2[tim][2]/MRUtils.maxM0BionanoForNormalization;
-	 		radius=Math.min(0.9, Math.max(0.05, radius));
-			plotT22.replace(incrT2++, "line",new double[] {paramsTimelapseT2[tim][3],paramsTimelapseT2[tim][3]},new double[] {tim+0.02,tim+0.02+radius});//Afficher la courbe
-	 		radius=0.05+0.5*paramsTimelapseT2[tim][4]/MRUtils.maxM0BionanoForNormalization;
-	 		radius=Math.min(0.9, Math.max(0.05, radius));
-			plotT22.replace(incrT2++, "line",new double[] {paramsTimelapseT2[tim][5],paramsTimelapseT2[tim][5]},new double[] {tim+0.02,tim+0.02+radius});//Afficher la courbe
-	*/		
-			
 	 		//Draw spectrum curves
 			if(T1T2MixedEstimation) {
 				plotT21.setLineWidth(2);
@@ -3985,7 +3636,7 @@ public double[][] computeSpectrumCurveT1T2(int time) {
 	}				
 
 	/**
-	 * Actualize spectrum curves T 1 T 2.
+	 * Actualize spectrum curves when computing cross-fitting T1T2
 	 */
 	public void actualizeSpectrumCurvesT1T2() {
 		for(int tim=0;tim<this.nTimepoints;tim++) {
@@ -4028,7 +3679,7 @@ public double[][] computeSpectrumCurveT1T2(int time) {
 	}
 
 	/**
-	 * Actualize spectrum curves T 1.
+	 * Actualize spectrum curves 
 	 */
 	public void actualizeSpectrumCurvesT1() {
 		for(int tim=0;tim<this.nTimepoints;tim++) {
@@ -4098,161 +3749,9 @@ public double[][] computeSpectrumCurveT1T2(int time) {
 	}
 
 	 
-	
-	
-/*	public void actualizeExportSentence() {
-		if(true)return;
-		rSentence="\n\n#R CODE\n";
-		rSentence+="# * t1TimesAndObservations : \n#      first line = recovery times used for observations\n#      following lines are actual echo spin observations (one line per time-point in case of timelapse)\n";
-		rSentence+="# * t2TimesAndObservations : \n#      first line = echo times used for observations\n#      following lines are actual echo spin observations (one line per time-point in case of timelapse)\n";
-		rSentence+="# * estimatedParameters : \n#      each line gives estimated parameters (PD,T1,T2) obtained for each time point (in case of timelapse)\n";
-		rSentence+="#      all parameters are computed using exponential fit, after rice noise estimation and correction\n";
-		rSentence+="#      Params in each line : [ ObservationTime  ,  PD(of T1 relax curve)  ,  T1 ,  PD(of T2 relax curve monocomponent) , \n#                                           T2(mono-exponential), PD-1(first part of bi-exponential) , T2-1 (first T2) ,  PD-2 (second part) , T2-2 (second T2) , \n#                                            Jitter T1 (% error in fit), Jitter T2 mono , Jitter T2 bicomp\n";
-		rSentence+="# code begins here\n#\n";
-		rSentence+="t1TimesAndObservations <- data.frame(acquisition_number=c(0,";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(t+1)+",";
-		rSentence+=""+nTimepoints+")";
-		rSentence+=", acquisition_day=c(0,";
-		for(int t=1;t<nTimepoints-1;t++)rSentence+=""+hyperMap.actualDay[t]+",";
-		rSentence+=""+hyperMap.actualDay[nTimepoints-1]+")";
-		for(int ec=0;ec<t1Times.length;ec++) {
-			rSentence+=", Echo"+ec+"=c("+t1Times[ec]+",";
-			for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(dataTimelapseT1[t][ec])+",";
-			rSentence+=""+(dataTimelapseT1[nTimepoints-1][ec])+")";
-		}
-		rSentence+=")\n";
-		rSentence+="t2TimesAndObservations <- data.frame(acquisition_number=c(0,";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(t+1)+",";
-		rSentence+=""+nTimepoints+")";
-		rSentence+=", acquisition_day=c(0,";
-		for(int t=1;t<nTimepoints-1;t++)rSentence+=""+hyperMap.actualDay[t]+",";
-		rSentence+=""+hyperMap.actualDay[nTimepoints-1]+")";
-		for(int ec=0;ec<t2Times.length;ec++) {
-			rSentence+=", Echo"+ec+"=c("+t2Times[ec]+",";
-			for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(dataTimelapseT2[t][ec])+",";
-			rSentence+=""+(dataTimelapseT2[nTimepoints-1][ec])+")";
-		}
-		rSentence+=")\n";
-	
-	
-		
-		rSentence+="estimatedParameters <- data.frame(acquisition_number=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(t+1)+",";
-		rSentence+=""+nTimepoints+"),acquisition_day=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+hyperMap.actualDay[t]+",";
-		rSentence+=""+hyperMap.actualDay[nTimepoints-1]+"), PDT1=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT1[t][0])+",";
-		rSentence+=""+""+(paramsTimelapseT1[nTimepoints-1][0])+"), T1=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT1[t][1])+",";
-		rSentence+=""+""+(paramsTimelapseT1[nTimepoints-1][1])+"), PDT2=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT2[t][0])+",";
-		rSentence+=""+""+(paramsTimelapseT2[nTimepoints-1][0])+"), T2=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT2[t][1])+",";
-		rSentence+=""+""+(paramsTimelapseT2[nTimepoints-1][1])+"), PDT21=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT2[t][2])+",";
-		rSentence+=""+""+(paramsTimelapseT2[nTimepoints-1][2])+"), T21=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT2[t][3])+",";
-		rSentence+=""+""+(paramsTimelapseT2[nTimepoints-1][3])+"), PDT22=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT2[t][4])+",";
-		rSentence+=""+""+(paramsTimelapseT2[nTimepoints-1][4])+"), T22=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(paramsTimelapseT2[t][5])+",";
-		rSentence+=""+""+(paramsTimelapseT2[nTimepoints-1][5])+"), JitterT1Mono=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(jitterT1Mono[t])+",";
-		rSentence+=""+""+(jitterT1Mono[nTimepoints-1])+"), JitterT1BiExp=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(jitterT1Bicomp[t])+",";
-		rSentence+=""+""+(jitterT1Bicomp[nTimepoints-1])+"), JitterT2MonoExp=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(jitterT2Mono[t])+",";
-		rSentence+=""+""+(jitterT2Mono[nTimepoints-1])+"), JitterT2BiExp=c(";
-		for(int t=0;t<nTimepoints-1;t++)rSentence+=""+(jitterT2Bicomp[t])+",";
-		rSentence+=""+""+(jitterT2Bicomp[nTimepoints-1])+"))\n\n";
-	
-	
-		
-		pySentence="\n\n#CODE PYTHON\n";
-		pySentence+="# * t1TimesAndObservations : \n#      first line = recovery times used for observations\n#      following lines are actual echo spin observations (one line per time-point in case of timelapse)\n";
-		pySentence+="#     Data are normalised : the values have been divided by the last echo value of the capillary in the central slice)\n";
-		pySentence+="# * t2TimesAndObservations : \n#      first line = echo times used for observations\n#      following lines are actual echo spin observations (one line per time-point in case of timelapse)\n";
-		pySentence+="#     Data are normalised : the values have been divided by the estimation of PD of the capillary in the central slice)\n";
-		pySentence+="# * estimatedParameters : \n#      each line gives estimated parameters (M,T1,T2) obtained for each time point (in case of timelapse)\n";
-		pySentence+="#      all parameters are computed using exponential fit, after rice noise estimation and correction\n";
-		pySentence+="#      Params in each line : [ ObservationTime  ,  PD(of T1 relax curve)  ,  T1 ,  PD(of T2 relax curve monocomponent) , \n#                                  T2(mono-exponential), PD-1(first part of bi-exponential) , T2-1 (first T2) ,  PD-2 (second part) , T2-2 (second T2) , \n#                                   Jitter T1 (% error in fit), Jitter T2 mono , Jitter T2 bicomp\n";
-		pySentence+="# code begins here\n#\nimport numpy as np\n";
-		pySentence+="t1TimesAndObservations=np.array([[0,0";
-		for(int ec=0;ec<t1Times.length;ec++)pySentence+=","+t1Times[ec];
-		pySentence+="]";					
-		for(int t=1;t<=nTimepoints;t++) {
-			pySentence+=",\n["+t+","+hyperMap.actualDay[t-1];
-			for(int ec=0;ec<t1Times.length;ec++) pySentence+=","+dataTimelapseT1[t-1][ec];
-			pySentence+="]";
-		}
-		pySentence+="\n])\n";
-	
-		pySentence+="t2TimesAndObservations=np.array([[0,0";
-		for(int ec=0;ec<t2Times.length;ec++)pySentence+=","+t2Times[ec];
-		pySentence+="]";					
-		for(int t=1;t<=nTimepoints;t++) {
-			pySentence+=",\n["+t+","+hyperMap.actualDay[t-1];
-			for(int ec=0;ec<t2Times.length;ec++) pySentence+=","+dataTimelapseT2[t-1][ec];
-			pySentence+="]";
-		}
-		pySentence+="\n])\n";
-	
-		
-		pySentence+="estimatedParameters=np.array([\n";
-		for(int t=0;t<nTimepoints;t++) {
-			pySentence+="["+(t+1)+","+hyperMap.actualDay[t];		
-			for(int val=0;val<2;val++)pySentence+=","+paramsTimelapseT1[t][val];
-			for(int val=0;val<6;val++)pySentence+=","+paramsTimelapseT2[t][val];
-			pySentence+=","+jitterT1Mono[t]+","+jitterT1Bicomp[t]+","+jitterT2Mono[t]+","+jitterT2Bicomp[t];
-			pySentence+="]"+(t==nTimepoints-1 ? "\n" : ",\n");
-		}
-		pySentence+="])\n";
-	
-		matSentence="\n\n%MATLAB\n";
-		matSentence+="% * t1TimesAndObservations : \n%      first line = recovery times used for observations\n%      following lines are actual echo spin observations (one line per time-point in case of timelapse)\n";
-		matSentence+="%     Data are normalised : the values have been divided by the last echo value of the capillary in the central slice)\n";
-		matSentence+="% * t2TimesAndObservations : \n%      first line = echo times used for observations\n%      following lines are actual echo spin observations (one line per time-point in case of timelapse)\n";
-		matSentence+="%     Data are normalised : the values have been divided by the estimation of PD of the capillary in the central slice)\n";
-		matSentence+="% * estimatedParameters : \n%      each line gives estimated parameters (M,T1,T2) obtained for each time point (in case of timelapse)\n";
-		matSentence+="%      all parameters are computed using exponential fit, after rice noise estimation and correction\n";
-		matSentence+="%      Params in each line : [ ObservationTime  ,  PD(of T1 relax curve)  ,  T1 ,  PD(of T2 relax curve monocomponent) , \n%                                           T2(mono-exponential), PD-1(first part of bi-exponential) , T2-1 (first T2) ,  PD-2 (second part) , T2-2 (second T2) , \n%                                            Jitter T1 (% error in fit), Jitter T2 mono , Jitter T2 bicomp\n";
-		matSentence+="% code begins here\n%\n";
-	
-		
-		matSentence+="t1TimesAndObservations=[\n[0,0";
-		for(int ec=0;ec<t1Times.length;ec++)matSentence+=","+t1Times[ec];
-		matSentence+="]";					
-		for(int t=1;t<=nTimepoints;t++) {
-			matSentence+=";\n["+t+","+hyperMap.actualDay[t-1];
-			for(int ec=0;ec<t1Times.length;ec++) matSentence+=","+dataTimelapseT1[t-1][ec];
-			matSentence+="]";
-		}
-		matSentence+="\n]\n";
-	
-		matSentence+="t2TimesAndObservations=[\n[0,0";
-		for(int ec=0;ec<t2Times.length;ec++)matSentence+=","+t2Times[ec];
-		matSentence+="]";					
-		for(int t=1;t<=nTimepoints;t++) {
-			matSentence+=";\n["+t+","+hyperMap.actualDay[t-1];
-			for(int ec=0;ec<t2Times.length;ec++) matSentence+=","+dataTimelapseT2[t-1][ec];
-			matSentence+="]";
-		}
-		matSentence+="\n]\n";
-	
-		
-		matSentence+="estimatedParameters=[\n";
-		for(int t=0;t<nTimepoints;t++) {
-			matSentence+="["+(t+1)+","+hyperMap.actualDay[t];		
-			for(int val=0;val<2;val++)matSentence+=","+paramsTimelapseT1[t][val];
-			for(int val=0;val<6;val++)matSentence+=","+paramsTimelapseT2[t][val];
-			matSentence+=","+jitterT1Mono[t]+","+jitterT1Mono[t]+","+jitterT2Mono[t]+","+jitterT2Bicomp[t];
-			matSentence+="]"+(t==nTimepoints-1 ? "\n" : ";\n");
-		}
-		matSentence+="]\n";
-	}*/
-	
+
 	/**
- * Actualize displayed numbers.
+ * Actualize displayed numbers in the central tab
  */
 public void actualizeDisplayedNumbers() {
 		//Update colors
@@ -4327,10 +3826,10 @@ public void actualizeDisplayedNumbers() {
 
 	
 	/**
-	 * Export data to csv.
+	 * Export fitting data and spectrum to csv.
 	 *
-	 * @param dirPath the dir path
-	 * @param basename the basename
+	 * @param dirPath export directory
+	 * @param basename the basename of the csv file to export
 	 */
 	//TODO
 	public void exportDataToCsv(String dirPath,String basename) {
@@ -4538,7 +4037,7 @@ public void actualizeDisplayedNumbers() {
 
 
 	/**
-	 * Display results again.
+	 * Update display of both results
 	 */
 	public void displayResultsAgain() {
 		imgCan1.getImage().setPosition(cMaps+1,zCor+1,tCor+1);
@@ -4572,7 +4071,7 @@ public void actualizeDisplayedNumbers() {
 	/**
 	 *  Gui updating functions and callbacks--------------------------------------------------------------------------------.
 	 *
-	 * @param e the e
+	 * @param e the event
 	 */	
 	@Override
 	public void keyTyped(KeyEvent e) {
@@ -4772,7 +4271,7 @@ public void actualizeDisplayedNumbers() {
 	
 	
 	/**
-	 * Change tr.
+	 * Change tr. Button to move Tr
 	 *
 	 * @param up the up
 	 */
@@ -4867,7 +4366,7 @@ public void actualizeDisplayedNumbers() {
 	/**
 	 * Action performed.
 	 *
-	 * @param e the e
+	 * @param e the event
 	 */
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -5103,7 +4602,7 @@ public void actualizeDisplayedNumbers() {
 	}
 
 	/**
-	 * Smooth histo.
+	 * Smooth histo. Compute smoothing of spectrum curves given as a parameter
 	 *
 	 * @param histo the histo
 	 * @param sig the sig
@@ -5199,7 +4698,7 @@ public void actualizeDisplayedNumbers() {
     }
 
     /**
-     * Update playing.
+     * Update the parameters displayed in the tab, depending on the current action
      *
      * @param param the param
      * @param action the action

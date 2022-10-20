@@ -10,9 +10,10 @@ import io.github.rocsg.fijiyama.common.VitimageUtils;
 import ij.macro.Interpreter;
 import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 
-// TODO: Auto-generated Javadoc
+
 /**
- * The Class SimplexDualCurveFitterNoBias.
+ * A simplex-based solution to curve fitting of exponential functions over MRI observations points
+ * This one is preferred as default solution, as it produce way less outliers than Levenberg implementation, is faster, and converges toward the same values in most cases
  */
 public class SimplexDualCurveFitterNoBias{
 	
@@ -148,18 +149,18 @@ public class SimplexDualCurveFitterNoBias{
 	/** The parameters boundaries. */
 	private double[][] parametersBoundaries;
 	
-	/** The min delta chi 2. */
+	/** The min delta chi 2. When variation of chi 2 will be lower than it, induce an early break of fit*/
 	private double minDeltaChi2;
 
     /**
      *  Construct a new SimplexCurveFitter.
      *
-     * @param trData the tr data
-     * @param teData the te data
-     * @param magData the mag data
-     * @param fitType the fit type
-     * @param sigma the sigma
-     * @param debu the debu
+     * @param trData the recovery times
+     * @param teData the echo times
+     * @param magData the magnitude data
+     * @param fitType the type of fit, chosen among @link io.github.rocsg.fijirelax.mrialgo.MRDataType.Class
+     * @param sigma the sigma of Rice noise
+     * @param debu a debug flag for getting more verbose output
      */
     public SimplexDualCurveFitterNoBias (double[] trData, double[]teData,double[] magData, int fitType,double sigma,boolean debu) {
     	this.debug=debu;
@@ -173,7 +174,7 @@ public class SimplexDualCurveFitterNoBias{
     }
     
     /**
-     * Sets the iter factor.
+     * Sets the max number of iterations before early break
      *
      * @param maxIterations the new iter factor
      */
@@ -182,16 +183,16 @@ public class SimplexDualCurveFitterNoBias{
     }
     
     /**
-     * Do fit.
+     * Start the fit with the defined setup in the current object
      */
     public void doFit() {
     	doFit(fit);
     }
     
     /**
-     * Do fit.
+     * Starts the fit with the defined setup in the current object, and the given fit type
      *
-     * @param fitType the fit type
+     * @param fitType the fit type, chosen among @link io.github.rocsg.fijirelax.mrialgo.MRDataType.Class
      */
     public void doFit(int fitType) {
     	if(fitType==MRUtils.T1T2_BIONANO) {computeBioNano();return;}  	
@@ -199,10 +200,10 @@ public class SimplexDualCurveFitterNoBias{
     }
     
     /**
-     * Do fit.
+     * Starts the fit with the defined setup in the current object, and the given fit type
      *
-     * @param fitType the fit type
-     * @param showSettings the show settings
+     * @param fitType the fit type, chosen among @link io.github.rocsg.fijirelax.mrialgo.MRDataType.Class
+     * @param showSettings a flag (without effect since v4.0.2, deprecated soon)
      */
     public void doFit(int fitType, boolean showSettings) {
         int saveFitType = fitType;
@@ -300,9 +301,9 @@ public class SimplexDualCurveFitterNoBias{
     }
         
     /**
-     * Gets the default parameters boundaries.
+     * Gets the default parameters boundaries i.e. the acceptable boundaries for the exponential curve to estimate.
      *
-     * @param fitType the fit type
+     * @param fitType the fit type, chosen among @link io.github.rocsg.fijirelax.mrialgo.MRDataType.Class
      * @return the default parameters boundaries
      */
     public double[][] getDefaultParametersBoundaries(int fitType) {
@@ -322,7 +323,7 @@ public class SimplexDualCurveFitterNoBias{
     /**
      *  Initialise the simplex.
      *
-     * @param fitType the fit type
+     * @param fitType the fit type, chosen among @link io.github.rocsg.fijirelax.mrialgo.MRDataType.Class
      */
     protected void initialize(int fitType) {
         // Calculate some things that might be useful for predicting parametres
@@ -627,7 +628,7 @@ public class SimplexDualCurveFitterNoBias{
     }
         
     /**
-     * Show simplex.
+     * Show simplex. Display it in the log window, as text
      *
      * @param iter the iter
      */
@@ -930,7 +931,7 @@ public class SimplexDualCurveFitterNoBias{
 	
     
     /**
-     * Compute bio nano.
+     * Compute approximative parameters using the three first echoes. Used as benchmark 
      */
     public void computeBioNano(){
     	initialize2DTab();
@@ -941,7 +942,7 @@ public class SimplexDualCurveFitterNoBias{
     }
     
 	/**
-	 * Initialize 2 D tab.
+	 * Initialize 2 D tab for storing successive values of Repetition times and Echo times
 	 */
 	public void initialize2DTab(){
     	ArrayList<Double>listTr=new ArrayList<Double>();
@@ -980,7 +981,7 @@ public class SimplexDualCurveFitterNoBias{
 	}	
 	
 	/**
-	 * Inspect 2 D tab.
+	 * Inspect 2 D tab storing successive values of Repetition times and Echo times
 	 */
 	public void inspect2DTab() {
 		if(debugBionano)System.out.println("Nul ?"+(magData2D==null));
@@ -994,14 +995,14 @@ public class SimplexDualCurveFitterNoBias{
 	}
 
 	/**
-	 * Inspect T 2 estimated values.
+	 * Inspect values when computing approximative parameters using the three first echoes. Used as benchmark 
 	 */
 	public void inspectT2EstimatedValues() {
 		if(debugBionano)System.out.println("T2 vas computed. Values : T2="+this.t2+"  , R2="+this.r2+"  , M0="+this.m0t2);
 	}
 	
 	/**
-	 * Compute T 2 bionano.
+	 * Computing approximative value of T2 using the three first echoes. Used as benchmark 
 	 */
 	public void computeT2Bionano() {
 		int indexTr10000=magData2D.length-1;
@@ -1021,7 +1022,7 @@ public class SimplexDualCurveFitterNoBias{
 	
 	
 	/**
-	 * Compute T 1 bionano.
+	 * Computing approximative value of T1 using the three first recovery times. Used as benchmark 
 	 */
 	public void computeT1Bionano() {
 		if(debugBionano)System.out.println("\n\nT1 COMPUTATION");
@@ -1108,7 +1109,7 @@ public class SimplexDualCurveFitterNoBias{
     
 	
 	/**
-	 * Mean hampel.
+	 * Used in benchmark for estimative approximation of parrameters. A replicate of the Hampel function of Matlab
 	 *
 	 * @param tab the tab
 	 * @return the double

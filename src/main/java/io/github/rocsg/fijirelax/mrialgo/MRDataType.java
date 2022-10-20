@@ -4,9 +4,9 @@
 package io.github.rocsg.fijirelax.mrialgo;
 
 // TODO: Auto-generated Javadoc
-/** This enum define different common sequence. Their handling is done by HyperMap
+/** This enum define different common MRI imaging sequence. Their handling is done by HyperMap
  * 
- * @see HyperMap
+ * @see io.github.rocsg.fijirelax.mrialgo.HyperMap
  */
 public enum MRDataType {
 	

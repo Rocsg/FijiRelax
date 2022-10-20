@@ -16,7 +16,7 @@ import java.util.Arrays;
 import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 
 
-// TODO: Auto-generated Javadoc
+
 /**
  * A class which implements the <i>Levenberg-Marquardt Algorithm</i>
  * (LMA) fit for non-linear, multidimensional parameter space

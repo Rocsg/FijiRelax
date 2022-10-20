@@ -24,7 +24,7 @@ public class ArrayConverter {
 	
 	
 	/**
-	 * As double array.
+	 * Get float array as a double array.
 	 *
 	 * @param a the a
 	 * @return the double[][]
@@ -43,7 +43,7 @@ public class ArrayConverter {
 	}
 	
 	/**
-	 * As double array.
+	 * Get float array as a double array. 
 	 *
 	 * @param a the a
 	 * @return the double[]
@@ -54,7 +54,7 @@ public class ArrayConverter {
 	}
 	
 	/**
-	 * As float array.
+	 * Get double array as float array. 
 	 *
 	 * @param a the a
 	 * @return the float[]

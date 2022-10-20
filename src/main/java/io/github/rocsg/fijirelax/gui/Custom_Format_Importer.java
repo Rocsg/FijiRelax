@@ -163,7 +163,7 @@ public class Custom_Format_Importer{
 	
 	
 	/**
-	 * Set all data member fields to null.
+	 * Set member fields maps (Images) to null
 	 */
 	public void makeNullMaps(){
 		multiM0=VitimageUtils.nullImage(imgT1T2Line[0]);
@@ -173,7 +173,7 @@ public class Custom_Format_Importer{
 	
 
 	/**
-	 * Gets the first image of T 1 T 2 serie.
+	 * Gets the first image of T1-T2 serie, when providing the input dir containing all the data.
 	 *
 	 * @param inputDir the input dir
 	 * @return the first image of T 1 T 2 serie
@@ -192,7 +192,7 @@ public class Custom_Format_Importer{
 	}
 	
 	/**
-	 * Read T 1 T 2.
+	 * Read T1-T2 data from the given input dir (object member),organize it and return it as an HyperMap.
 	 *
 	 * @return the hyper map
 	 */
@@ -258,7 +258,7 @@ public class Custom_Format_Importer{
 	
 	
 	/**
-	 * Detect sorgho.
+	 * Used for detecting specific kind of experiments
 	 *
 	 * @param img the img
 	 * @return true, if successful
@@ -277,7 +277,7 @@ public class Custom_Format_Importer{
 	}
 
 	/**
-	 * Detect bouture.
+	 * Used for detecting specific kind of experiments
 	 *
 	 * @param img the img
 	 * @return true, if successful
@@ -294,253 +294,6 @@ public class Custom_Format_Importer{
 	}
 
 
-		
-	/**
-	 * Register the T1 observations along with T2 observations, and update member fields with the processed data
-	 *
-	 * 	 */
-	//TODO : is this function still needed, as HyperMap have its own facility ?
-	//TODO : there is a if(false) there
-
-/*
-	public void registerT1T2(){		
-		int nT1=this.imgT1T2.length;
-		if(nT1==1)return;
-		ItkTransform  []trs=new ItkTransform[nT1];
-		VitimageUtils.printImageResume(imgMask,"imgMask2");
-		VitimageUtils.printImageResume(imgMaskCap,"imgMaskCap2");
-
-		//In case of sorgho data, set them all to the same voxel size
-		if(makeSorghoTrick && false) {
-			System.out.println("Sorgho detect !");
-			double targetVZ=0.5;
-			double targetVoxVolume=1E-3;
-			double targetVX=Math.sqrt(targetVoxVolume/targetVZ);
-			double targetVY=Math.sqrt(targetVoxVolume/targetVZ);
-			int[]targetDims=new int[] {512,512,4};
-			double[]targetVoxs=new double[] {targetVX,targetVY,targetVZ};		
-			for(int j=0;j<imgT1T2[nT1-1].length;j++) {
-				imgT1T2[nT1-1][j]=new ItkTransform().transformImageExtensive(targetDims, targetVoxs, imgT1T2[nT1-1][j],false);
-			}
-			imgMask.getStack().setSliceLabel("", 1);
-			imgMask=new ItkTransform().transformImage(targetDims, targetVoxs, imgMask,false);
-			imgMask=VitimageUtils.getFloatBinaryMask(imgMask, 1.0, 1E10);
-			imgMaskCap=VitimageUtils.getAntiCapillaryMask(imgT1T2[imgT1T2.length-1][0],VitimageUtils.bionanoCapillaryRadius);
-		}
-		VitimageUtils.printImageResume(imgMask,"imgMask3");
-		VitimageUtils.printImageResume(imgMaskCap,"imgMaskCap3");
-		imgMask=VitimageUtils.makeOperationBetweenTwoImages(imgMask,imgMaskCap, 1, true);
-			
-		
-		trs[nT1-1]=new ItkTransform();
-		ImagePlus imgMov,imgRef;
-		ItkTransform tr=new ItkTransform();
-		RegistrationAction regAct;
-		BlockMatchingRegistration bmRegistration;
-		imgMov=VitimageUtils.imageCopy(imgT1T2[nT1-2][0]);
-		imgRef=VitimageUtils.imageCopy(imgT1T2[nT1-1][0]);
-		
-		//If needed, handle a manual registration before
-		if(!forceNoMan || (nameObservation.contains("B032") && nameObservation.contains("J35"))) {
-			ImagePlus comp=VitimageUtils.compositeOf(imgT1T2[nT1-1][0],imgT1T2[nT1-2][0],"red=T2 first echo , green = T1 last rep time");
-			if(!dontShowNothing)comp.show();
-			if(VitiDialogs.getYesNoUI("Manual registration first ?", "Manual registration first ?\nNeeded if T1 stack and T2 stack are largely disaligned")) {
-				Point3d[][]pts=VitiDialogs.registrationPointsUI(5,imgRef,imgMov,true);
-				tr=ItkTransform.estimateBestRigid3D(pts[1],pts[0]); 
-			}
-			if(!dontShowNothing)comp.close();
-		}
-		
-		//Run automatic registration
-		int incr=0;
-		imgRef=imgT1T2[nT1-1][0];
-		ImagePlus maskReg=new Duplicator().run(imgMask);
-		maskReg=VitimageUtils.getFloatBinaryMask(maskReg, 2,10E8);
-		maskReg=VitimageUtils.makeOperationOnOneImage(maskReg,1, -1, true);
-		maskReg=VitimageUtils.makeOperationOnOneImage(maskReg,2, -1, true);
-
-		for(int iMov=0;iMov<nT1-1;iMov++) {	
-			if(skipRegForTesting) {
-				trs[iMov]=new ItkTransform();
-				continue;
-			}
-			imgMov=imgT1T2[iMov][0];
-			regAct=new RegistrationAction();
-			regAct.defineSettingsSimplyFromTwoImages(imgRef,imgMov);
-			regAct.typeAutoDisplay=0;
-			if(speedupRegistrationForTesting) {
-				if(makeBoutureTrick)regAct.setLevelMax(1);
-				regAct.strideX=regAct.strideX*3;
-				regAct.strideY=regAct.strideY*3;
-				regAct.strideZ=regAct.strideZ*3;
-			};
-			regAct.higherAcc=1;
-			if(nameObservation.contains("B098") && nameObservation.contains("J70")) {
-				regAct.iterationsBMLin+=10;
-				regAct.strideX/=3;
-				regAct.strideY/=3;
-				regAct.strideZ-=1;
-				regAct.levelMaxLinear+=1;
-			}
-			bmRegistration=BlockMatchingRegistration.setupBlockMatchingRegistration(imgRef,imgMov,regAct);
-			bmRegistration.consoleOutputActivated=false;
-			bmRegistration.timingMeasurement=true;
-			bmRegistration.mask=maskReg.duplicate();
-			bmRegistration.setRefRange(new double[] {imgRef.getDisplayRangeMin(),imgRef.getDisplayRangeMax()});
-			bmRegistration.setMovRange(new double[] {imgMov.getDisplayRangeMin(),imgMov.getDisplayRangeMax()});
-			bmRegistration.flagRange=true;
-			bmRegistration.minBlockVariance=10;
-			bmRegistration.displayRegistration=viewRegistration ? 2 : 0;
-			if(nameObservation.contains("B032") && nameObservation.contains("J35"))bmRegistration.displayRegistration=2;
-			bmRegistration.displayR2=false;
-			bmRegistration.levelMin=-1;
-			bmRegistration.returnComposedTransformationIncludingTheInitialTransformationGiven=true;
-			trs[iMov]=bmRegistration.runBlockMatching(tr,false);
-			bmRegistration.closeLastImages();
-	
-			regAct=new RegistrationAction();
-			regAct.defineSettingsSimplyFromTwoImages(imgRef,imgMov);
-			if(speedupRegistrationForTesting) {
-				regAct.strideX=regAct.strideX*2;
-				regAct.strideY=regAct.strideY*2;
-				regAct.strideZ=regAct.strideZ*2;
-			};
-			regAct.higherAcc=1;
-			
-			if((!forgetEarlyReps) && (MRUtils.readTrInSliceLabel(imgMov,0,0,0)<=300) || makeBoutureTrick) {}
-			else {
-				regAct.levelMaxDense=1;
-				regAct.typeTrans=Transform3DType.DENSE;
-				bmRegistration=BlockMatchingRegistration.setupBlockMatchingRegistration(imgRef,imgMov,regAct);
-				bmRegistration.consoleOutputActivated=false;
-				bmRegistration.timingMeasurement=true;
-				bmRegistration.setRefRange(new double[] {imgRef.getDisplayRangeMin(),imgRef.getDisplayRangeMax()});
-				bmRegistration.setMovRange(new double[] {imgMov.getDisplayRangeMin(),imgMov.getDisplayRangeMax()});
-				bmRegistration.mask=maskReg.duplicate();
-				bmRegistration.flagRange=true;
-				bmRegistration.minBlockVariance=10;
-				bmRegistration.displayRegistration=viewRegistration ? 2 : 0;
-				bmRegistration.displayR2=false;
-				bmRegistration.levelMin=-1;
-				bmRegistration.returnComposedTransformationIncludingTheInitialTransformationGiven=true;
-				trs[iMov]=bmRegistration.runBlockMatching(trs[iMov],false);
-				bmRegistration.closeLastImages();
-			}
-			for(int j=0;j<imgT1T2[iMov].length;j++) {
-				imgT1T2[iMov][j]=trs[iMov].transformImageExtensive(imgT1T2[nT1-1][0],imgT1T2[iMov][j]);
-			}
-		}
-		IJ.log("Registration finished !");
-	}
-	*/
-	
-	
-	//TODO : this function is not anymore needed
-	/*
-	public void convert2DImgArrayTo1DArray() {
-		int n=0;
-		for(int i=0;i<imgT1T2.length;i++)n+=imgT1T2[i].length;
-		imgT1T2Line=new ImagePlus[n];
-		n=0;
-		for(int i=0;i<imgT1T2.length;i++) {
-			for(int j=0;j<imgT1T2[i].length;j++) {
-				if( (i==imgT1T2.length-1) && (j==0) )indexFirstT2Seq=n;
-				imgT1T2Line[n++]=(!makeCrop ? imgT1T2[i][j] : VitimageUtils.cropImageFloat(imgT1T2[i][j], 50, 50, 0, 100, 100, 4));
-			}
-		}
-		dims=VitimageUtils.getDimensions(imgT1T2Line[0]);
-	}
-	
-	
-	public ImagePlus stackSaveAndShowResultsT1T2() {
-		System.out.println("STARTING THE STACKING");
-		if(makeSorghoTrick)nameObservation="SORGHO_"+nameObservation;
-		if(makeBoutureTrick)nameObservation="BOUTURE_"+nameObservation;
-		int nImg=imgT1T2Line.length;
-		ImagePlus []tempRes=new ImagePlus[nImg+4];
-		int curInd=0;
-		int nMaps=3;
-		tempRes[0]=multiM0.duplicate();		
-		tempRes[1]=multiT1.duplicate();
-		tempRes[2]=T2map.duplicate();
-		tempRes[3]=imgMask;
-		for(int z=1;z<=dims[2];z++) {
-			tempRes[0].getStack().setSliceLabel("M0MAP_"+nameObservation, z);
-			tempRes[1].getStack().setSliceLabel("T1MAP_"+nameObservation, z);
-			tempRes[2].getStack().setSliceLabel("T2MAP_"+nameObservation, z);
-			tempRes[3].getStack().setSliceLabel("MASKMAP_"+nameObservation, z);
-		}
-		
-		for(int i=0;i<nImg;i++) {
-			tempRes[i+4]=imgT1T2Line[i].duplicate();
-			for(int z=1;z<=dims[2];z++) {
-				tempRes[i+4].getStack().setSliceLabel(tempRes[i+4].getStack().getSliceLabel(z).replace("_T1T2SEQ","T1T2SEQ"), z);
-			}
-		}
-		
-	
-		//Measurements of capillary value and std
-		int Z=imgMask.getNSlices();
-		int X=imgMask.getWidth();
-		int Y=imgMask.getHeight();
-		float[]capVals;
-		int nHits;
-		int incr;
-		double sum;
-		for(int z=0;z<Z;z++) {
-			ArrayList<int[]> coordsPointsCap=new ArrayList<int[]>();
-			capVals=(float[])imgMask.getStack().getProcessor(z+1).getPixels();
-			nHits=0;
-			for(int x=0;x<X;x++)for(int y=0;y<Y;y++) if(capVals[VitimageUtils.getPixelIndex(x, X, y)]>4.5) {nHits++; coordsPointsCap.add(new int[] {x,y});};
-
-			for(int c=0;c<nImg+4;c++) {
-				double[]vals=new double[nHits];
-				incr=0;
-				System.out.println("Going to do c="+c);
-				VitimageUtils.printImageResume(tempRes[c]);
-				capVals=(float[])tempRes[c].getStack().getProcessor(z+1).getPixels();				
-				for(int i=0;i<nHits;i++) {
-					vals[incr++]=capVals[VitimageUtils.getPixelIndex(coordsPointsCap.get(i)[0], X, coordsPointsCap.get(i)[1])];
-				}
-				double[]stats=VitimageUtils.statistics1D(vals);
-				tempRes[c].getStack().setSliceLabel(tempRes[c].getStack().getSliceLabel(z+1)+"_CAP="+VitimageUtils.dou(stats[0])+"+-"+VitimageUtils.dou(stats[1]), z+1);
-			}
-		}	
-
-		
-		for(int c=0;c<tempRes.length;c++)tempRes[c]=VitimageUtils.convertFloatToShortWithoutDynamicChanges(tempRes[c]);			
-		ImagePlus hyperImg=Concatenator.run(tempRes);
-		hyperImg=HyperStackConverter.toHyperStack(hyperImg, tempRes.length,dims[2],1,"xyztc","Grayscale");
-
-		hyperImg.setC(1);
-		IJ.run(hyperImg,"Fire","");
-		hyperImg.setDisplayRange(0,MRUtils.maxDisplayedBionanoM0 );
-
-		hyperImg.setC(2);
-		IJ.run(hyperImg,"Fire","");
-		hyperImg.setDisplayRange(0,MRUtils.maxDisplayedBionanoT1 );
-
-		hyperImg.setC(3);
-		IJ.run(hyperImg,"Fire","");
-		hyperImg.setDisplayRange(0,MRUtils.maxDisplayedBionanoT2 );
-
-		hyperImg.setC(4);
-		IJ.run(hyperImg,"Fire","");
-		hyperImg.setDisplayRange(0,5 );
-
-		for(int c=0;c<nImg;c++) {
-			hyperImg.setC(5+(computeMulti ? 0 : 0)+c);
-			IJ.run(hyperImg,"Fire","");
-			hyperImg.setDisplayRange(0,MRUtils.maxDisplayedBionanoM0 );
-		}
-
-		hyperImg.setTitle("hypermap");
-		return hyperImg;
-	}
-	*/
-
-	
-	
 	
 	
 }

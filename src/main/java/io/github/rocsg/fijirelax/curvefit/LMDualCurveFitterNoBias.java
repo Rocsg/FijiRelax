@@ -8,9 +8,9 @@ import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 import io.github.rocsg.fijirelax.lma.LMAMultiDimFunction;
 import io.github.rocsg.fijirelax.lma.LMA;
 
-// TODO: Auto-generated Javadoc
+
 /**
- *  Class for building curve fitter.
+ *  Implements the MRLMA capabilities for fitting exponential curves to match observation points
  */
 public class LMDualCurveFitterNoBias {	
 	
@@ -51,7 +51,7 @@ public class LMDualCurveFitterNoBias {
 	public boolean iterationsBreak=false;
 	
 	/** The lambda. */
-	public static double lambda = 0.01;
+	public static double lambda = 0.001;//lambda = 0.01 in original version;
 	
 	/** The min delta chi 2. */
 	public static double minDeltaChi2 = 1e-7;
@@ -62,7 +62,7 @@ public class LMDualCurveFitterNoBias {
 		
 	
     /**
-     * Gets the default parameters boundaries.
+     * Gets the default parameters boundaries i.e. the acceptable boundaries for the exponential curve to estimate.
      *
      * @param fitType the fit type
      * @return the default parameters boundaries
@@ -75,14 +75,14 @@ public class LMDualCurveFitterNoBias {
 
 
 	/**
-	 *  Construct a new CurveFitter.
+	 *  Construct a new CurveFitter object to proceed to exponential fit
 	 *
-	 * @param trData the tr data
-	 * @param teData the te data
-	 * @param yData the y data
-	 * @param fitType the fit type
-	 * @param sigma the sigma
-	 * @param debugLM the debug LM
+	 * @param trData Recovery times (along T1 relax)
+	 * @param teData the te times (along T2 relax)
+	 * @param yData the magnitude observed
+	 * @param fitType the fit type, chosen among @link io.github.rocsg.fijirelax.mrialgo.MRDataType.Class
+	 * @param sigma the estimated sigma of the Rice distribution
+	 * @param debugLM a debug flag producing additional verbose output data
 	 */
 	public LMDualCurveFitterNoBias (double[] trData, double[] teData, double[] yData, int fitType,double sigma,boolean debugLM) {
 		this.fit=fitType;
@@ -427,7 +427,7 @@ public class LMDualCurveFitterNoBias {
 
 
 	/**
-	 * Config LMA.
+	 * Setters for LM parameters
 	 *
 	 * @param lambda the lambda
 	 * @param minDeltaChi2 the min delta chi 2
@@ -441,7 +441,7 @@ public class LMDualCurveFitterNoBias {
 	}
 
 	/**
-	 * Do fit.
+	 * Run the fit using the declared setup of the current object
 	 */
 	public void doFit() {
 		try {
@@ -456,7 +456,7 @@ public class LMDualCurveFitterNoBias {
 	}
 
 	/**
-	 * Do fit.
+	 * Run the fit using the declared setup of the current object and the given LM parameters
 	 *
 	 * @param lambda the lambda
 	 * @param minDeltaChi2 the min delta chi 2
@@ -472,7 +472,7 @@ public class LMDualCurveFitterNoBias {
 	}
 
 	/**
-	 * Gets the params.
+	 * Gets the estimated params of the fitted function.
 	 *
 	 * @return the params
 	 */
@@ -484,7 +484,7 @@ public class LMDualCurveFitterNoBias {
 	}
 
 	/**
-	 * Gets the lma.
+	 * Gets the lma object.
 	 *
 	 * @return the lma
 	 */
@@ -500,7 +500,7 @@ public class LMDualCurveFitterNoBias {
 	
 
 	/**
-	 * The Class T1Mono.
+	 * The Class T1Mono. Describes fitting of a T1 relaxation with a single T1 component, without offset and without Rice noise
 	 */
 	//////////////////////  1-  T1MONO  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1Mono extends LMAMultiDimFunction {
@@ -515,14 +515,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser.
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma
 		 *
 		 * @param sig the new sigma
 		 */
@@ -531,32 +531,32 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=  Rice_sigma [ a[0]* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @return the non riced value
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]*(1-Math.exp(-Tr/a[1]));
 		}
 		
 		/**
-		 * To string.
+		 * Get the equation currently estimated
 		 *
 		 * @return the string
 		 */
 		public String toString() {
-			return "y=  Rice_sigma [ a[0]* (1 - Math.exp(-(Tr / a[1])) ]";
+			return "y=  [ a[0]* (1 - Math.exp(-(Tr / a[1])) ]";
 		}
 
 		/**
-		 * Gets the y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @return the y
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  [ a[0]* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @return the value in absence of any Rice corruption
 		 */
 		@Override
 		public double getY(double[] x, double[] a) {
@@ -566,12 +566,12 @@ public class LMDualCurveFitterNoBias {
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=   [ a[0]* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -587,7 +587,7 @@ public class LMDualCurveFitterNoBias {
 	} // end class
 	
 	/**
-	 * The Class T1MonoBias.
+	 * The Class T1MonoBias. Describes fitting of a T1 relaxation with a single T1 component, with offset and withoutRice noise
 	 */
 	//////////////////////  1-  T1MONOBIAS  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1MonoBias extends LMAMultiDimFunction {
@@ -602,14 +602,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser.
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -618,32 +618,32 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=  Rice_sigma [ a[0]* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @return the non riced value
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]*(1-Math.exp(-Tr/a[1]))+a[2];
 		}
 		
 		/**
-		 * To string.
+		 * Get the equation currently estimated
 		 *
 		 * @return the string
 		 */
 		public String toString() {
-			return "y=  Rice_sigma [ a[0]* (1 - Math.exp(-(Tr / a[1])) ]";
+			return "y=   [ a[0]* (1 - Math.exp(-(Tr / a[1])) ] + a[2]";
 		}
 
 		/**
-		 * Gets the y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @return the y
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  [ a[0]* (1 - Math.exp(-(Tr / a[1])) ] + a[2]
+		 * @return the value in absence of any Rice corruption
 		 */
 		@Override
 		public double getY(double[] x, double[] a) {
@@ -653,12 +653,12 @@ public class LMDualCurveFitterNoBias {
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=   [ a[0]* (1 - Math.exp(-(Tr / a[1])) ] + a[2]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -675,7 +675,7 @@ public class LMDualCurveFitterNoBias {
 	} // end class
 	
 	/**
-	 * The Class T1MonoRice.
+	 * The Class T1MonoRice. Describes fitting of a T1 relaxation with a single T1 component, without offset and with Rice noise
 	 */
 	//////////////////////  1-  T1MONORICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1MonoRice extends LMAMultiDimFunction {
@@ -690,14 +690,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser.
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -706,19 +706,19 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=  [ a[0]* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @return the non riced value
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]*(1-Math.exp(-Tr/a[1]));
 		}
 		
 		/**
-		 * To string.
+		 * Get the equation currently estimated
 		 *
 		 * @return the string
 		 */
@@ -727,11 +727,11 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @return the y
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y= Ricecorruption_sigma [ a[0]* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @return the value in absence of any Rice corruption
 		 */
 		@Override
 		public double getY(double[] x, double[] a) {
@@ -741,12 +741,12 @@ public class LMDualCurveFitterNoBias {
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y= Rice [ a[0]* (1 - Math.exp(-(Tr / a[1])) ] + a[2]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -768,7 +768,7 @@ public class LMDualCurveFitterNoBias {
 	
 	
 	/**
-	 * The Class T2Mono.
+	 * The Class T2Mono. Describes fitting of a T2 relaxation with a single T2 component, without offset and without Rice noise
 	 */
 	//////////////////////  2-  T2MONO  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T2Mono extends LMAMultiDimFunction {
@@ -783,14 +783,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -799,32 +799,32 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=  [ a[0]* Math.exp(-(Te / a[1])) ]
+		 * @return the non riced value
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]* Math.exp(-(Te / a[1]));
 		}
 		
 		/**
-		 * To string.
+		 * Get the equation currently estimated
 		 *
 		 * @return the string
 		 */
 		public String toString() {
-			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[1])) ]";
+			return "y=   [ a[0]* Math.exp(-(Te / a[1])) ]";
 		}
 
 		/**
-		 * Gets the y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @return the y
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y= [ a[0]* Math.exp(-(Te / a[1])) ]
+		 * @return the value in absence of any Rice corruption
 		 */
 		@Override
 		public double getY(double[] x, double[] a) {
@@ -834,12 +834,12 @@ public class LMDualCurveFitterNoBias {
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=   [ a[0]* Math.exp(-(Te / a[1])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -855,7 +855,7 @@ public class LMDualCurveFitterNoBias {
 	} // end class
 	
 	/**
-	 * The Class T2MonoBias.
+	 * The Class T2MonoBias. Describes fitting of a T2 relaxation with a single T2 component, with offset and without Rice noise
 	 */
 	//////////////////////  2-  T2MONOBIAS  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T2MonoBias extends LMAMultiDimFunction {
@@ -870,14 +870,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -886,32 +886,32 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=   [ a[0]* Math.exp(-(Te / a[1])) ]
+		 * @return the non riced value
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]* Math.exp(-(Te / a[1]))+a[2];
 		}
 		
 		/**
-		 * To string.
+		 * Get the equation currently estimated
 		 *
 		 * @return the string
 		 */
 		public String toString() {
-			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[1])) ]";
+			return "y=  [ a[0]* Math.exp(-(Te / a[1])) ]";
 		}
 
 		/**
-		 * Gets the y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @return the y
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  [ a[0]* Math.exp(-(Te / a[1])) ]
+		 * @return the value in absence of any Rice corruption
 		 */
 		@Override
 		public double getY(double[] x, double[] a) {
@@ -921,12 +921,12 @@ public class LMDualCurveFitterNoBias {
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=   [ a[0]* Math.exp(-(Te / a[1])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -943,7 +943,7 @@ public class LMDualCurveFitterNoBias {
 	} // end class
 	
 	/**
-	 * The Class T2MonoRice.
+	 * The Class T2MonoRice. Describes fitting of a T2 relaxation with a single T1 component, without offset and with Rice noise
 	 */
 	//////////////////////  2-  T2MONORICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T2MonoRice extends LMAMultiDimFunction {
@@ -958,14 +958,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -974,19 +974,19 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[1])) ]
+		 * @return the non riced value
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]* Math.exp(-(Te / a[1]));
 		}
 		
 		/**
-		 * To string.
+		 * Get the equation currently estimated
 		 *
 		 * @return the string
 		 */
@@ -995,11 +995,11 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @return the y
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y= Rice_sigma [ a[0]* Math.exp(-(Te / a[1])) ]
+		 * @return the value in absence of any Rice corruption
 		 */
 		@Override
 		public double getY(double[] x, double[] a) {
@@ -1009,12 +1009,12 @@ public class LMDualCurveFitterNoBias {
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y= Rice_sigma [ a[0]* Math.exp(-(Te / a[1])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -1041,7 +1041,7 @@ public class LMDualCurveFitterNoBias {
 	
 	
 	/**
-	 * The Class T2Multi.
+	 * The Class T2Multi. Describes fitting of a T2 relaxation with two T2 components, without offset and without Rice noise
 	 */
 	//////////////////////  3-  T2MULTI  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T2Multi extends LMAMultiDimFunction {
@@ -1056,14 +1056,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -1072,13 +1072,14 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		
-/**
- * Gets the y.
- *
- * @param x the x
- * @param a the a
- * @return the y
- */
+		/**
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
+		 *
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=   [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
+		 * @return the non riced value
+		 */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -1087,12 +1088,11 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
+		 * @return the value in absence of any Rice corruption
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return  ( a[0]* Math.exp(-(Te / a[2])) + a[1] * Math.exp(-(Te / a[3])));
@@ -1100,21 +1100,21 @@ public class LMDualCurveFitterNoBias {
 		
 
 		/**
-		 * To string.
+		 * The equation being optimized.
 		 *
 		 * @return the string
 		 */
 		public String toString() {
-			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]";
+			return "y=   [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]";
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=   [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -1131,7 +1131,7 @@ public class LMDualCurveFitterNoBias {
 	} // end class
 	
 	/**
-	 * The Class T2MultiBias.
+	 * The Class T2MultiBias. Describes fitting of a T2 relaxation with two T2 components, with offset and without Rice noise
 	 */
 	//////////////////////  3-  T2MULTIRICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T2MultiBias extends LMAMultiDimFunction {
@@ -1146,14 +1146,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -1162,13 +1162,14 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		
-/**
- * Gets the y.
- *
- * @param x the x
- * @param a the a
- * @return the y
- */
+		/**
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
+		 *
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=   [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
+		 * @return the non riced value
+		 */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -1177,12 +1178,12 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=   [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
+		 * @return the non riced value
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return  ( a[0]* Math.exp(-(Te / a[2])) + a[1] * Math.exp(-(Te / a[3]))+a[4]);
@@ -1190,21 +1191,21 @@ public class LMDualCurveFitterNoBias {
 		
 
 		/**
-		 * To string.
+		 * Get the equation currently estimated
 		 *
 		 * @return the string
 		 */
 		public String toString() {
-			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]";
+			return "y=  [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]";
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -1222,7 +1223,7 @@ public class LMDualCurveFitterNoBias {
 	} // end class
 	
 	/**
-	 * The Class T2MultiRice.
+	 * The Class T2MultiRice. Describes fitting of a T2 relaxation with two T2 components, without offset and with Rice noise
 	 */
 	//////////////////////  3-  T2MULTIRICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T2MultiRice extends LMAMultiDimFunction {
@@ -1237,14 +1238,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -1253,13 +1254,13 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		
-/**
- * Gets the y.
- *
- * @param x the x
- * @param a the a
- * @return the y
- */
+		/**
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
+		 *
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y= Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
+		 * @return the value in absence of any Rice corruption
+		 */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -1268,12 +1269,12 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
+		 * @return the non riced value
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return  ( a[0]* Math.exp(-(Te / a[2])) + a[1] * Math.exp(-(Te / a[3])));
@@ -1281,7 +1282,7 @@ public class LMDualCurveFitterNoBias {
 		
 
 		/**
-		 * To string.
+		 * Get the equation currently estimated
 		 *
 		 * @return the string
 		 */
@@ -1290,12 +1291,12 @@ public class LMDualCurveFitterNoBias {
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y= Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -1319,7 +1320,7 @@ public class LMDualCurveFitterNoBias {
 	
 	
 	/**
-	 * The Class T1T2Mono.
+	 * The Class T1T2Mono. Describes cross-fitting of a T1&T2 relaxation with a single T2 component, without offset and without Rice noise
 	 */
 	//////////////////////  4-  T1T2MONO  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2Mono extends LMAMultiDimFunction {
@@ -1334,14 +1335,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -1350,32 +1351,32 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @return the value in absence of any Rice corruption
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]* Math.exp(-(Te / a[2]))*(1-Math.exp(-Tr/a[1]));
 		}
 		
 		/**
-		 * To string.
+		 * The equation being optimized.
 		 *
 		 * @return the string
 		 */
 		public String toString() {
-			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]";
+			return "y=  [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]";
 		}
 
 		/**
-		 * Gets the y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @return the y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=   [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
+		 * @return the non riced value
 		 */
 		@Override
 		public double getY(double[] x, double[] a) {
@@ -1385,12 +1386,12 @@ public class LMDualCurveFitterNoBias {
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=   [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -1407,7 +1408,7 @@ public class LMDualCurveFitterNoBias {
 	} // end class
 	
 	/**
-	 * The Class T1T2MonoBias.
+	 * The Class T1T2MonoBias. Describes cross-fitting of a T1&T2 relaxation with a single T2 component, with offset and without Rice noise
 	 */
 	//////////////////////  4-  T1T2MONOBIAS  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2MonoBias extends LMAMultiDimFunction {
@@ -1422,14 +1423,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -1438,32 +1439,33 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=  [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @return the non riced value
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]* Math.exp(-(Te / a[2]))*(1-Math.exp(-Tr/a[1]))+a[3];
 		}
 		
 		/**
-		 * To string.
+		 * Get the equation currently estimated
 		 *
 		 * @return the string
 		 */
 		public String toString() {
-			return "y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]";
+			return "y=  [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]";
 		}
 
 		/**
-		 * Gets the y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @return the y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=  [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @return the non riced value
 		 */
 		@Override
 		public double getY(double[] x, double[] a) {
@@ -1473,12 +1475,12 @@ public class LMDualCurveFitterNoBias {
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -1496,7 +1498,7 @@ public class LMDualCurveFitterNoBias {
 	} // end class
 	
 	/**
-	 * The Class T1T2MonoRice.
+	 * The Class T1T2MonoRice. Describes cross fitting of a T1-T2 relaxation with a single T2 component, without offset and with Rice noise
 	 */
 	//////////////////////  4-  T1T2MONORICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2MonoRice extends LMAMultiDimFunction {
@@ -1511,14 +1513,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -1527,19 +1529,19 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=   Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @return the non riced value
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return a[0]* Math.exp(-(Te / a[2]))*(1-Math.exp(-Tr/a[1]));
 		}
 		
 		/**
-		 * To string.
+		 * Get the equation currently estimated
 		 *
 		 * @return the string
 		 */
@@ -1548,11 +1550,11 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @return the y
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @return the value in absence of any Rice corruption
 		 */
 		@Override
 		public double getY(double[] x, double[] a) {
@@ -1562,12 +1564,12 @@ public class LMDualCurveFitterNoBias {
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  Rice_sigma [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -1589,7 +1591,7 @@ public class LMDualCurveFitterNoBias {
 	
 	
 	/**
-	 * The Class T1T2Multi.
+	 * The Class T1T2Multi. Describes cross-fitting of a T1&T2 relaxation with a single T2 component, without offset and without Rice noise
 	 */
 	//////////////////////  5-  T1T2MULTI  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2Multi extends LMAMultiDimFunction {
@@ -1604,14 +1606,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser.
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -1620,13 +1622,14 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		
-/**
- * Gets the y.
- *
- * @param x the x
- * @param a the a
- * @return the y
- */
+		/**
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
+		 *
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=  [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
+		 * @return the non riced value
+		 */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -1635,12 +1638,11 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
+		 * @return the value in absence of any Rice corruption
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return (1-Math.exp(-Tr/a[2])) * ( a[0]* Math.exp(-(Te / a[3])) + a[1] * Math.exp(-(Te / a[4])));
@@ -1648,21 +1650,21 @@ public class LMDualCurveFitterNoBias {
 		
 
 		/**
-		 * To string.
+		 * The equation being optimized.
 		 *
 		 * @return the string
 		 */
 		public String toString() {
-			return "y=  Rice_sigma [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]";
+			return "y=   [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]";
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -1680,7 +1682,7 @@ public class LMDualCurveFitterNoBias {
 	} // end class
 
 	/**
-	 * The Class T1T2MultiBias.
+	 * The Class T1T2MultiBias. Describes cross-fitting of a T1&T2 relaxation with a single T2 component, with an offset and without Rice noise
 	 */
 	//////////////////////  5-  T1T2MULTIBIAS  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2MultiBias extends LMAMultiDimFunction {
@@ -1695,14 +1697,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -1711,13 +1713,14 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		
-/**
- * Gets the y.
- *
- * @param x the x
- * @param a the a
- * @return the y
- */
+		/**
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
+		 *
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=  [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
+		 * @return the non riced value
+		 */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -1726,12 +1729,12 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=  [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
+		 * @return the non riced value
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return (1-Math.exp(-Tr/a[2])) * ( a[0]* Math.exp(-(Te / a[3])) + a[1] * Math.exp(-(Te / a[4])))+a[5];
@@ -1739,21 +1742,21 @@ public class LMDualCurveFitterNoBias {
 		
 
 		/**
-		 * To string.
+		 * Get the equation currently estimated
 		 *
 		 * @return the string
 		 */
 		public String toString() {
-			return "y=  Rice_sigma [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]";
+			return "y= [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]";
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -1772,7 +1775,7 @@ public class LMDualCurveFitterNoBias {
 	} // end class
 
 	/**
-	 * The Class T1T2MultiRice.
+	 * The Class T1T2MultiRice. Describes cross fitting of a T1-T2 relaxation with a single T2 component, without offset and with Rice noise
 	 */
 	//////////////////////  5-  T1T2MULTIRICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2MultiRice extends LMAMultiDimFunction {
@@ -1783,7 +1786,7 @@ public class LMDualCurveFitterNoBias {
 		/** The sigma. */
 		public double sigma=0;
 		
-		/** The lm. */
+		/** The optimiser */
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
@@ -1794,7 +1797,7 @@ public class LMDualCurveFitterNoBias {
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -1803,13 +1806,13 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		
-/**
- * Gets the y.
- *
- * @param x the x
- * @param a the a
- * @return the y
- */
+		/**
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
+		 *
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  Rice_sigma [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
+		 * @return the value in absence of any Rice corruption
+		 */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -1818,12 +1821,12 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y=   Rice_sigma [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
+		 * @return the non riced value
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return (1-Math.exp(-Tr/a[2])) * ( a[0]* Math.exp(-(Te / a[3])) + a[1] * Math.exp(-(Te / a[4])));
@@ -1831,7 +1834,7 @@ public class LMDualCurveFitterNoBias {
 		
 
 		/**
-		 * To string.
+		 * Get the equation currently estimated
 		 *
 		 * @return the string
 		 */
@@ -1840,12 +1843,12 @@ public class LMDualCurveFitterNoBias {
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  Rice_sigma [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
@@ -1865,7 +1868,7 @@ public class LMDualCurveFitterNoBias {
 
 	
 	/**
-	 * The Class T1T2DefaultMonoRice.
+	 * The Class T1T2DefaultMonoRice.  Describes cross-fitting of a T1&T2 relaxation with a single T2 component, without offset and without Rice noise
 	 */
 	//////////////////////  6-  T1T2DEFAULTMONORICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2DefaultMonoRice extends LMAMultiDimFunction {
@@ -1880,7 +1883,7 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser
 		 *
 		 * @param lm the new lm
 		 */
@@ -1955,7 +1958,7 @@ public class LMDualCurveFitterNoBias {
 
 	
 	/**
-	 * The Class T1T2DefaultMultiRice.
+	 * The Class T1T2DefaultMultiRice. Describes cross-fitting of a T1&T2 relaxation with two T2 components, without offset and without Rice noise
 	 */
 	//////////////////////  7-  T1T2DEFAULTMULTIRICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2DefaultMultiRice extends LMAMultiDimFunction {
@@ -1970,14 +1973,14 @@ public class LMDualCurveFitterNoBias {
 		public LMDualCurveFitterNoBias lm;
 		
 		/**
-		 * Sets the lm.
+		 * Sets the optimiser
 		 *
 		 * @param lm the new lm
 		 */
 		public void setLM(LMDualCurveFitterNoBias lm) {this.lm=lm;}
 		
 		/**
-		 * Sets the sigma.
+		 * Sets the Rice sigma.
 		 *
 		 * @param sig the new sigma
 		 */
@@ -1986,13 +1989,14 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		
-/**
- * Gets the y.
- *
- * @param x the x
- * @param a the a
- * @return the y
- */
+		/**
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
+		 *
+		 * @param Tr the recovery time
+		 * @param Te the echo time
+		 * @param a the parameters of the equation y= Rice_sigma [ (      a[0]* Math.exp(-((Te+a[5]) / a[3])) + a[1]* Math.exp(-((Te+a[5]) / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
+		 * @return the non riced value
+		 */
 //		@Override
 		public double getY(double[] x, double[] a) {
 			double Tr=x[0];
@@ -2001,12 +2005,11 @@ public class LMDualCurveFitterNoBias {
 		}
 
 		/**
-		 * Gets the non riced Y.
+		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the tr
-		 * @param Te the te
-		 * @param a the a
-		 * @return the non riced Y
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  Rice_sigma [ (      a[0]* Math.exp(-((Te+a[5]) / a[3])) + a[1]* Math.exp(-((Te+a[5]) / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
+		 * @return the value in absence of any Rice corruption
 		 */
 		public double getNonRicedY(double Tr,double Te, double[] a) {
 			return (1-Math.exp(-Tr/a[2])) * ( a[0]* Math.exp(-((Te+(Tr>9999 ? a[5] : 0)) / a[3])) + a[1] * Math.exp(-((Te+(Tr>9999 ? a[5] : 0)) / a[4])));
@@ -2014,7 +2017,7 @@ public class LMDualCurveFitterNoBias {
 		
 
 		/**
-		 * To string.
+		 * The equation being optimized.
 		 *
 		 * @return the string
 		 */
@@ -2023,12 +2026,12 @@ public class LMDualCurveFitterNoBias {
 		}
 		
 		/**
-		 * Gets the partial derivate.
+		 * Gets the partial derivate of the signal according to one of the parameters
 		 *
-		 * @param x the x
-		 * @param a the a
-		 * @param parameterIndex the parameter index
-		 * @return the partial derivate
+		 * @param x =[Tr,Te]
+		 * @param a the parameters of the equation y=  Rice_sigma [ (      a[0]* Math.exp(-((Te+a[5]) / a[3])) + a[1]* Math.exp(-((Te+a[5]) / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
+		 * @param parameterIndex the index of the parameter in a
+		 * @return the partial derivate value around this point
 		 */
 		@Override
 		public double getPartialDerivate(double[] x, double[] a, int parameterIndex) {
