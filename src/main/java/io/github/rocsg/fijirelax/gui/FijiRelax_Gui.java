@@ -42,7 +42,6 @@ import io.github.rocsg.fijirelax.mrialgo.HyperMap;
  * The PlugInFrame holding the main window the FijiRelax GUI, when called from the Fiji interface.
  *
  * @author Romain Fernandez (romain.fernandez@cirad.fr)
- * @version 1.2, 15.04.2022
  */
 public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 
@@ -119,7 +118,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	public String versionName="Handsome honeysuckle";
 	
 	/** The time version flag. */
-	public String timeVersionFlag="  Release time : 2022-05-29 -20:21 PM";
+	public String timeVersionFlag="  Release time : 2022-10-24 - v4.0.3";
 	
 	/** The version flag. */
 	public String versionFlag=versionName+timeVersionFlag;

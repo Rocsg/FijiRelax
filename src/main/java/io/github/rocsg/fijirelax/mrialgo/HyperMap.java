@@ -1438,7 +1438,9 @@ public class HyperMap {
 		int index;
 		
 		ImagePlus temp=VitimageUtils.cropMultiChannelFloatImage(hyperEchoes,xm2,xM2,ym2,yM2,zm,zM);
-		temp=VitimageUtils.gaussianFilteringMultiChannel(temp,sigmaXYInVoxels,sigmaXYInVoxels,0);//It's no error : no "big smoothing" over Z, due to misalignment
+		//TODO : fix this point in relation with SimpleITK team.
+		//Under linux it is ok. But under Windows, the DLL provided under Windows does not contain some symbols, without them being indicated deprecated.
+		//temp=VitimageUtils.gaussianFilteringMultiChannel(temp,sigmaXYInVoxels,sigmaXYInVoxels,0);//It's no error : no "big smoothing" over Z, due to misalignment
 	
 		for(int t=0;t<this.T;t++) {			
 			for(int zz=zm;zz<=zM;zz++) {
@@ -1487,7 +1489,9 @@ public class HyperMap {
 		bboxYf=Math.min(Y-1, bboxYf+5);
 	
 		ImagePlus temp=VitimageUtils.cropMultiChannelFloatImage(hyperEchoes,bboxX0,bboxXf,bboxY0,bboxYf,zCor,zCor);
-		temp=VitimageUtils.gaussianFilteringMultiChannel(temp,sigmaXYInVoxels,sigmaXYInVoxels,0);//It's no error : no "big smoothing" over Z, due to misalignment
+		//TODO : fix this point in relation with SimpleITK team.
+		//Under linux it is ok. But under Windows, the DLL provided under Windows does not contain some symbols, without them being indicated deprecated.
+		//		temp=VitimageUtils.gaussianFilteringMultiChannel(temp,sigmaXYInVoxels,sigmaXYInVoxels,0);//It's no error : no "big smoothing" over Z, due to misalignment
 		double[][][][]data= new double[t1t2Indices.length][nHits][1][];//[times][vox][Seq][echos]		
 		int currentChan;
 		int xx,yy;	
