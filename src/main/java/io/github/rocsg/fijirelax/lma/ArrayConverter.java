@@ -69,11 +69,10 @@ public class ArrayConverter {
 	
 	/**
 	 * Separates data from dataPoints[N][K+1] to yDataPoints[N] and xDatapoints[N][K].
-	 * <p>
-	 * dataPoints[j] = yj xj0 xj1 xj2 ... xj[K-1]<br>
-	 * =><br>
-	 * yDataPoints    = y0 y1 y2 ... yN<br>
-	 * xDataPoints[i] = xi0 xi1 xi2 ... xi[K-1]<br>
+	 * dataPoints[j] = yj xj0 xj1 xj2 ... xj[K-1]
+	 * =>
+	 * yDataPoints    = y0 y1 y2 ... yN
+	 * xDataPoints[i] = xi0 xi1 xi2 ... xi[K-1]
 	 *
 	 * @param dataPoints the data points
 	 * @return the separated data
@@ -93,11 +92,11 @@ public class ArrayConverter {
 	
 	/**
 	 * Combines K-dimensional input data into one 2d-array:
-	 * <p>
-	 * yDataPoints    = y0 y1 y2 ... yN<br>
-	 * xDataPoints[i] = xi0 xi1 xi2 ... xi[K-1]<br>
-	 * =><br>
-	 * result[j] = yj xj0 xj1 xj2 ... xj[K-1]<br>
+	 * 
+	 * yDataPoints    = y0 y1 y2 ... yN
+	 * xDataPoints[i] = xi0 xi1 xi2 ... xi[K-1]
+	 * =>
+	 * result[j] = yj xj0 xj1 xj2 ... xj[K-1]
 	 *
 	 * @param yDataPoints the y data points
 	 * @param xDataPoints the x data points
@@ -116,11 +115,11 @@ public class ArrayConverter {
 	
 	/**
 	 * Combines K-dimensional input data into one 2d-array:
-	 * <p>
-	 * yDataPoints    = y0 y1 y2 ... yN<br>
-	 * xDataPoints[i] = xi0 xi1 xi2 ... xi[K-1]<br>
-	 * =><br>
-	 * result[j] = yj xj0 xj1 xj2 ... xj[K-1]<br>
+	 * 
+	 * yDataPoints    = y0 y1 y2 ... yN
+	 * xDataPoints[i] = xi0 xi1 xi2 ... xi[K-1]
+	 * =>
+	 * result[j] = yj xj0 xj1 xj2 ... xj[K-1]
 	 *
 	 * @param yDataPoints the y data points
 	 * @param xDataPoints the x data points

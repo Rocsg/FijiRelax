@@ -203,7 +203,7 @@ public class HyperMap {
 	
 	
 	/**
-	 * Import hyper map from raw dicom data organized in a directory, by calling {@link io.github.rocsg.fijirelax.gui.Custom_Format_Importer.importCustomDataAsHyperMap#importCustomDataAsHyperMap()} 
+	 * Import hyper map from raw dicom data organized in a directory, by calling (see fijirelax.gui.Custom_Format_Importer.importCustomDataAsHyperMap) 
 	 *
 	 * @param inputDir the input directory containing the raw data
 	 * @param nameSpecimen the name specimen
@@ -451,7 +451,7 @@ public class HyperMap {
 	 * @param path the absolute path of the nifti image
 	 * @param imageName the name of the resulting hypermap
 	 * @param Tr the recovery time
-	 * @param Te the tab of Te successive values (in case of uneven Te spacing)
+	 * @param Tes the tab of Te successive values (in case of uneven Te spacing)
 	 * @return the hyper map 
 	 */
 	public static HyperMap importHyperMapFromNifti4DT2Sequence(String path,String imageName,double Tr, double Tes[]) {
@@ -489,7 +489,7 @@ public class HyperMap {
 	 * @param path the absolute path of the nifti image
 	 * @param imageName the name of the resulting hypermap
 	 * @param Tr the recovery time
-	 * @param Te the tab of Te successive values (in case of uneven Te spacing)
+	 * @param TeSpacing the distance between two successive echoes
 	 * @return the hyper map 
 	 */
 	public static HyperMap importHyperMapFromNifti4DT1Sequence(String path,String imageName,double []Tr, double TeSpacing) {
@@ -1658,7 +1658,7 @@ public class HyperMap {
 	/**
 	 *  Maps computation routine, with default parameters, but without joint T1-T2 fit
 	 *
-	 * @param noise the noise to handle, among {@link io.github.rocsg.fijirelax.mrialgo.NoiseManagement}
+	 * @param noi the noise to handle, among {@link io.github.rocsg.fijirelax.mrialgo.NoiseManagement}
 	 * @return the updated HyperMap, as a TIFF ImagePlus
 	 */
 	public ImagePlus computeMapsNoJoint(NoiseManagement noi) {

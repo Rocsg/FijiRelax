@@ -1075,8 +1075,7 @@ public class LMDualCurveFitterNoBias {
 		/**
 		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the recovery time
-		 * @param Te the echo time
+		 * @param x =[Tr,Te]
 		 * @param a the parameters of the equation y=   [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
 		 * @return the non riced value
 		 */
@@ -1090,7 +1089,8 @@ public class LMDualCurveFitterNoBias {
 		/**
 		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param x =[Tr,Te]
+		 * @param Tr the recovery time
+		 * @param Te the echo time
 		 * @param a the parameters of the equation y=  [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
 		 * @return the value in absence of any Rice corruption
 		 */
@@ -1165,8 +1165,7 @@ public class LMDualCurveFitterNoBias {
 		/**
 		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the recovery time
-		 * @param Te the echo time
+		 * @param x =[Tr,Te]
 		 * @param a the parameters of the equation y=   [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
 		 * @return the non riced value
 		 */
@@ -1320,7 +1319,7 @@ public class LMDualCurveFitterNoBias {
 	
 	
 	/**
-	 * The Class T1T2Mono. Describes cross-fitting of a T1&T2 relaxation with a single T2 component, without offset and without Rice noise
+	 * The Class T1T2Mono. Describes cross-fitting of a T1 and T2 relaxation with a single T2 component, without offset and without Rice noise
 	 */
 	//////////////////////  4-  T1T2MONO  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2Mono extends LMAMultiDimFunction {
@@ -1353,7 +1352,8 @@ public class LMDualCurveFitterNoBias {
 		/**
 		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param x =[Tr,Te]
+		 * @param Tr the recovery time
+		 * @param Te the echo time
 		 * @param a the parameters of the equation y=  [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]
 		 * @return the value in absence of any Rice corruption
 		 */
@@ -1373,8 +1373,7 @@ public class LMDualCurveFitterNoBias {
 		/**
 		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the recovery time
-		 * @param Te the echo time
+		 * @param x =[Tr,Te]
 		 * @param a the parameters of the equation y=   [ a[0]* Math.exp(-(Te / a[2]))  +  a[1]* Math.exp(-(Te / a[3])) ]
 		 * @return the non riced value
 		 */
@@ -1408,7 +1407,7 @@ public class LMDualCurveFitterNoBias {
 	} // end class
 	
 	/**
-	 * The Class T1T2MonoBias. Describes cross-fitting of a T1&T2 relaxation with a single T2 component, with offset and without Rice noise
+	 * The Class T1T2MonoBias. Describes cross-fitting of a T1 and T2 relaxation with a single T2 component, with offset and without Rice noise
 	 */
 	//////////////////////  4-  T1T2MONOBIAS  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2MonoBias extends LMAMultiDimFunction {
@@ -1462,8 +1461,7 @@ public class LMDualCurveFitterNoBias {
 		/**
 		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the recovery time
-		 * @param Te the echo time
+		 * @param x =[Tr, Te]
 		 * @param a the parameters of the equation y=  [ a[0]* Math.exp(-(Te / a[2]))* (1 - Math.exp(-(Tr / a[1])) ]
 		 * @return the non riced value
 		 */
@@ -1591,7 +1589,7 @@ public class LMDualCurveFitterNoBias {
 	
 	
 	/**
-	 * The Class T1T2Multi. Describes cross-fitting of a T1&T2 relaxation with a single T2 component, without offset and without Rice noise
+	 * The Class T1T2Multi. Describes cross-fitting of a T1 and T2 relaxation with a single T2 component, without offset and without Rice noise
 	 */
 	//////////////////////  5-  T1T2MULTI  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2Multi extends LMAMultiDimFunction {
@@ -1625,8 +1623,7 @@ public class LMDualCurveFitterNoBias {
 		/**
 		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the recovery time
-		 * @param Te the echo time
+		 * @param x =[Tr,Te]
 		 * @param a the parameters of the equation y=  [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
 		 * @return the non riced value
 		 */
@@ -1640,7 +1637,8 @@ public class LMDualCurveFitterNoBias {
 		/**
 		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param x =[Tr,Te]
+		 * @param Tr the recovery time
+		 * @param Te the echo time
 		 * @param a the parameters of the equation y=  [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
 		 * @return the value in absence of any Rice corruption
 		 */
@@ -1682,7 +1680,7 @@ public class LMDualCurveFitterNoBias {
 	} // end class
 
 	/**
-	 * The Class T1T2MultiBias. Describes cross-fitting of a T1&T2 relaxation with a single T2 component, with an offset and without Rice noise
+	 * The Class T1T2MultiBias. Describes cross-fitting of a T1 and T2 relaxation with a single T2 component, with an offset and without Rice noise
 	 */
 	//////////////////////  5-  T1T2MULTIBIAS  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2MultiBias extends LMAMultiDimFunction {
@@ -1716,8 +1714,7 @@ public class LMDualCurveFitterNoBias {
 		/**
 		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param Tr the recovery time
-		 * @param Te the echo time
+		 * @param x =[Tr,Te]
 		 * @param a the parameters of the equation y=  [ (      a[0]* Math.exp(-(Te / a[3])) + a[1]* Math.exp(-(Te / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
 		 * @return the non riced value
 		 */
@@ -1868,7 +1865,7 @@ public class LMDualCurveFitterNoBias {
 
 	
 	/**
-	 * The Class T1T2DefaultMonoRice.  Describes cross-fitting of a T1&T2 relaxation with a single T2 component, without offset and without Rice noise
+	 * The Class T1T2DefaultMonoRice.  Describes cross-fitting of a T1 and T2 relaxation with a single T2 component, without offset and without Rice noise
 	 */
 	//////////////////////  6-  T1T2DEFAULTMONORICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2DefaultMonoRice extends LMAMultiDimFunction {
@@ -1958,7 +1955,7 @@ public class LMDualCurveFitterNoBias {
 
 	
 	/**
-	 * The Class T1T2DefaultMultiRice. Describes cross-fitting of a T1&T2 relaxation with two T2 components, without offset and without Rice noise
+	 * The Class T1T2DefaultMultiRice. Describes cross-fitting of a T1 and T2 relaxation with two T2 components, without offset and without Rice noise
 	 */
 	//////////////////////  7-  T1T2DEFAULTMULTIRICE  /////////////////////////////////////////////////////////////////////////////////////////
 	public static class T1T2DefaultMultiRice extends LMAMultiDimFunction {
@@ -1990,10 +1987,9 @@ public class LMDualCurveFitterNoBias {
 
 		
 		/**
-		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
+		 * Gets estimates of what would be the observed value in presence of Rice noise corruption
 		 *
-		 * @param Tr the recovery time
-		 * @param Te the echo time
+		 * @param x the vector of parameters {Tr, Te}
 		 * @param a the parameters of the equation y= Rice_sigma [ (      a[0]* Math.exp(-((Te+a[5]) / a[3])) + a[1]* Math.exp(-((Te+a[5]) / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
 		 * @return the non riced value
 		 */
@@ -2007,7 +2003,8 @@ public class LMDualCurveFitterNoBias {
 		/**
 		 * Gets estimates of what would be the observed value in absence of Rice noise corruption
 		 *
-		 * @param x =[Tr,Te]
+		 * @param Tr the recovery time
+		 * @param Te the echo time
 		 * @param a the parameters of the equation y=  Rice_sigma [ (      a[0]* Math.exp(-((Te+a[5]) / a[3])) + a[1]* Math.exp(-((Te+a[5]) / a[4]) ) * (1 - Math.exp(-(Tr / a[2])) ]
 		 * @return the value in absence of any Rice corruption
 		 */

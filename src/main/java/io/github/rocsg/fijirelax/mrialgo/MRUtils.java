@@ -320,7 +320,7 @@ public class MRUtils  {
 	/**
 	 * Simulate echoes of a T2 relaxation sequence.
 	 *
-	 * @param maps an ImagePlus giving the dimensions of the image to simulate
+	 * @param hyperMap an ImagePlus giving the dimensions of the image to simulate
 	 * @param Tr the double[] value of the recovery times
 	 * @param Te the double[] value of the echoe times
 	 * @param nRepetitions the averaging (number of repeated measurements to average for each pixel)
@@ -1305,8 +1305,8 @@ public class MRUtils  {
 	 *  Compute a simple T1 or T2 fit, or a T1T2 crossfit,
 	 *  but compute also the distribution of estimated parameters when applying randomized modifications of the relaxation data, to check the sensibility of the operation.
 	 *
-	 * @param tabTrTimesTemp the tab of recovery times
-	 * @param tabTeTimesTemp the tab of echo times
+	 * @param tabTrTimes the tab of recovery times
+	 * @param tabTeTimes the tab of echo times
 	 * @param tabData the tab of magnitude data observed
 	 * @param fitType the fit type to use, Ex MRUtils.T1_MONO_BIAS
 	 * @param algType the alg type; Ex: MRUtils.SIMPLEX
@@ -1316,7 +1316,6 @@ public class MRUtils  {
 	 * @param nRepetMonteCarlo the n repet monte carlo
 	 * @param nAveragePts the n average pts
 	 * @param riceEstimator the rice estimator
-	 * @param debug the debug
 	 * @return the double[][]
 	 */	
 	public static double[][]makeFitMonteCarlo(double[]tabTrTimes, double[]tabTeTimes, double[]tabData,int fitType,int algType,int nbIter,double sigma,int nRepetMonteCarlo,int nAveragePts,RiceEstimator riceEstimator,boolean debug){
