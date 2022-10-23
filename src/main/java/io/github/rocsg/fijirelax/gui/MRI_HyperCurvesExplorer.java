@@ -988,7 +988,6 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	 */
 	public void run(String arg) {
 		System.out.println("RUN CALLED !");
-		IJ.log("DebugWIN start 1.1.1");
 		runExplorer(null);
 	}
 	
@@ -1008,11 +1007,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	 * @param imgPath the path to the HyperMap
 	 */
 	public void runExplorer(String imgPath) {
-		IJ.log("DebugWIN start 1.1.2 . Given imgPath="+imgPath);
 		ImagePlus fullHyp=null;
 		if (imgPath!=null)fullHyp=IJ.openImage(imgPath);
 		else fullHyp=VitiDialogs.chooseOneImageUI("Open hyperimage", "Open a hyperimage built using T1T2MapImporter");		
-		IJ.log("DebugWIN start 1.1.3 . checking resume of image to show");
 		IJ.log(VitimageUtils.imageResume(fullHyp) );
 		runExplorerFromImage(fullHyp);
 	}
@@ -1023,9 +1020,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	 * @param fullHyp the ImagePlus
 	 */
 	public void runExplorerFromImage(ImagePlus fullHyp) {
-		IJ.log("DebugWIN start 1.1.4 . runExplorerFromImage");
 		if(!(fullHyp.getType()==ImagePlus.GRAY32))IJ.run(fullHyp,"32-bit","");
-		IJ.log("DebugWIN start 1.1.5 . runExplorerFromImage 115");
 		if(VitimageUtils.isBouture(fullHyp))this.deltaT2=25;
 		IJ.log("Opening hyperimage "+VitimageUtils.imageResume(fullHyp));
 		hyperMap=new HyperMap(fullHyp);
@@ -1033,7 +1028,6 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		this.hasT1=hyperMap.hasT1sequence;
 		this.hasT2=hyperMap.hasT2sequence;
 		
-		IJ.log("DebugWIN start 1.1.6 . runExplorerFromImage 116");
 		if(new File("/users/bionanonmri/").exists()) {
 			this.isBionanoDisplay=true;
 			IJ.showMessage("Detected Bionano server. \nSurvival display, but numerous cores");
@@ -1056,11 +1050,8 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		tCor=0;
 		nTimepoints=hyperMap.T;
 		//setupTimesTrTe();
-		IJ.log("DebugWIN start 1.1.7 . runExplorerFromImage 117");
 		setupStructures();
-		IJ.log("DebugWIN start 1.1.8 . runExplorerFromImage 118");
 		startGui();
-		IJ.log("DebugWIN start 1.1.9 . runExplorerFromImage 119");
 	}
 	
 
