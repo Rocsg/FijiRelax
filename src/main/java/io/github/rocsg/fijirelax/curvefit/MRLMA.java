@@ -1,8 +1,4 @@
-/*
- * 
- */
 package io.github.rocsg.fijirelax.curvefit;
-
 import io.github.rocsg.fijirelax.lma.ArrayConverter;
 import io.github.rocsg.fijirelax.lma.LMAFunction;
 import io.github.rocsg.fijirelax.lma.LMAMatrix;

@@ -10,7 +10,6 @@ import io.github.rocsg.fijirelax.lma.implementations.JAMAMatrix;
 import java.util.Arrays;
 
 
-// TODO: Auto-generated Javadoc
 /**
  * A class which implements the <i>Levenberg-Marquardt Algorithm</i>
  * (LMA) fit for non-linear, multidimensional parameter space

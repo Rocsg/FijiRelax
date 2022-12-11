@@ -7,7 +7,11 @@
 
 ## Summary
 
-FijiRelax is a generic tool for 3D+t MRI analysis and exploration using multi-echo spin-echo sequences. This work was supported by the French Ministry of Agriculture, France AgriMer, CNIV and IFV, within VITIMAGE and VITIMAGE-2024 projects (program Plan National Dépérissement du Vignoble). This tools is developed in the context of :
+FijiRelax is a generic tool for 3D+t MRI analysis and exploration using multi-echo spin-echo sequences. This work was supported by the French Ministry of Agriculture, France AgriMer, CNIV and IFV, within VITIMAGE and VITIMAGE-2024 projects (program Plan National Dépérissement du Vignoble). 
+
+
+## Funding
+This tools are developed in the context of :
 - the [Vitimage 1](https://www.plan-deperissement-vigne.fr/recherches/programmes-de-recherche/vitimage) and [Vitimage 2024](https://www.plan-deperissement-vigne.fr/recherches/programmes-de-recherche/vitimage-2024) projects.
 - the [Aplim](https://umr-agap.cirad.fr/recherche/projets-de-recherche/aplim) flagship project.
 
@@ -20,6 +24,18 @@ FijiRelax is a generic tool for 3D+t MRI analysis and exploration using multi-ec
 - Exploration of T1/T2 distribution in ROI over time
 - Operable through a GUI, or scriptable for batch processing of large datasets
 <img src="https://github.com/Rocsg/FijiRelax/blob/master/images/fijirelax-snap-glob-explorer.png" width="800" caption="Time-lapse exploration of parameters in a plant under drought stress">
+ 
+
+ ## Using FijiRelax, from GUI to API
+ 
+ FijiRelax has been designed for three types of scientists: i) end-users using a GUI, ii) advanced users able to use a scripting languages to process large number of images, and iii) developers able to adapt and extend the application with new functionalities.
+
+* **End-users using a GUI**: this mode is recommended for scientists who are not specialists in image processing nor programming. Download FijiRelax through the official Fiji release, and follow the step-by-step installation instructions, as well as the hands-on tutorials built on the test dataset hosted at Zenodo [@fijirelaxDataset]. Then, use the graphical user interface to import and process your own Bruker/NIFTI/Custom data, explore the relaxation maps in space and time using the graphical relaxation curve explorer and export your results as 2D/3D/4D TIFF images. This mode is also recommended for studying new datasets or new biological questions. Among the interface features, the plugin provides a graphical explorer to visualize the relaxation curves, and the estimated PD-weighted T1 and T2 distributions over customizable areas of interest. In 5D hypermaps, the distributions at each time-point can be displayed simultaneously, giving access to valuable information on water distribution in tissues and its evolution during the monitoring period.
+
+* **Advanced users**: this mode can be used by scientists with programming skills. Load the sample BeanShell scripts provided in the Zenodo archive by dragging them into the Fiji interface and run the scripts to reproduce the results shown in \autoref{fig:figure1}: import a dataset, convert it to an HyperMap (see \autoref{fig:figure1}-e), compute the parameter maps. Then, adapt these scripts to your needs, including processing your own data and batch-processing multiple experiments.
+
+* **Developers**: this mode is for programmers fluent with Java and Maven. Start by exploring the FijiRelax API: [API Overview](https://javadoc.io/doc/io.github.rocsg/fijirelax/latest/index.html). Build your own tools on top of the FijiRelax library, provided as a jar file hosted at maven central repository ([Artifact](https://search.maven.org/artifact/io.github.rocsg/fijirelax)), by indicating FijiRelax as a dependency in your POM file and run the unit tests. FijiRelax is hosted on a github public repository ([https://github.com/rocsg/fijirelax](https://github.com/rocsg/fijirelax)) and developers can offer to contribute to its development, and extend it by requesting features, or proposing new features.
+
  
 ## Dataset for testing purpose
 
@@ -49,14 +65,14 @@ In order to install FijiRelax on your computer, please follow these steps:
 
 ## Preparing your data
 
-FijiRleax needs properly formatted dataset:
+FijiRleax needs a properly formatted dataset:
 - Nifti 4D images, or a set of Nifti 3D images
 - Dicom dirs with 3D images, or a set of dirs with 2D images
 
 
 ## The interface
 
-FijiRelax interface have four main panels :
+FijiRelax's interface has four main panels :
 - With the first panel, you can import / open / export data.
 - The second panel holds the processing routines.
 - The third panel contains the explorer button.
@@ -85,13 +101,13 @@ The output image is a 4D MR hyperimage. The "channels" slicer helps you to explo
 -   Channels NR-2,..... NR-2+NE are the successive NE echo times of the "T2 sequence", in increasing order.
 
   
-Unit for the channels 2 and 3 are milliseconds, what mean you can use it like it, without any additional conversion.  
-For time-lapse experiments, one can compute such a 4D MR hyperimage at successive timepoints, and register and combine them in a 5D MR hyperimage (the same, with an additional slicer to walk through time). Registration and data combining can be done using the series registration mode of the [Fijiyama](/plugins/fijiyama) plugin.
+Unit for the channels 2 and 3 are milliseconds, which means you can use it like it, without any additional conversion.  
+For time-lapse experiments, one can compute such a 4D MR hyperimage at successive timepoints, and register and combine them in a 5D MR hyperimage (with an additional slicer to walk through time). Registration and data combining can be done using the series registration mode of the [Fijiyama](/plugins/fijiyama) plugin.
 
   
 ## The science behind
 
-This plugin compute M0, T1 and T2 maps pixelwise from a given set of spin-echo sequences, acquired with different repetition times and/or different echo times.
+This plugin computes M0, T1 and T2 maps pixelwise from a given set of spin-echo sequences, acquired with different repetition times and/or different echo times.
 
 First a 3d registration is computed to align precisely the successive images, using libraries of the [Fijiyama](/plugins/fijiyama)  plugin. Then the rice noise level is estimated, and the M0, T1 and T2 parameters are estimated, fitting mono or bi-exponential curves, corrected with the measured rice noise. For more information, see the paper in next section.
 
@@ -101,10 +117,15 @@ First a 3d registration is computed to align precisely the successive images, us
 
 ## Software dependencies acknowledgements
 
+- Janne Holopainen for LMA
 - Johannes Schindelin et al for [Fiji](/software/fiji) (Schindelin et al., 2012)
 - Karl Schmidt and Dimiter Prodanov for MRI Analysis Calculator and CurveFitters
 
 ## License
+
+The code of FijiRelax is distributed under GPL 2.0 public license and authorship of Romain Fernandez romainfernandez06@gmail.com io.github.rocsg
+It includes code of Janne Holopainen (LMA), released as GPL 2.0 in the context of this repository
+ 
 
 This program is an open-source **free software**: it can be redistributed and/or modified under the terms of the **GNU General Public License** as published by the Free Software Foundation ([http://www.gnu.org/licenses/gpl.txt](http://www.gnu.org/licenses/gpl.txt)).
 
