@@ -1,0 +1,61 @@
+import io.github.rocsg.fijirelax.mrialgo.HyperMap;
+import io.github.rocsg.fijiyama.RegistrationAction;
+import io.github.rocsg.fijiyama.common.VitiDialogs;
+import ij.IJ;
+import ij.ImagePlus;
+import java.io.File;
+
+//switch variable to use or not use visual debug information
+boolean useVisualDebugThatIsVeryInterestingButImplySlowerComputation=true;
+
+//Get FijiRelax archive directory path
+String mainDir=VitiDialogs.chooseDirectoryUI("Select FijiRelax DOI directory","Dir that contains Case_0_Brain, Case_1 ...");
+
+//Input data directory definition
+File f=new File(mainDir,"Experiments_for_figures_and_tables");
+f=new File(f.getAbsolutePath(),"Input_data");
+f=new File(f.getAbsolutePath(),"Images");
+f=new File(f.getAbsolutePath(),"Human_brain_nifti");
+File f1=new File(f.getAbsolutePath(),"SEdata.nii.gz");
+String sourcePathNifti=f1.getAbsolutePath();
+
+File f2=new File(f.getAbsolutePath(),"MaskSkull.tif");
+String sourcePathMask=f2.getAbsolutePath();
+
+//Output image definition
+f=new File(mainDir,"Experiments_for_figures_and_tables");
+f=new File(f.getAbsolutePath(),"Results_and_evaluation");
+f=new File(f.getAbsolutePath(),"My_results");
+f=new File(f.getAbsolutePath(),"Images");
+f=new File(f.getAbsolutePath(),"Result_hypermap_figure_1b_right.tif");
+String targetPathHyperMap=f.getAbsolutePath();
+
+
+System.out.println(sourcePathNifti);
+ImagePlus img=IJ.openImage(sourcePathNifti);
+HyperMap hyperBrain=HyperMap.importHyperMapFromNifti4DT2Sequence(sourcePathNifti,"Test_data",1,12); 
+
+
+//Compute maps
+ImagePlus mask=IJ.openImage(sourcePathMask);
+mask.show();
+hyperBrain.computeMapsWithMask(mask);
+
+//Get, display and save the result image
+ImagePlus imageBrain=hyperBrain.getAsImagePlus();
+imageBrain.show();
+imageBrain.setTitle("Results_figure_1b_left");
+imageBrain.setC(1);
+imageBrain.setDisplayRange(0, 2500);
+imageBrain.setC(2);
+imageBrain.setDisplayRange(0, 200);
+imageBrain.setC(1);
+//Correct the wrong convention in Nifti opener
+IJ.run(imageBrain, "Flip Vertically", "stack");
+
+//Here is the figure 1a and S2
+IJ.saveAsTiff(imageBrain,targetPathHyperMap);
+IJ.showMessage("Your result have been saved to "+targetPathHyperMap+"\n.\nComputation done !");
+
+IJ.saveAsTiff(imageVine,targetPathHyperMap);
+IJ.showMessage("Your result have been saved to "+targetPathHyperMap+"\n.\nComputation done !");

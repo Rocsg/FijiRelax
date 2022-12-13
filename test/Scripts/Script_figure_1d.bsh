@@ -1,0 +1,253 @@
+import java.io.File;
+import java.lang.Math;
+import ij.IJ;
+import ij.ImagePlus;
+import ij.plugin.Duplicator;
+import io.github.rocsg.fijirelax.mrialgo.MRUtils;
+import io.github.rocsg.fijirelax.mrialgo.HyperMap;
+import io.github.rocsg.fijirelax.mrialgo.NoiseManagement;
+import io.github.rocsg.fijiyama.fijiyamaplugin.RegistrationAction;
+import io.github.rocsg.fijiyama.common.VitimageUtils;
+import io.github.rocsg.fijiyama.common.VitiDialogs;
+import io.github.rocsg.fijirelax.gui.MRI_HyperCurvesExplorer;
+
+
+
+
+
+
+
+
+
+public static double[]exp_02_getValsSigmaSimulation(){
+	//Constants used for simulations of exp02
+	public static double PD_exp02=1000;
+	double []valsSNR=new double[] {200,500,1000};
+	double []valsSigma=new double[3];
+	for(int i=0;i<valsSNR.length;i++) {
+		valsSigma[i]=Math.sqrt(PD_exp02*PD_exp02/valsSNR[i]);
+	}
+	return valsSigma;
+}
+
+
+ImagePlus estimateMapsFromEchoesSquaredFantoms(ImagePlus imgSimulatedEchoes,int fitType) {
+	/** The P D exp 02. */
+	
+	/** The spacing simulations exp 02. */
+	public static int []spacingSimulations_exp_02=new int[] {8,10,10,10};
+	
+	/** The vals T 2 simulation exp 02. */
+	public static double[] valsT2Simulation_exp_02=new double[] {20,40,60,80};
+	/** The n repet exp 02. */
+	public static int nRepet_exp_02=4;
+	
+	/** The dim Z exp 02. */
+	public static int dimZ_exp_02=12;
+	
+	/** The n echoes exp 02. */
+	public static int nEchoes_exp_02=16;
+	
+	/** The te spacing exp 02. */
+	public static double teSpacing_exp_02=10; //12.8 chez QMRLAB
+	
+	/** The tr exp 02. */
+	public static int tr_exp_02=10000;
+	
+	/** The val T 1 exp 02. */
+	public static int valT1_exp_02=500;
+	
+	int nEchoes=nEchoes_exp_02;
+	double Tr=tr_exp_02;
+	double TeSpacing=teSpacing_exp_02;
+	double[]tabTrTimes=new double[nEchoes];
+	double[]tabTeTimes=new double[nEchoes];
+
+	ImagePlus []imgs=new ImagePlus[nEchoes];
+	
+	ImagePlus img=imgSimulatedEchoes;
+	imgs=VitimageUtils.stacksFromHyperstackFastBis(img);
+	
+	
+	ImagePlus []maps=new ImagePlus[3];
+	double[]tabData=new double[nEchoes];
+	for(int ec=0;ec<nEchoes;ec++) {
+		tabTrTimes[ec]=Tr;
+		tabTeTimes[ec]=TeSpacing*(ec+1);
+	}
+	int dimZ= dimZ_exp_02;
+	int[] spacing=spacingSimulations_exp_02;
+	int spaceX=spacing[0];int lx=spacing[1];
+	int spaceY=spacing[2];int ly=spacing[3];
+	double valT1=valT1_exp_02;
+	double []valsT2=valsT2Simulation_exp_02;
+	double []valsSigma=null;
+	valsSigma=exp_02_getValsSigmaSimulation();
+	int dimX=(spaceX+lx)*(valsSigma.length)+spaceX;
+	maps[0]=VitimageUtils.nullImage(imgs[0]);
+	maps[1]=VitimageUtils.nullImage(imgs[0]);
+	maps[2]=VitimageUtils.nullImage(imgs[0]);
+	float[][]mapVals=new float[3][];
+	float[][]ecVals=new float[nEchoes][];
+	for(int z=0;z<dimZ;z++) {
+		for(int i=0;i<3;i++)mapVals[i]=(float[]) maps[i].getStack().getPixels(z+1);
+		for(int i=0;i<nEchoes;i++) {
+			System.out.println("i="+i);
+			ecVals[i]=(float[]) imgs[i].getStack().getPixels(z+1);
+		}
+
+		for(int i=0;i<valsT2.length;i++) {
+			System.out.println("i"+i);
+			for(int j=0;j<valsSigma.length;j++) {
+				for(int dx=0;dx<lx;dx++) {
+					for(int dy=0;dy<ly;dy++) {
+						int x=dx+j*(lx+spaceX)+spaceX;
+						int y=dy+i*(ly+spaceY)+spaceY;
+						for(int ec=0;ec<nEchoes;ec++)tabData[ec]=ecVals[ec][y*dimX+x];
+						double[]params=(double[]) MRUtils.makeFit(tabTrTimes, tabTeTimes, tabData, fitType, MRUtils.SIMPLEX, 400, valsSigma[j], false)[0];
+						mapVals[0][y*dimX+x]=(float) params[0];
+						mapVals[1][y*dimX+x]=(float) valT1;
+						mapVals[2][y*dimX+x]=(float) params[1];
+					}
+				}
+			}
+		
+		}
+	}
+
+
+	
+	ImagePlus map=VitimageUtils.hyperStackingChannels(maps);
+	map.setC(1);map.setDisplayRange(0,  1500);		IJ.run(map,"Fire","");
+	map.setC(2);map.setDisplayRange(0,  800);		IJ.run(map,"Fire","");
+	map.setC(3);map.setDisplayRange(0,  120);		IJ.run(map,"Fire","");
+	String dat="Simulated";
+	return map;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+boolean useVisualDebugThatIsVeryInterestingButImplySlowerComputation=false;
+String lut="physics";
+//Get FijiRelax archive directory path
+mainDir=VitiDialogs.chooseDirectoryUI("Select FijiRelax DOI directory","Dir that contains Case_0_Brain, Case_1 ...");
+
+//Input data definition
+File f=new File(mainDir,"Experiments_for_figures_and_tables");
+f=new File(f.getAbsolutePath(),"Input_data");
+f=new File(f.getAbsolutePath(),"Images");
+f=new File(f.getAbsolutePath(),"Squared_fantoms");
+File f1=new File(f.getAbsolutePath(),"Simulated_echoes.tif");
+String sourcePathSimulatedEchoes=f1.getAbsolutePath();
+f1=new File(f.getAbsolutePath(),"Expected_maps.tif");
+String sourcePathExpectedMaps=f1.getAbsolutePath();
+
+
+//Output image definition
+f=new File(mainDir,"Experiments_for_figures_and_tables");
+f=new File(f.getAbsolutePath(),"Results_and_evaluation");
+f=new File(f.getAbsolutePath(),"My_results");
+f1=new File(f.getAbsolutePath(),"Images");
+File f2 =new File(f1.getAbsolutePath(),"Result_hypermap_figure_1d");
+String targetPathHyperMap=f2.getAbsolutePath();
+
+ImagePlus imgEchoes=IJ.openImage(sourcePathSimulatedEchoes);
+imgEchoes.show();
+imgEchoes.setTitle("Simulated_echoes");
+
+
+//Expected fit
+ImagePlus imgExpected=new Duplicator().run(IJ.openImage(sourcePathExpectedMaps),3,3,1,12,1,1);
+imgExpected=new Duplicator().run(imgExpected,3,3,1,12,1,1);
+ImagePlus imgMask=VitimageUtils.thresholdImage(imgExpected, 0.000001, 10E8);
+imgExpected.show();
+imgExpected.setTitle("Expected FIT");
+imgExpected.setDisplayRange(5, 100);
+ImagePlus imgDIFFExpected=VitimageUtils.makeOperationBetweenTwoImages(imgExpected, imgExpected, 3,true);
+imgDIFFExpected=VitimageUtils.makeOperationBetweenTwoImages(imgDIFFExpected, imgMask, 2,true);
+imgDIFFExpected.setTitle("DIFF Expected");
+IJ.run(imgDIFFExpected, lut, "");
+imgDIFFExpected.setDisplayRange(0.8, 1.2);
+
+//Results without noise handling
+imgEchoes.duplicate().show();
+ImagePlus imgEXP=estimateMapsFromEchoesSquaredFantoms(imgEchoes,MRUtils.T2_MONO);
+imgEXP.duplicate().show();
+imgEXP=new Duplicator().run(imgEXP,3,3,1,12,1,1);
+imgEXP.show();
+imgEXP.setDisplayRange(5, 100);
+imgEXP.setTitle("Results_EXP_FIT");
+ImagePlus imgDIFFEXP=VitimageUtils.makeOperationBetweenTwoImages(imgEXP, imgExpected, 3,true);
+imgDIFFEXP=VitimageUtils.makeOperationBetweenTwoImages(imgDIFFEXP, imgMask, 2,true);
+imgDIFFEXP.show();
+imgDIFFEXP.setTitle("DIFF EXP FIT");
+IJ.run(imgDIFFEXP, lut, "");
+imgDIFFEXP.setDisplayRange(0.8, 1.2);
+
+//Results with Offset fit
+ImagePlus imgOFFSET=estimateMapsFromEchoesSquaredFantoms(imgEchoes,MRUtils.T2_MONO_BIAS);
+imgOFFSET=new Duplicator().run(imgOFFSET,3,3,1,12,1,1);
+imgOFFSET.show();
+imgOFFSET.setDisplayRange(5, 100);
+imgOFFSET.setTitle("Results_OFFSET_FIT");
+imgOFFSET.setDisplayRange(5, 100);
+ImagePlus imgDIFFOFFSET=VitimageUtils.makeOperationBetweenTwoImages(imgOFFSET, imgExpected, 3,true);
+imgDIFFOFFSET=VitimageUtils.makeOperationBetweenTwoImages(imgDIFFOFFSET, imgMask, 2,true);
+imgDIFFOFFSET.show();
+imgDIFFOFFSET.setTitle("DIFF EXP FIT");
+IJ.run(imgDIFFOFFSET, lut, "");
+imgDIFFOFFSET.setDisplayRange(0.8, 1.2);
+
+//Results with Rice fit
+ImagePlus imgRICE=estimateMapsFromEchoesSquaredFantoms(imgEchoes,MRUtils.T2_MONO_RICE);
+imgRICE=new Duplicator().run(imgRICE,3,3,1,12,1,1);
+imgRICE.show();
+imgRICE.setTitle("Results_RICE_FIT");
+//		imgRICE.setC(2);
+imgRICE.setDisplayRange(5, 100);
+ImagePlus imgDIFFRICE=VitimageUtils.makeOperationBetweenTwoImages(imgRICE, imgExpected, 3,true);
+imgDIFFRICE=VitimageUtils.makeOperationBetweenTwoImages(imgDIFFRICE, imgMask, 2,true);
+imgDIFFRICE.show();
+imgDIFFRICE.setTitle("DIFF RICE FIT");
+IJ.run(imgDIFFRICE, lut, "");
+imgDIFFRICE.setDisplayRange(0.8, 1.2);
+
+//Here is the figure 1a and S2
+IJ.saveAsTiff(imgExpected,targetPathHyperMap+"_Expected.tif");
+IJ.saveAsTiff(imgDIFFExpected,targetPathHyperMap+"_DIFF_Expected.tif");
+
+IJ.saveAsTiff(imgEXP,targetPathHyperMap+"_Exponential.tif");
+IJ.saveAsTiff(imgDIFFEXP,targetPathHyperMap+"_DIFF_Exponential.tif");
+
+IJ.saveAsTiff(imgOFFSET,targetPathHyperMap+"_Offset.tif");
+IJ.saveAsTiff(imgDIFFOFFSET,targetPathHyperMap+"_DIFF_Offset.tif");
+
+IJ.saveAsTiff(imgRICE,targetPathHyperMap+"_Rice.tif");
+IJ.saveAsTiff(imgDIFFRICE,targetPathHyperMap+"_DIFF_Rice.tif");
+
+
+
+
+
+IJ.showMessage("Your image results has been saved to \n"+targetPathHyperMap+" \n \n.\n.\nYour table results has been saved to \n"+targetPathCSV+"\nComputation done !");
+
+
+
+
+
+
+
+
+

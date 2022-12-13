@@ -1,0 +1,90 @@
+import java.io.File;
+import ij.ImagePlus;
+import io.github.rocsg.fijirelax.mrialgo.HyperMap;
+import io.github.rocsg.fijirelax.mrialgo.NoiseManagement;
+import io.github.rocsg.fijiyama.fijiyamaplugin.RegistrationAction;
+import io.github.rocsg.fijiyama.common.VitimageUtils;
+import io.github.rocsg.fijiyama.common.VitiDialogs;
+import io.github.rocsg.fijirelax.gui.MRI_HyperCurvesExplorer;import ij.IJ;
+//switch variable to use or not use visual debug information
+boolean useVisualDebugThatIsVeryInterestingButImplySlowerComputation=true;
+
+//Get FijiRelax archive directory path
+String mainDir=VitiDialogs.chooseDirectoryUI("Select FijiRelax DOI directory","Dir that contains Case_0_Brain, Case_1 ...");
+
+//Input data definition
+File f=new File(mainDir,"Experiments_for_figures_and_tables");
+f=new File(f.getAbsolutePath(),"Input_data");
+f=new File(f.getAbsolutePath(),"Images");
+f=new File(f.getAbsolutePath(),"Circular_fantoms");
+File f1=new File(f.getAbsolutePath(),"SimulatedData_echoes.tif");
+String sourcePathSimulatedEchoes=f1.getAbsolutePath();
+File f2=new File(f.getAbsolutePath(),"SimulatedData_expected_maps.tif");
+String sourcePathExpectedMaps=f2.getAbsolutePath();
+
+
+//Output image definition
+f=new File(mainDir,"Experiments_for_figures_and_tables");
+f=new File(f.getAbsolutePath(),"Results_and_evaluation");
+f=new File(f.getAbsolutePath(),"My_results");
+f1=new File(f.getAbsolutePath(),"Images");
+f2 =new File(f1.getAbsolutePath(),"Result_hypermap_figure_1c_and_S4_without_registration.tif");
+String targetPathHyperMapWithout=f2.getAbsolutePath();
+File f3 =new File(f1.getAbsolutePath(),"Result_hypermap_figure_1c_and_S4_with_registration.tif");
+String targetPathHyperMapWith=f3.getAbsolutePath();
+
+f1=new File(f.getAbsolutePath(),"Others");
+f2 =new File(f1.getAbsolutePath(),"Result_table_S1.csv");
+String targetPathCSV=f2.getAbsolutePath();
+
+
+
+ImagePlus imgEchoesInit=IJ.openImage(sourcePathSimulatedEchoes);
+HyperMap hyperFantom=new HyperMap(imgEchoesInit); 
+
+
+//Compute maps
+hyperFantom.computeMaps();
+
+//Get, display and save the result image
+ImagePlus imageFantomWithout=hyperFantom.getAsImagePlus();
+imageFantomWithout.show();
+imageFantomWithout.setTitle("Results_figure_1c_left");
+imageFantomWithout.setC(1);
+imageFantomWithout.setDisplayRange(0, 2500);
+imageFantomWithout.setC(2);
+imageFantomWithout.setDisplayRange(0, 6000);
+imageFantomWithout.setC(1);
+imageFantomWithout.setC(2);
+		
+//Compute maps after registration
+HyperMap hyperFantom2=HyperMap.hyperMapFactory(hyperFantom);
+hyperFantom2.registerEchoes();
+hyperFantom2.computeMaps();
+
+//Get, display and save the result image
+ImagePlus imageFantomWith=hyperFantom2.getAsImagePlus();
+imageFantomWith.show();
+imageFantomWith.setTitle("Results_figure_1c_right");
+imageFantomWith.setC(1);
+imageFantomWith.setDisplayRange(0, 2500);
+imageFantomWith.setC(2);
+imageFantomWith.setDisplayRange(0, 6000);
+imageFantomWith.setC(1);
+imageFantomWith.setC(2);
+
+//Here is the figure 1a and S2
+IJ.saveAsTiff(imageFantomWithout,targetPathHyperMapWithout);
+IJ.saveAsTiff(imageFantomWith,targetPathHyperMapWith);
+
+
+//Compute results of table S1
+ImagePlus expectedMaps=IJ.openImage(sourcePathExpectedMaps);
+expectedMaps.setC(2);
+ImagePlus mapsWithout=hyperFantom.getMapsImage();
+ImagePlus mapsWith=hyperFantom2.getMapsImage();
+
+
+
+IJ.showMessage("Your image results has been saved to "+targetPathHyperMapWith+" and "+targetPathHyperMapWithout+"\nYour table results has been saved to "+targetPathCSV+"\nComputation done !");
+

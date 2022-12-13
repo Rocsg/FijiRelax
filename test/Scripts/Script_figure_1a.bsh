@@ -1,0 +1,65 @@
+import io.github.rocsg.fijirelax.mrialgo.HyperMap;
+import io.github.rocsg.fijiyama.fijiyamaplugin.RegistrationAction;
+import io.github.rocsg.fijiyama.common.VitiDialogs;
+import ij.IJ;
+import ij.ImagePlus;
+import java.io.File;
+import io.github.rocsg.fijirelax.testing.TestScripts;
+
+//switch variable to use or not use visual debug information
+boolean useVisualDebugThatIsVeryInterestingButImplySlowerComputation=false;
+
+//Get FijiRelax archive directory path
+mainDir=VitiDialogs.chooseDirectoryUI("Select FijiRelax DOI directory","Dir that contains Case_0_Brain, Case_1 ...");
+
+//Input data directory definition
+File f=new File(mainDir,"Experiments_for_figures_and_tables");
+f=new File(f.getAbsolutePath(),"Input_data");
+f=new File(f.getAbsolutePath(),"Images");
+f=new File(f.getAbsolutePath(),"BM2_F05_1119_SL_RAW");
+String sourcePathRawDicom=f.getAbsolutePath();
+System.out.println(f.exists());
+
+//Output image definition
+f=new File(mainDir,"Experiments_for_figures_and_tables");
+f=new File(f.getAbsolutePath(),"Results_and_evaluation");
+f=new File(f.getAbsolutePath(),"My_results");
+f=new File(f.getAbsolutePath(),"Images");
+f=new File(f.getAbsolutePath(),"Result_hypermap_figures_1a_and_S2.tif");
+String targetPathHyperMap=f.getAbsolutePath();
+
+
+//Import data
+
+HyperMap hyperSorgho=HyperMap.importHyperMapFromRawDicomData(sourcePathRawDicom,"Test_data");
+
+//Register echoes with visual debug
+if(useVisualDebugThatIsVeryInterestingButImplySlowerComputation) {
+	IJ.showMessage("Now a succession of registration routines will run in visual mode, during 5 minutes. Don't expect to do nothing with your computer, or run it again, but activate the stealth mode, line 9. The result will appear as an image at the end, with a popup like this one");
+	hyperSorgho.registerEchoes();
+}
+else {//register echoes in stealth mode, faster
+	IJ.showMessage("Now a succession of registration routines will run in stealth mode, during 2 minutes. The result will appear as an image at the end, with a popup like this one");
+	RegistrationAction regAct=hyperSorgho.getDefaultRegistrationSettings();
+	regAct.typeAutoDisplay=0;
+	hyperSorgho.registerEchoes(regAct);
+}
+
+//Compute maps
+hyperSorgho.computeMaps();
+
+//Get, display and save the result image
+ImagePlus imageSorgho=hyperSorgho.getAsImagePlus();
+imageSorgho.show();
+imageSorgho.setTitle("Results_figure_1a_and_S2");
+imageSorgho.setC(1);
+imageSorgho.setDisplayRange(0, 10000);
+imageSorgho.setC(2);
+imageSorgho.setDisplayRange(0, 3000);
+imageSorgho.setC(3);
+imageSorgho.setDisplayRange(0, 150);
+imageSorgho.setC(1);
+
+//Here is the figure 1a and S2
+IJ.saveAsTiff(imageSorgho,targetPathHyperMap);
+IJ.showMessage("Your result have been saved to "+targetPathHyperMap+"\n.\nComputation done !");

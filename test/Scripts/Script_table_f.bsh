@@ -1,0 +1,53 @@
+import io.github.rocsg.fijirelax.mrialgo.HyperMap;
+import io.github.rocsg.fijirelax.mrialgo.MRUtils;
+import io.github.rocsg.fijirelax.mrialgo.NoiseManagement;
+import io.github.rocsg.fijiyama.RegistrationAction;
+import io.github.rocsg.fijiyama.common.VitiDialogs;
+import io.github.rocsg.fijiyama.common.VitimageUtils;
+import io.github.rocsg.fijiyama.common.Timer;
+import ij.IJ;
+import ij.ImagePlus;
+import java.io.File;
+
+// 
+//A human brain T2w spin-echo sequence image (260 x 320 x 1 = 83.200 voxels)
+//was collected in the test data of qMRLab software.
+
+//We computed PD and T2 maps using Exponential fit, Offset fit, and Rice fit, 
+//depending on the availability of these methods in each software among QMRLab (Matlab), MyRelax (Python) and FijiRelax (ours). 
+//Here is the script running the measured sequence with FijiRelax
+
+//The computation time was measured on a laptop Dell Latitude with an Intel® Xeon(R) E-2186M CPU @ 2.90GHz × 8 cores/16 threads
+//and a 32 GB RAM, running Ubuntu 20.04. 
+//QMRLab was run with Octave. MyRelax was run with Python 3.7. FijiRelax was compiled and executed with Java-SE 1.8. 
+
+//Get FijiRelax archive directory path
+mainDir=VitiDialogs.chooseDirectoryUI("Select FijiRelax DOI directory","Dir that contains Case_0_Brain, Case_1 ...");
+
+
+//Open brain hypermap
+f=new File(mainDir,"Experiments_for_figures_and_tables");
+f=new File(f.getAbsolutePath(),"Results_and_evaluation");
+f=new File(f.getAbsolutePath(),"Archived_results_for_comparison");
+f=new File(f.getAbsolutePath(),"Images");
+f=new File(f.getAbsolutePath(),"Result_hypermap_figure_1b_brain.tif");
+String pathHyperMap=f.getAbsolutePath();
+HyperMap hyp=new HyperMap(IJ.openImage(pathHyperMap));
+IJ.openImage(pathHyperMap).show();
+
+
+//Compute maps and measure performance for the results table
+Timer t=new Timer();
+t.print("\n\n-------------Before computing exp fit------------------");
+hyp.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.NOTHING,false,null,4);
+t.print("\n\n-------------After computing exp fit------------------");
+
+t.print("\n\n-------------Before computing offset fit------------------");
+hyp.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.OFFSET,false,null,4);
+t.print("\n\n-------------After computing offset fit------------------");
+
+t.print("\n\n-------------Before computing rice fit------------------");
+hyp.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,4);
+t.print("A\n\n-------------fter computing rice fit------------------");
+
+IJ.showMessage("Computation done ! See the textual console log window for the measured timing.");
