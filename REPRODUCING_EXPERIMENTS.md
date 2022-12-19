@@ -16,7 +16,7 @@ Each figure is associated with a corresponding script, the correspondence is mad
 # Reproducing performance benchmarking
 
 The figure 1-f is a performance benchmarking using open data provided with QMRLab. Reproducing this experiment involves installing other software to make the benchmarking. The performance tests only measure the computation time for the fitting process and do not include any loading time for the application or data. They were run on a laptop Dell Latitude with an Intel® Xeon(R) E-2186M CPU @ 2.90GHz × 8 cores/16 threads and a 32 GB RAM, running Ubuntu 20.04. 
-QMRLab last release indicated was 2.4.1, and was run with octave. MyRelax last relase indicated was 1.0.0, and was run with Python 3.7. FijiRelax was compiled and executed with Java-SE 1.8. In both cases, power mode was activated in "Performance mode" (no sleep for the processors)
+QMRLab last release indicated was 2.4.1, and was run with octave. MyRelax last relase indicated was 1.0.0, and was run with Python 3.7. FijiRelax was v4.0.4, executed with Java-SE 1.8. In both cases, power mode was activated in "Performance mode" (no sleep for the processors)
 
 
 ## Computation time measurement with FijiRelax
