@@ -27,10 +27,10 @@ mainDir=VitiDialogs.chooseDirectoryUI("Select FijiRelax DOI directory","Dir that
 
 //Open brain hypermap
 f=new File(mainDir,"Experiments_for_figures_and_tables");
-f=new File(f.getAbsolutePath(),"Results_and_evaluation");
-f=new File(f.getAbsolutePath(),"Archived_results_for_comparison");
+f=new File(f.getAbsolutePath(),"Input_data");
 f=new File(f.getAbsolutePath(),"Images");
-f=new File(f.getAbsolutePath(),"Result_hypermap_figure_1b_brain.tif");
+f=new File(f.getAbsolutePath(),"Human_brain_Hyperimage");
+f=new File(f.getAbsolutePath(),"hyperMap.tif");
 String pathHyperMap=f.getAbsolutePath();
 HyperMap hyp=new HyperMap(IJ.openImage(pathHyperMap));
 IJ.openImage(pathHyperMap).show();
@@ -42,12 +42,14 @@ t.print("\n\n-------------Before computing exp fit------------------");
 hyp.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.NOTHING,false,null,4);
 t.print("\n\n-------------After computing exp fit------------------");
 
+t=new Timer();
 t.print("\n\n-------------Before computing offset fit------------------");
 hyp.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.OFFSET,false,null,4);
 t.print("\n\n-------------After computing offset fit------------------");
 
+t=new Timer();
 t.print("\n\n-------------Before computing rice fit------------------");
 hyp.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,4);
-t.print("A\n\n-------------fter computing rice fit------------------");
+t.print("A\n\n-------------After computing rice fit------------------");
 
 IJ.showMessage("Computation done ! See the textual console log window for the measured timing.");
