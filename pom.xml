@@ -6,7 +6,7 @@
   	<modelVersion>4.0.0</modelVersion>
   	<groupId>io.github.rocsg</groupId>
   	<artifactId>fijirelax</artifactId>
-	<version>4.0.4</version>
+	<version>4.0.5</version>
   	<packaging>jar</packaging>
   	<url>https://imagej.net/plugins/fijirelax/</url>
 

@@ -1055,15 +1055,12 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		echoesText=hyperMap.getEchoesImageText();
 		dims=hyperMap.dims;
 		voxs=hyperMap.voxs;
-		/*if(ij==null)ij = new ImageJ();https://imagej.github.io/
-		else ij = IJ.getInstance();*/
 		IJ.log("Starting MRI Curve Explorer");
 		xCor=hyperMap.dims[0]/2;
 		yCor=hyperMap.dims[1]/2;
 		zCor=0;
 		tCor=0;
 		nTimepoints=hyperMap.T;
-		//setupTimesTrTe();
 		setupStructures();
 		startGui();
 	}
@@ -1460,7 +1457,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		xD=imgCan1.offScreenXD(xMouse);
 		yD=imgCan1.offScreenYD(yMouse);
 		actualizeMriObservationsBasedOnData();
+		System.out.println("Ok 1");
 		computeResultsAgain();			
+		System.out.println("Ok 2");
 		actualizeCursor();
 		displayResultsAgain();
 		updateSwitchButtons();
@@ -1498,8 +1497,8 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		int screenY=(int) Math.round(screenSize.getHeight());
 		int screenX=(int) Math.round(screenSize.getWidth());
 		if(screenX>1920)screenX=1920;
-		if(screenX<=1600 && false) {
-			IJ.showMessage("Your screen has a very low resolution : "+screenX+" X "+screenY+"\nPlease consider investing in one which have at least 1024 lines x 1480 columns.\nPlugin will run in survivor mode, thus everything can happen");
+		if(screenX<=1600 ) {
+			IJ.showMessage("Your screen has a very low resolution : "+screenX+" X "+screenY+"\nPlugin will run in survivor mode, with reduced polices and graphics");
 			isBionanoDisplay=true;
 		}
 		if(isBionanoDisplay) {screenX=1260; screenY=768;}
@@ -1508,9 +1507,9 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 		TARGET_HEIGHT_FOR_PLOTS_AND_IMGS=isBionanoDisplay ? 233 : 400;
 		TARGET_HEIGHT_FOR_UP_PLOTS_AND_IMGS=isBionanoDisplay ? 280 : 480;
 		TARGET_HEIGHT_FOR_DOWN_PLOT_AND_IMGS=isBionanoDisplay ? 230 : 300;
-		TARGET_WIDTH_FOR_PLOTS_AND_IMGS=isBionanoDisplay ? 235 : 400;
-		TARGET_WIDTH_FOR_PLOTS_T1T2=isBionanoDisplay ? 800 : 1300;
-		TARGET_WIDTH_FOR_PLOTS_ALONE=isBionanoDisplay ? 400 : 650;
+		TARGET_WIDTH_FOR_PLOTS_AND_IMGS=isBionanoDisplay ? 260 : 400;
+		TARGET_WIDTH_FOR_PLOTS_T1T2=isBionanoDisplay ? 900 : 1300;
+		TARGET_WIDTH_FOR_PLOTS_ALONE=isBionanoDisplay ? 450 : 650;
 		DX_IMG=TARGET_WIDTH_FOR_PLOTS_AND_IMGS;
 		DY_IMG=TARGET_HEIGHT_FOR_PLOTS_AND_IMGS;
 		DY_TEXT=isBionanoDisplay ? 18 : 30;
@@ -1619,11 +1618,11 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
         };
         for(int i=0;i<8;i++) {
         	titles[i]=new JTextField(strTitles[i],0);
-        	titles[i].setEditable(false);titles[i].setFont(new Font("Helvetica", Font.BOLD, isBionanoDisplay ? 10 : 13));titles[i].setBackground(paramsUnactivated);
+        	titles[i].setEditable(false);titles[i].setFont(new Font("Helvetica", Font.BOLD, isBionanoDisplay ? 7 : 13));titles[i].setBackground(paramsUnactivated);
     	}
         for(int i=0;i<16;i++)for(int j=0;j<5;j++) {
         	params[i][j]=new JTextField(strParams[i][j],0);
-        	params[i][j].setEditable(false);params[i][j].setFont(new Font( "Helvetica" , i%2==0 ? Font.BOLD : 0, isBionanoDisplay ? 10 : 13));params[i][j].setBackground(paramsUnactivated);
+        	params[i][j].setEditable(false);params[i][j].setFont(new Font( "Helvetica" , i%2==0 ? Font.BOLD : 0, isBionanoDisplay ? 7 : 13));params[i][j].setBackground(paramsUnactivated);
         	params[i][j].setHorizontalAlignment(JTextField.CENTER);
         }
 
@@ -2338,18 +2337,25 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	 *  Read new data and update estimation and fits--------------------------------------------------------------------------------.
 	 */	
 	public void computeResultsAgain() {
+		System.out.println("10");
 		actualizeMeanEstimations();
+		System.out.println("11");
 		actualizeDisplayedNumbers();
+		System.out.println("12");
 		Timer tim2=new Timer();
 		computeEstimationsForAllPointsMultiThreaded();
+		System.out.println("13");
 		if(!T1T2MixedEstimation) {
 			tim2.print("Fit updated on "+this.nPtsCur+" voxels over "+this.nTimepoints+" timepoints."+
 					" Total fits : "+(((hasT1 ? 1 : 0 )+(hasT2 ? 2 : 0))*this.nPtsCur*this.nTimepoints)+"  . Total computation time : ");
 		}
 		else 			tim2.print("Fit updated on "+this.nPtsCur+" voxels over "+this.nTimepoints+" timepoints."+
 				" Total fits : "+(2*this.nPtsCur*this.nTimepoints)+"  . Total computation time : ");
+		System.out.println("14");
 		actualizeSpectrumCurves();
+		System.out.println("15");
 		identifyRangedData();
+		System.out.println("16");
 	}
 	
 	
@@ -2568,6 +2574,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	 * Compute estimations for all points multi threaded.
 	 */
 	public void computeEstimationsForAllPointsMultiThreaded() {
+		System.out.println("120");
 		if(T1T2MixedEstimation) {computeEstimationsForAllPointsMultiThreadedT1T2();return;}
 		else {
 			if(hasT1) {
@@ -2587,6 +2594,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	 * Multi-threaded estimations of curve parameters using all data points, estimating a T1T2 joint fit
 	 */
 	public void computeEstimationsForAllPointsMultiThreadedT1T2() {
+		System.out.println("1201");
 		//Prepare input data and output places for threads
 		int nThreads=VitimageUtils.getNbCores();
 		Thread[]threads=VitimageUtils.newThreadArray(nThreads);
@@ -2613,6 +2621,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				}
 			}
 		}
+		System.out.println("1202");
 
 	
 		
@@ -2649,9 +2658,12 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				} 
 			};  		
 		}				
+		System.out.println("1203");
 		VitimageUtils.startAndJoin(threads);
+		System.out.println("1204");
 
 		
+		System.out.println("1205");
 		//Gather results
 		pointsEstimations=new double[this.nTimepoints][this.nPtsCur][1][17];
 		for(int nt=0;nt<nThreads;nt++) {
@@ -2664,6 +2676,8 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 				}
 			}
 		}
+		System.out.println("1206");
+
 	}
 		
 	/**

@@ -24,8 +24,6 @@ See examples of automatic tests in io.github.rocsg.fijirelax.test.Test_FijiRelax
 
 ## Deploying
 
-### Deployment rationale
-
 ### Compulsory deployment targets
 Deployment imply to update these targets :
 * Github repository : FijiRelax is open-source, thus the code of any release should be accessible to the world without any restriction. The release should be indicated in the github repository, by commiting a tag and then using it to create a release number.
