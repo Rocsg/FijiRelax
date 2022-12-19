@@ -10,7 +10,7 @@ Download the latest version : https://doi.org/10.5281/zenodo.4518731
 
 # Reproducing figures of the paper
 
-First, follow the instructions given in the Readme file to proceed to installation, and download the dataset. Then use the beanshell scripts to reproduce the experiments of the paper. You can find them in the FijiRelax repository, in test/Beanshell_Scripts/*
+First, follow the instructions given in the Readme file to proceed to installation, and download the dataset. Then use the beanshell scripts to reproduce the experiments of the paper. You can find them in the FijiRelax repository, in test/Scripts/Beanshell_Scripts/*
 Each figure is associated with a corresponding script, the correspondence is made with an explicit naming of the scripts. Drag-slide a script into Fiji, then click run.
 
 # Reproducing performance benchmarking
@@ -32,7 +32,7 @@ Install the five dependancies, then clone the repository, and navigate to ./MyRe
 We recommend to make a clean processing arborescence including an "Input" and an "Output" directory, that we denote $INPUT and $OUTPUT thereafter. Before starting, the $INPUT directorty should contain the input data required. This input data can be found in the Zenodo downloaded archive, in the subdirectory $ZENODO_ARCHIVE/Experiments_for_figures_and_tables/Input_data/Images/Human_brain_nifti/*
 Please note that you can maximize the performance by identifying what is the optimal number of threads that can be handled for parallel computing. This number will be denoted $NCPU
 
-The script used is getT2T2star.py . In order to make it limit performance measurements to curve fitting, and to not include loading times, we change a bit the last lines of the scripts. That way, the script print the exact fitting time. The modified version of this Python script can be found in the FijiRelax repository in test/Python_Scripts/
+The script used is getT2T2star.py . In order to make it limit performance measurements to curve fitting, and to not include loading times, we change a bit the last lines of the scripts. That way, the script print the exact fitting time. The modified version of this Python script can be found in the FijiRelax repository in test/Scripts/Python_Scripts/
 
 To run the experiment, use the following command :
 python getT2T2star.py $INPUT/SEdata.nii $INPUT/TES.txt $OUTPUT/  --mask $INPUT/Mask.nii.gz   --ncpu $NCPU
@@ -59,7 +59,7 @@ $octave-shell$> qMRgenBatch(model)
 The two last lines generate the matlab instructions and download the corresponding dataset, in a directory that you have to select (we denote it $DEMO_DIR). Within the octave shell, navigate to $DEMO_DIR/mono_t2_demo/. The matlab script to be run is mono_t2_batch.m
 
 In order to run the performances tests, we insert some code to display time elapsed during the fit.
-The modified versions of the matlab script (mono_t2_batch_with_offset.m and mono_t2_batch_without_offset) can be found in the FijiRelax repository in test/Matlab_Scripts/
+The modified versions of the matlab script (mono_t2_batch_with_offset.m and mono_t2_batch_without_offset) can be found in the FijiRelax repository in test/Scripts/Matlab_Scripts/
 
 To run the experiment, use the following command :
 $octave-shell$> mono_t2_batch_without_offset
