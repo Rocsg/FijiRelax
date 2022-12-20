@@ -111,6 +111,10 @@ This plugin computes M0, T1 and T2 maps pixelwise from a given set of spin-echo 
 
 First a 3d registration is computed to align precisely the successive images, using libraries of the [Fijiyama](/plugins/fijiyama)  plugin. Then the rice noise level is estimated, and the M0, T1 and T2 parameters are estimated, fitting mono or bi-exponential curves, corrected with the measured rice noise. For more information, see the paper in next section.
 
+## Support
+Feature request, issues ? Please post a message on the [the ImageJ forum](https://forum.image.sc/), using the tag `fijirelax` . For precise requests, technical users can use a github issue, or pull-request modifications (see CONTRIBUTE.md)   
+
+ 
 ## Citing this work
 
 - Romain Fernandez and Cédric Moisy, 2022  «FijiRelax: Fast and noise-corrected estimation of MRI relaxation maps in 3D + t» *under review*
