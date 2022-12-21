@@ -241,7 +241,7 @@ IJ.saveAsTiff(imgDIFFRICE,targetPathHyperMap+"_DIFF_Rice.tif");
 
 
 
-IJ.showMessage("Your image results has been saved to \n"+targetPathHyperMap+" \n \n.\n.\nYour table results has been saved to \n"+targetPathCSV+"\nComputation done !");
+IJ.showMessage("Your image results has been saved to \n"+targetPathHyperMap+" \n \n.\n.\nComputation done !");
 
 
 

@@ -129,7 +129,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	private Font mySurvivalFontForLittleDisplays=null;
 
 	/** The version name. */
-	public String versionName="Handsome honeysuckle v4.0.6 patch 2022-12-20 05h47";
+	public String versionName="Handsome honeysuckle v4.0.7 patch 2022-12-21 23h55";
 	
 	/** The time version flag. */
 	public String timeVersionFlag="";
@@ -271,6 +271,13 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 			this.isSurvivorVncTunnelLittleDisplay=true;
 			IJ.showMessage("Detected Bionano server. \nSurvival display, but numerous cores");
 		}
+		IJ.log(System.getProperties().toString());
+		if(VitimageUtils.isWindowsOS() && System.getProperties().toString().contains("zulu")) {
+			IJ.showMessage("Things are going to get ugly. \nYou run windows with zulu JDK.\n The plugin will close. \nThen please read the installation instructions on the plugin page\nhttps://imagej.net/plugins/fijirelax ");
+			return;
+		}
+		IJ.log("\nZulu check ok\n\n");
+		
 		IJ.log(versionFlag);
 		startFijiRelaxInterface();
 		welcomeAndInformAboutComputerCapabilities();

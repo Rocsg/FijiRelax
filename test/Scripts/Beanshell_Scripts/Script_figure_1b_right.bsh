@@ -61,7 +61,7 @@ imageVine.setC(2);
 imageVine.setDisplayRange(0, 3000);
 imageVine.setC(3);
 imageVine.setDisplayRange(0, 120);
-imageVine.setZ(20)
+imageVine.setZ(20);
 
 //Here is the figure 1a and S2
 IJ.saveAsTiff(imageVine,targetPathHyperMap);
