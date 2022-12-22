@@ -11,10 +11,7 @@ jobs:
           mirrors: |
             [
               {
-                "id": "insecure-repo",
-                "mirrorOf": "external:http:*",
-                "url": "http://maven.imagej.net/content/groups/public",
-                "blocked": "false"
+                "id":"insecure-repo"
               }
             ]
       - uses: actions/checkout@v3
