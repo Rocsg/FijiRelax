@@ -8,6 +8,7 @@ import ij.ImageJ;
 import ij.ImagePlus;
 import ij.plugin.Duplicator;
 import io.github.rocsg.fijiyama.common.VitimageUtils;
+import io.github.rocsg.fijiyama.registration.ItkTransform;
 import io.github.rocsg.fijirelax.mrialgo.HyperMap;
 import io.github.rocsg.fijirelax.mrialgo.MRDataType;
 import io.github.rocsg.fijirelax.mrialgo.MRUtils;
@@ -21,9 +22,6 @@ public class Test_FijiRelaxPackage {
 	boolean completeTest=true;
 
 	
-	@Test
-	public void test_00_initialize() {
-	}	
 
 	public Test_FijiRelaxPackage() {		
 	}
@@ -36,29 +34,19 @@ public class Test_FijiRelaxPackage {
 		te.test_03_RegisterAndComputeMapsCircle();
 	}
 	
-	@Test
-	public void test_01_Trial()throws Exception{
-		if(!completeTest)return;
-		
-		
-		
-		assertEquals(0, 0,0);
-	}
-
-	@Test
-	public void test_02_OpenImage() throws Exception{
-		if(!completeTest)return;
-		String path="src/test/resources/data/test_1/SimulatedData_echoes.tif";
-		ImagePlus img=IJ.openImage(path);
-	}
-
 	
 
 	// Test main computation features of the plugin
 	@Test
 	public void test_03_RegisterAndComputeMapsCircle()throws Exception{
 		if(!completeTest)return;
-		String mainDir="src/test/resources/data/test_1/";
+		try {ItkTransform tr=new ItkTransform();}
+		catch (UnsatisfiedLinkError error) {
+			IJ.showMessage("Unsatisfied");
+			return;
+		}
+		
+		String mainDir=new File(getClass().getClassLoader().getResource("data/test_1/").getFile()).getAbsolutePath();
 		
 		//Open the source data
 		File f1=new File(mainDir,"SimulatedData_echoes.tif");
@@ -158,20 +146,22 @@ public class Test_FijiRelaxPackage {
 	@Test
 	public void test_06_Importers() throws Exception{
 		if(!completeTest)return;
-		String path="/home/rfernandez/eclipse-workspace/MyIJPlugs/FijiRelax/src/test/resources/data/test_2";
-	
+		String path=new File(getClass().getClassLoader().getResource("data/test_2/").getFile()).getAbsolutePath();
+		ImagePlus imgMap=IJ.openImage(
+				new File(getClass().getClassLoader().getResource("data/test_2/TestDataHyperMap/smallSorghoSerieRaw.tif").getFile()).getAbsolutePath());
+
 		HyperMap hyp=HyperMap.importHyperMapFromCustomData(new File(path,"TestDataImportRaw").getAbsolutePath(),"img_TR{TR}_TE{TE}.tif");
 		ImagePlus resultCustom=hyp.getEchoesImage();
-		IJ.saveAsTiff(resultCustom, "/home/rfernandez/Bureau/testCust.tif");
+		//IJ.saveAsTiff(resultCustom, new File(pathTemp,"testCust.tif").getAbsolutePath());
 		
 		hyp=HyperMap.importHyperMapFromRawDicomData(new File(path,"TestDataImportDicom").getAbsolutePath(),"testDicom");
 		ImagePlus resultDicom=hyp.getEchoesImage();
 		resultDicom=new Duplicator().run(resultDicom,1,resultDicom.getNChannels(),1,1,1,1);
-		IJ.saveAsTiff(resultDicom, "/home/rfernandez/Bureau/testDicom.tif");
+		//IJ.saveAsTiff(resultDicom, new File(pathTemp,"testDicom.tif").getAbsolutePath());
 		
 		ImagePlus resultExpected=IJ.openImage(new File(path,"TestDataHyperMap/smallSorghoSerieRaw.tif").getAbsolutePath());
 		resultExpected=new Duplicator().run(resultExpected,1,resultExpected.getNChannels(),1,1,1,1);
-		IJ.saveAsTiff(resultExpected, "/home/rfernandez/Bureau/testExp.tif");
+		//IJ.saveAsTiff(resultExpected, new File(pathTemp,"testExp.tif").getAbsolutePath());
 
 		
 		ImagePlus diff=VitimageUtils.substract(resultExpected,resultCustom, true);
@@ -179,11 +169,11 @@ public class Test_FijiRelaxPackage {
 		double upperBound=VitimageUtils.maxOfImage(diff);		
 		assertEquals(lowerBound, 0,VitimageUtils.EPSILON);
 		assertEquals(upperBound, 0,VitimageUtils.EPSILON);
-		IJ.saveAsTiff(diff, "/home/rfernandez/Bureau/testDiff1.tif");
+		//IJ.saveAsTiff(diff, "/home/rfernandez/Bureau/testDiff1.tif");
 		
 		
 		diff=VitimageUtils.substract(resultExpected,resultDicom, true);
-		IJ.saveAsTiff(diff, "/home/rfernandez/Bureau/testDiff2.tif");
+		//IJ.saveAsTiff(diff, "/home/rfernandez/Bureau/testDiff2.tif");
 		lowerBound=VitimageUtils.minOfImage(diff);
 		upperBound=VitimageUtils.maxOfImage(diff);		
 		ImageJ ij=new ImageJ();
@@ -194,8 +184,10 @@ public class Test_FijiRelaxPackage {
 	@Test
 	public void test_07_Estimators() throws Exception{
 		if(!completeTest)return;
-		String path="/home/rfernandez/eclipse-workspace/MyIJPlugs/FijiRelax/src/test/resources/data/test_2";
-		ImagePlus imgMap=IJ.openImage(new File(path,"TestDataHyperMap/smallSorghoSerieRaw.tif").getAbsolutePath());
+		ImagePlus imgMap=IJ.openImage(
+				new File(getClass().getClassLoader().getResource("data/test_2/TestDataHyperMap/smallSorghoSerieRaw.tif").getFile()).getAbsolutePath());
+
+		
 		HyperMap map=new HyperMap(imgMap);
 		
 		int[]algTypes=new int[] {MRUtils.SIMPLEX,MRUtils.LM};
@@ -213,9 +205,8 @@ public class Test_FijiRelaxPackage {
 	@Test
 	public void test_08_Outliers() throws Exception{
 		if(!completeTest)return;
-		String path="/home/rfernandez/eclipse-workspace/MyIJPlugs/FijiRelax/src/test/resources/data/test_2";
-		ImagePlus imgMap=IJ.openImage(new File(path,"TestDataHyperMap/smallSorghoSerieRaw.tif").getAbsolutePath());
-
+		ImagePlus imgMap=IJ.openImage(
+				new File(getClass().getClassLoader().getResource("data/test_2/TestDataHyperMap/smallSorghoSerieRaw.tif").getFile()).getAbsolutePath());
 		HyperMap map=new HyperMap(imgMap);
 		map.computeMaps();
 		map.simulateOutlierRemoval(10, 10, 20, 20, 0, 0);
