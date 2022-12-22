@@ -17,7 +17,7 @@ Model = mono_t2;
 %%       b- modify options
 %           |- This section will pop-up the options GUI. Close window to continue.
 %           |- Octave is not GUI compatible. Modify Model.options directly.
-#Model = Custom_OptionsGUI(Model); % You need to close GUI to move on. 
+%Model = Custom_OptionsGUI(Model); % You need to close GUI to move on. 
 %% III- FIT EXPERIMENTAL DATASET
 %%       a- set protocols via gui 
 EchoTime  = [12.8000; 25.6000; 38.4000; 51.2000; 64.0000; 76.8000; 89.6000; 102.4000; 115.2000; 128.0000; 140.8000; 153.6000; 166.4000; 179.2000; 192.0000; 204.8000; 217.6000; 230.4000; 243.2000; 256.0000; 268.8000; 281.6000; 294.4000; 307.2000; 320.0000; 332.8000; 345.6000; 358.4000; 371.2000; 384.0000];
@@ -83,7 +83,7 @@ Model.saveObj('mono_t2_Demo.qmrlab.mat');
       figure('Name','Sensitivity Analysis');
       SimVaryPlot(SimResults, 'T2' ,'T2' );
       
-      printf("Elapsed time=%f",elapsed_time)
+      fprintf("Elapsed time=%f",elapsed_time)
 %% VI- NOTES
 % _No notes are available for this model._
 % More information is available at https://qmrlab.readthedocs.io/en/master/mono_t2_batch.html
