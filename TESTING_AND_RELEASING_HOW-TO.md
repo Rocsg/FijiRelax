@@ -14,7 +14,7 @@ See examples of accessing / generate these data in io.github.rocsg.fijirelax.tes
 
 ### How and when to run automatic tests
 Tests should be run before each commit, and have to be run before any deployment operation. That way, the building system of maven prevent to deploy any unstable version of FijiRelax.
-To run automatic tests, you can run a maven build sequence that include testing. This action run a global lookup of classes/functions running tests and execute before deploying a local version of the jar file.
+To run automatic tests, you can run a maven build sequence that include testing (mvn clean test). This action run a global lookup of classes/functions running tests and execute before deploying a local version of the jar file.
 Examples of automatic tests can be found in io.github.rocsg.fijirelax.test.Test_FijiRelaxPackage.java. 
 
 ### How and when to add tests
