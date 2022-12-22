@@ -273,7 +273,10 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		}
 		IJ.log(System.getProperties().toString());
 		if(VitimageUtils.isWindowsOS() && System.getProperties().toString().contains("zulu")) {
-			IJ.showMessage("Things are going to get ugly. \nYou run windows with zulu JDK.\n The plugin will close. \nThen please read the installation instructions on the plugin page\nhttps://imagej.net/plugins/fijirelax ");
+			IJ.showMessage("You run windows with zulu JDK. We are sorry, but this is unconvenient\n"+
+					" The plugin will close to let you adjust your setup (two operations to make). "+""
+				+ "\nThen please read the windows installation instructions on the plugin page"+
+					"\nhttps://imagej.net/plugins/fijirelax ");
 			return;
 		}
 		IJ.log("\nZulu check ok\n\n");
