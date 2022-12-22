@@ -4,12 +4,49 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
 		http://maven.apache.org/xsd/maven-4.0.0.xsd">
   	<modelVersion>4.0.0</modelVersion>
+  	<parent>
+	    <groupId>org.scijava</groupId>
+	    <artifactId>pom-scijava</artifactId>
+	    <version>34.0.0-SNAPSHOT</version>
+    </parent>
+ 	<contributors>
+	    <contributor>
+	      <name>Romain Fernandez</name>
+	      <email>romainfernandez06@gmail.com</email>
+	      <url>https://imagej.net/plugins/fijirelax/</url>
+	      <organization>CIRAD</organization>
+	      <organizationUrl>https://www.cirad.fr/en</organizationUrl>
+	    </contributor>
+	    <contributor>
+	      <name>Cedric Moisy</name>
+	      <email>cedric.moisy@vignevin.com</email>
+	      <url>https://imagej.net/plugins/fijirelax/</url>
+	      <organization>IFV</organization>
+	      <organizationUrl>https://www.vignevin.com/en/</organizationUrl>
+	    </contributor>
+	</contributors>
+	
+	
+	<mailingLists>
+	    <mailingList>
+	      <name>User List</name>
+	      <subscribe>user-subscribe@127.0.0.1</subscribe>
+	      <unsubscribe>user-unsubscribe@127.0.0.1</unsubscribe>
+	      <post>user@127.0.0.1</post>
+	      <archive>http://127.0.0.1/user/</archive>
+	    </mailingList>
+
+    </mailingLists>
+  	
   	<groupId>io.github.rocsg</groupId>
   	<artifactId>fijirelax</artifactId>
 	<version>4.0.7</version>
   	<packaging>jar</packaging>
   	<url>https://imagej.net/plugins/fijirelax/</url>
-
+	<organization>	
+		<name>fijirelax</name>
+	  	<url>https://imagej.net/plugins/fijirelax/</url>
+	</organization>
 	<name>fijirelax</name>
 	<description>FijiRelax : 3D+t MRI analysis and exploration using multi-echo spin-echo sequences</description>
 	<inceptionYear>2021</inceptionYear>
@@ -71,36 +108,30 @@
 		<dependency>
 		    <groupId>net.imagej</groupId>
 		    <artifactId>ij</artifactId>
-		    <version>1.52t</version>
 		</dependency>
 		<dependency>
 		    <groupId>sc.fiji</groupId>
 		    <artifactId>VIB-lib</artifactId>
-		    <version>2.2.0</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.scijava</groupId>
 		    <artifactId>scijava-java3d</artifactId>
-		    <version>0.1.0</version>
 		</dependency>
 
 		
 		<dependency>
 		    <groupId>junit</groupId>
 		    <artifactId>junit</artifactId>
-		    <version>4.4</version>
 		    <scope>test</scope>
 		</dependency>
  		<dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.7.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.7.2</version>
             <scope>test</scope>
         </dependency>
 
@@ -110,12 +141,10 @@
 		<dependency>
 		    <groupId>commons-io</groupId>
 		    <artifactId>commons-io</artifactId>
-		    <version>2.5</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.commons</groupId>
 		    <artifactId>commons-math3</artifactId>
-		    <version>3.6.1</version>
 		</dependency>
 
 
@@ -140,6 +169,12 @@
 		    <groupId>jaolho.data</groupId>
 		    <artifactId>lma</artifactId>
 		    <version>1.3</version>
+		    <exclusions>
+		    	<exclusion>
+		    		<groupId>jama</groupId>
+		    		<artifactId>jama</artifactId>
+		    	</exclusion>
+		    </exclusions>
 		</dependency>
 	</dependencies>
   	
@@ -161,11 +196,9 @@
 	      
 	      <plugin>
 	          <artifactId>maven-surefire-plugin</artifactId>
-              <version>2.22.2</version>
 	        </plugin>
           <plugin>
               <artifactId>maven-failsafe-plugin</artifactId>
-              <version>2.22.2</version>
           </plugin>
 		  
 		  
@@ -184,7 +217,6 @@
 	   <plugin>
 	    <groupId>org.apache.maven.plugins</groupId>
 	    <artifactId>maven-source-plugin</artifactId>
-	    <version>2.2.1</version>
 	    <executions>
 	     <execution>
 	      <id>attach-sources</id>
@@ -197,7 +229,6 @@
 	   <plugin>
 	    <groupId>org.apache.maven.plugins</groupId>
 	    <artifactId>maven-javadoc-plugin</artifactId>
-	    <version>3.2.0</version>
 	    <executions>
 	     <execution>
 	      <id>attach-javadocs</id>
@@ -210,7 +241,6 @@
 	   <plugin>
 	    <groupId>org.apache.maven.plugins</groupId>
 	    <artifactId>maven-gpg-plugin</artifactId>
-	    <version>1.5</version>
 	    <executions>
 	     <execution>
 	      <id>sign-artifacts</id>

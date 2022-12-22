@@ -1,6 +1,3 @@
-/*
- * 
- */
 package io.github.rocsg.fijirelax.lma.implementations;//Initially joalho.data.lma.implementations, see  https://zenodo.org/record/4281064
 
 import io.github.rocsg.fijirelax.lma.LMAMatrix;
