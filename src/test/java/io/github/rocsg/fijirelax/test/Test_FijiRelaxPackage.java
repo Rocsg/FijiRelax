@@ -42,7 +42,6 @@ public class Test_FijiRelaxPackage {
 		if(!completeTest)return;
 		try {ItkTransform tr=new ItkTransform();}
 		catch (UnsatisfiedLinkError error) {
-			IJ.showMessage("Unsatisfied");
 			return;
 		}
 		
