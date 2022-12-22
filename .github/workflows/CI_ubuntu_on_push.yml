@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name Set up settings
+  - name: Set up settings
         uses: s4u/maven-settings-action@v2.8.0
         with:
           mirrors: '[{"id": "insecure-repo", "name": "httpImageJ", "mirrorOf": "http://maven.imagej.net/content/groups/public", "url": "mirrorUrl"}]'
