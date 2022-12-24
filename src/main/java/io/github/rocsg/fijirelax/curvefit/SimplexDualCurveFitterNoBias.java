@@ -14,7 +14,7 @@ import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 /**
  * A simplex-based solution to curve fitting of exponential functions over MRI observations points
  * This one is preferred as default solution, as it produce way less outliers than Levenberg implementation, is faster, and converges toward the same values in most cases
- *  	Copyright (C) 2022  <io.github.rocsg>
+ *  	Copyright (C) 2022  io.github.rocsg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by

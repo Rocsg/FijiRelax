@@ -21,10 +21,12 @@ import io.github.rocsg.fijiyama.registration.Transform3DType;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
+import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.plugin.Concatenator;
 import ij.plugin.Duplicator;
 import ij.plugin.HyperStackConverter;
+import ij.plugin.LutLoader;
 import ij.process.ImageProcessor;
 import io.github.rocsg.fijirelax.gui.Custom_Format_Importer;
 
@@ -228,7 +230,10 @@ public class HyperMap {
 		HyperMap hyp=t1t2.importCustomDataAsHyperMap();
 		ImagePlus img=hyp.getAsImagePlus();
 		//hyp=null;
-		IJ.run(img,"Fire","");
+//		IJ.run(img,"Fire","");
+		WindowManager.setTempCurrentImage(img);
+		new LutLoader().run("fire");
+
 		HyperMap hyperNew=new HyperMap(img);
 		VitimageUtils.garbageCollector();
 		return hyp;
@@ -256,7 +261,7 @@ public class HyperMap {
 		
 		//Build an arrayList with fileNames
 		String[]files=new File(path).list();
-		for(int i=0;i<files.length;i++) System.out.println(files[i]);
+//		for(int i=0;i<files.length;i++) System.out.println(files[i]);
 		System.out.println("Import from custom : arrayList ok");
 
 		
@@ -265,7 +270,7 @@ public class HyperMap {
 		String sep="SEPARATOR";
 		ArrayList<double[]>paramList=new ArrayList<double[]>();
 		for(int i=0;i<files.length;i++) {
-			System.out.print("At "+i+" : add ");
+			//System.out.print("At "+i+" : add ");
 			if(hasTE && hasTR){
 				//Guess that 1) File names does not begin or end by a parameter such as 000010imgtruc.tif or imgdsdsd.tif.000010
 				//And guess that TR and TE params are not concatenated such as img00010050000.tif
@@ -274,15 +279,11 @@ public class HyperMap {
 				String pat0=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[0];
 				String pat1=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[1];
 				String pat2=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[2];
-				System.out.println("Pat0="+pat0);
-				System.out.println("Pat1="+pat1);
-				System.out.println("Pat2="+pat2);
 				String str=files[i].replace(pat0,sep).replace(pat1, sep).replace(pat2, sep);
 				double val0=Double.parseDouble(str.split(sep)[1]);
 				double val1=Double.parseDouble(str.split(sep)[2]);
 				if(pattern.indexOf("{TR}")<pattern.indexOf("{TE}")){				
 					paramList.add(new double[] {i,val0,val1});
-					System.out.println(""+i+","+val0+","+val1);
 				}
 				else {
 					paramList.add(new double[] {i,val1,val0});
@@ -295,12 +296,10 @@ public class HyperMap {
 				//And guess that file names does not repeat TR and TE values
 				String pat0=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[0];
 				String pat1=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[1];
-				System.out.println("Pat0="+pat0);
-				System.out.println("Pat1="+pat1);
 				String str=files[i].replace(pat0,sep).replace(pat1, sep);
 				double val0=Double.parseDouble(str.split(sep)[1]);
 				paramList.add(new double[] {i,TR,val0});
-				System.out.println(""+i+","+TR+","+val0);
+				
 			}			
 			else if(hasTR){
 				//Guess that 1) File names does not begin or end by a parameter such as 000010imgtruc.tif or imgdsdsd.tif.000010
@@ -308,13 +307,10 @@ public class HyperMap {
 				//And guess that file names does not repeat TR and TE values
 				String pat0=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[0];
 				String pat1=pattern.replace("{TR}",sep).replace("{TE}",sep).split(sep)[1];
-				System.out.println("Pat0="+pat0);
-				System.out.println("Pat1="+pat1);
 				String str=files[i].replace(pat0,sep).replace(pat1, sep);
-				System.out.println(str);
 				double val0=Double.parseDouble(str.split(sep)[1]);
 				paramList.add(new double[] {i,val0,TE});
-				System.out.println(""+i+","+val0+","+TE);
+				
 			}			
 			else {
 				IJ.showMessage("No TR / TE data here : "+files[i]);
@@ -322,7 +318,7 @@ public class HyperMap {
 		}
 		System.out.println("Import from custom : paramList ok");
 		for(int i=0;i<files.length;i++) {
-			System.out.println(TransformUtils.stringVector(paramList.get(i)," List["+i+"]"));
+//			System.out.println(TransformUtils.stringVector(paramList.get(i)," List["+i+"]"));
 		}
 		
 		//Sort the array
@@ -334,7 +330,7 @@ public class HyperMap {
 		});
 		System.out.println("Import from custom : sort ok");
 		for(int i=0;i<files.length;i++) {
-			System.out.println(TransformUtils.stringVector(paramList.get(i)," List["+i+"]"));
+//			System.out.println(TransformUtils.stringVector(paramList.get(i)," List["+i+"]"));
 		}
 
 		//Stack the data
@@ -393,7 +389,6 @@ public class HyperMap {
 	 * @return the resulting tab
 	 */
 	public static ImagePlus[]stackToSlicesTframes(ImagePlus img){
-		VitimageUtils.printImageResume(img);
 		int X=img.getWidth();int Y=img.getHeight();int Z=img.getNFrames();
 		ImagePlus []ret=new ImagePlus[Z];
 		for(int z=0;z<Z;z++) {
@@ -746,7 +741,7 @@ public class HyperMap {
 		for(double val=10;val<18;val+=0.2){
 			Object[]obj=MADeIsOutlier(val, test, null, 3);
 			Object[]obj2=tuckeyIsOutlier(val, test, null, 3);
-			System.out.println("Val="+val+"    "+"MADe : "+obj[0]+" -> "+obj[1]+"      "+"Tuckey : "+obj2[0]+" -> "+obj2[1]+"      ");
+			//System.out.println("Val="+val+"    "+"MADe : "+obj[0]+" -> "+obj[1]+"      "+"Tuckey : "+obj2[0]+" -> "+obj2[1]+"      ");
 	   		}
 	   	}
 
@@ -1575,7 +1570,6 @@ public class HyperMap {
 		Arrays.sort(d);
 		int index=(int)Math.round(d.length*percentageKeep/100.0);
 		//System.out.println("Setting with index="+index+"/"+d.length+" . Val0="+d[0]+" valindex="+d[index]+" valfinale="+d[d.length-1]);
-		t.print("After sorting");
 		return (d[index]*factor);
 	}
 
@@ -1623,8 +1617,13 @@ public class HyperMap {
 				echoes.setDisplayRange(rangesEchoes[0], rangesEchoes[1]);
 				this.hyperImg.setC(c+1+(hasMaps ? nMaps : 0));
 				this.hyperImg.setDisplayRange(rangesEchoes[0], rangesEchoes[1]);
-				IJ.run(echoes,"Fire","");
-				IJ.run(hyperImg,"Fire","");
+				WindowManager.setTempCurrentImage(echoes);
+				new LutLoader().run("fire");
+				WindowManager.setTempCurrentImage(hyperImg);
+				new LutLoader().run("fire");
+
+//				IJ.run(echoes,"Fire","");
+//				IJ.run(hyperImg,"Fire","");
 			}
 		}
 		echoes.setT(1);
@@ -1892,7 +1891,6 @@ public class HyperMap {
 		}
 		
 		ImagePlus newHyperImg=Concatenator.run(tempRes);
-		VitimageUtils.printImageResume(newHyperImg,"New hyperMap");
 
 		newHyperImg=HyperStackConverter.toHyperStack(newHyperImg, C+nMaps,Z,T,"xyztc","Grayscale");		
 		hyperImg=newHyperImg;
@@ -2031,7 +2029,8 @@ public class HyperMap {
 		String codeStacking="xyztc";
 		ImagePlus hyperNew=HyperStackConverter.toHyperStack(hypTemp, Ctot, Z,T,codeStacking,"Grayscale");
 		hyperImg=hyperNew;
-		for(int c=Ctot-1;c>=0;c--)for(int t=T-1;t>=0;t--) {hyperImg.setC(c+1);hyperImg.setT(t+1);IJ.run(hyperImg,"Fire","");}
+		for(int c=Ctot-1;c>=0;c--)for(int t=T-1;t>=0;t--) {hyperImg.setC(c+1);hyperImg.setT(t+1);				WindowManager.setTempCurrentImage(hyperImg);new LutLoader().run("fire");
+/*IJ.run(hyperImg,"Fire","");*/}
 		adjustContrast();
 	}
 	
@@ -2043,8 +2042,6 @@ public class HyperMap {
 		if(hasMaps) {
 			hyperMaps=new Duplicator().run(hyperImg,1,nMaps,1,Z,1,T);
 			hyperEchoes=new Duplicator().run(hyperImg,nMaps+1,Ctot,1,Z,1,T);
-			VitimageUtils.printImageResume(hyperMaps,"hypMa after update");
-			VitimageUtils.printImageResume(hyperEchoes,"hypEc after update");
 		}
 		else hyperEchoes=hyperImg.duplicate();
 		adjustContrast();
@@ -2076,17 +2073,24 @@ public class HyperMap {
 				else if(c<nMaps && (mrDataType[0][c]==MRDataType.T1MAP)) {hyperImg.setC(c+1);hyperImg.setDisplayRange(0, maxT1);}
 				else if(c<nMaps && (mrDataType[0][c]==MRDataType.T2MAP)) {hyperImg.setC(c+1);hyperImg.setDisplayRange(0, maxT2);}
 				else {hyperImg.setC(c+1);hyperImg.setDisplayRange(0, 2);}//mask
-				IJ.run(hyperImg,"Fire","");
+				//IJ.run(hyperImg,"Fire","");
+				WindowManager.setTempCurrentImage(hyperImg);
+				new LutLoader().run("fire");
+
 			}
 			for(int c=nMaps;c<Ctot;c++) {
 				hyperImg.setC(c+1);hyperImg.setDisplayRange(0, maxPD);
-				IJ.run(hyperImg,"Fire","");
+				//IJ.run(hyperImg,"Fire","");
+				WindowManager.setTempCurrentImage(hyperImg);
+				new LutLoader().run("fire");
 			}
 		}
 		else {
 			for(int c=0;c<C;c++) {
 				hyperImg.setC(c+1);hyperImg.setDisplayRange(0, maxPD);
-				IJ.run(hyperImg,"Fire","");
+				WindowManager.setTempCurrentImage(hyperImg);
+				new LutLoader().run("fire");
+//				IJ.run(hyperImg,"Fire","");
 			}		
 		}
 		hyperImg.setC(1);
@@ -2103,9 +2107,7 @@ public class HyperMap {
 		int ZZ=tab[0].getNSlices();
 		double[]trTab=MRUtils.getTrFrom3DRelaxationImageTab(tab);
 		double[]teTab=MRUtils.getTeFrom3DRelaxationImageTab(tab)[0];
-		System.out.println(tab.length+"");
 		for(int i=0;i<tab.length;i++) {
-			System.out.println(i);
 			if( ! (trTab[i]<10000 && teTab[i]>13))incr++;
 		}
 		ImagePlus []ret=new ImagePlus[incr];
@@ -2348,7 +2350,6 @@ public class HyperMap {
    VitimageUtils.copyImageCalibrationAndRange(imgT1,this.getAsImagePlus());
    ImagePlus imgT=VitimageUtils.cropMultiChannelFloatImage(imgT1, x0,x1, y0, y1, 0,0);
    VitimageUtils.copyImageCalibrationAndRange(imgT,this.getAsImagePlus());
-   VitimageUtils.printImageResume(imgT,"imgT in HyperMap");
    HyperMap hypShort=new HyperMap(imgT);
    ImagePlus oldMap=  hypShort.getAsImagePlus();
    ImagePlus [][]retTab=new ImagePlus[nC][totalConf+1];
@@ -2524,7 +2525,7 @@ public class HyperMap {
 
 			//Gather information of M0 value
 			double[]stats=VitimageUtils.statistics1D(VitimageUtils.valuesOfBlock(img3D,xLast-semiRayPix, yLast-semiRayPix, z-1,xLast+semiRayPix, yLast+semiRayPix, z+1));
-			IJ.log("Capillary detected at z="+z+" at coordinates "+xLast+", "+yLast+" with M0="+stats[0]+" std="+stats[1]);
+			//IJ.log("Capillary detected at z="+z+" at coordinates "+xLast+", "+yLast+" with M0="+stats[0]+" std="+stats[1]);
 			capVals[z]=stats[0];
 		}
 		xLast=xMed;
@@ -2542,7 +2543,7 @@ public class HyperMap {
 			
 			//Gather information of M0 value
 			double[]stats=VitimageUtils.statistics1D(VitimageUtils.valuesOfBlock(img3D,xLast-semiRayPix, yLast-semiRayPix, z-1,xLast+semiRayPix, yLast+semiRayPix, z+1));
-			System.out.println("Capillary detected at z="+z+" at coordinates "+xLast+", "+yLast+" with M0="+stats[0]+" std="+stats[1]);
+			//System.out.println("Capillary detected at z="+z+" at coordinates "+xLast+", "+yLast+" with M0="+stats[0]+" std="+stats[1]);
 			capVals[z]=stats[0];
 		}
 		return capVals;

@@ -40,7 +40,7 @@ import io.github.rocsg.fijirelax.mrialgo.HyperMap;
 
 /**
  * The PlugInFrame holding the main window the FijiRelax GUI, when called from the Fiji interface.
- * 	Copyright (C) 2022  <io.github.rocsg>
+ * 	Copyright (C) 2022  io.github.rocsg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by

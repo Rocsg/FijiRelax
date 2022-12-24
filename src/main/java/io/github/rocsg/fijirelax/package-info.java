@@ -1,6 +1,6 @@
 /**
  * This package is the root of the fijirelax project. Contains subpackages: curvefit, gui, lma, mrialgo
- * 	Copyright (C) 2022  <io.github.rocsg>
+ * 	Copyright (C) 2022  io.github.rocsg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by

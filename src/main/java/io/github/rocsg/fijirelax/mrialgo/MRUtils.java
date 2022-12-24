@@ -559,7 +559,7 @@ public class MRUtils  {
 		final AtomicInteger incrTotalFit = new AtomicInteger(0);
 		final AtomicInteger incrProc = new AtomicInteger(0);
 		final AtomicInteger nEarlyBreaks = new AtomicInteger(0);
-		final int onePercent=1+(X*YZ)/100;
+		final int onePercent=1+(X*YZ)/10;
 		final int XYZ=X*YZ;
 		IJ.log((  ("Multi-threaded with ("+Z+" threads)"))+" T1 and/or T2 map computation.\n Start fit on "+(X*Y*Z)+" voxels with sigma="+listSigmaForThreads[0][0]);
 		final Thread[] threads = VitimageUtils.newThreadArray(nCores);    
@@ -755,7 +755,7 @@ public class MRUtils  {
 		ImageProcessor imgP;
 		double tr=VitimageUtils.getRepetitionTime(img);
 		double te=VitimageUtils.getEchoTime(img);
-		System.out.println("Make bouture trick ?"+makeBoutureTrick);
+//		System.out.println("Make bouture trick ?"+makeBoutureTrick);
 		for(int nc=0;nc<nbC;nc++) {
 			for(int nz=0;nz<nbZ;nz++) {
 				for(int nf=0;nf<nbF;nf++) {

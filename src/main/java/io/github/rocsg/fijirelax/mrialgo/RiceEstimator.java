@@ -102,11 +102,11 @@ public class RiceEstimator {
 		for(double obs=0;obs<1;obs+=0.01) {
 			double index=rice.getSigmaCoord(sigma);
 			double coord=rice.getObservationCoord(0.5);
-			System.out.println("Obs="+VitimageUtils.dou(obs)+"  Index="+index+" Coord="+coord);
+//			System.out.println("Obs="+VitimageUtils.dou(obs)+"  Index="+index+" Coord="+coord);
 		}		
 
 		double[]sigs=rice.estimateSigmas(100,new double[] {120,1000});
-		System.out.println("Sigmas="+sigs[0]+" , "+sigs[1]);
+	//	System.out.println("Sigmas="+sigs[0]+" , "+sigs[1]);
 		
 		
 		double val=computeRiceSigmaFromBackgroundValuesStatic(2,1.2); 
@@ -411,7 +411,7 @@ public class RiceEstimator {
 	 * @return The estimated sigma of the Rice noise
 	 */
 	public static double computeRiceSigmaFromBackgroundValuesStatic(double meanBg,double sigmaBg) {
-		boolean debug=true;
+		boolean debug=false;
 		double val1=meanBg * Math.sqrt(2.0/Math.PI);
 		double val2=sigmaBg * Math.sqrt(2.0/(4.0-Math.PI));
 		if(debug && Math.abs((val1-val2)/val2) >0.3) System.out.println("Warning : Acquisition > computeRiceSigmaStatic. Given :M="+meanBg+" , S="+sigmaBg+" gives sm="+val1+" , ss="+val2+"  .sm/ss="+VitimageUtils.dou(val1/val2)+". Using the first one..");

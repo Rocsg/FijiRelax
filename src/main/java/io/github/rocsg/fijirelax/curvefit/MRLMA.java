@@ -14,15 +14,15 @@ import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 
 
 /**
- * A class which implements the <i>Levenberg-Marquardt Algorithm</i>
+ * A class which implements the Levenberg-Marquardt Algorithm
  * (LMA) fit for non-linear, multidimensional parameter space
  * for any multidimensional fit function.
- * <p>
  * 
- * The algorithm is described in <i>Numerical Recipes in FORTRAN</i>,
- * 2nd edition, p. 676-679, ISBN 0-521-43064X, 1992 and also
- * <a href="http://www.nrbook.com/b/bookfpdf/f15-5.pdf">here</a> as a pdf file.
- * <p>
+ * 
+ * The algorithm is described in Numerical Recipes in FORTRAN
+ * 2nd edition, p. 676-679, ISBN 0-521-43064X, 1992 and also in
+ * http://www.nrbook.com/b/bookfpdf/f15-5.pdf as a pdf file.
+ * 
  * 
  * The matrix (<code>LMAMatrix</code>) class used in the fit is an interface, so you can use your
  * favourite implementation. This package uses <code>Matrix</code> from JAMA-math libraries,
@@ -571,13 +571,13 @@ public class MRLMA extends LMA{
 			double dy = yDataPoints[i] - function.getY(xDataPoints[i], a);
 			// check if NaN occurred
 			if (Double.isNaN(dy)) {
-				System.err.println(
+				/*System.err.println(
 					"Chi2 calculation produced a NaN value at point " + i + ":\n" +
 					" x = " + Arrays.toString(xDataPoints[i]) + "\n" +
 					" y = " + yDataPoints[i] + "\n" +
 					" parameters: " + Arrays.toString(a) + "\n" +
 					" iteration count = " + iterationCount
-				);
+				);*/
 				return Double.NaN;
 			}
 			result += weights[i] * dy * dy; 

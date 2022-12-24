@@ -8,9 +8,12 @@ import io.github.rocsg.fijiyama.common.Timer;
 import io.github.rocsg.fijiyama.common.VitimageUtils;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.WindowManager;
 import ij.plugin.Concatenator;
 import ij.plugin.FolderOpener;
 import ij.plugin.HyperStackConverter;
+import ij.plugin.LutLoader;
+import ij.process.ImageConverter;
 import io.github.rocsg.fijirelax.mrialgo.HyperMap;
 import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 
@@ -192,11 +195,9 @@ public class Custom_Format_Importer{
 	public Object[] getFirstImageOfT1T2Serie(String inputDir) {
 		String imgPath=inputDir;
 		String[]subFile=null;
-		System.out.println(imgPath);
 		while(!imgPath.substring(imgPath.length()-4, imgPath.length()).equals(".dcm") && !imgPath.substring(imgPath.length()-4, imgPath.length()).equals(".tif")){
-			IJ.log("Not yet an img :"+imgPath);
+			//IJ.log("Diving into subdirs, not yet an img :"+imgPath);
 			subFile=VitimageUtils.stringArraySort(new File(imgPath).list());
-			System.out.println(subFile[0]);
 			imgPath=new File(imgPath,subFile[0]).getAbsolutePath();
 		}
 		return new Object[] {IJ.openImage(imgPath),subFile.length};
@@ -208,13 +209,13 @@ public class Custom_Format_Importer{
 	 * @return the hyper map
 	 */
 	public HyperMap readT1T2() {
-		System.out.println(inputDir);
 		String[]listFiles=VitimageUtils.stringArraySortByTrValue(new File(inputDir).list());
 		imgT1T2 =new ImagePlus[listFiles.length][];
 		int nbSelected=listFiles.length;
 		int indexStart=listFiles.length-nbSelected;
 		int numberTot=0;
 
+		ImageConverter ic;
 		//Reading successive Tr sequences
 		for(int ii=indexStart;ii<listFiles.length;ii++) {
 			int i=ii-indexStart;
@@ -225,12 +226,13 @@ public class Custom_Format_Importer{
 			for(int j=0;j<strTes.length;j++) {
 				numberTot++;
 				String str=new File(new File(inputDir,listFiles[ii]),strTes[j]).getAbsolutePath();
-				System.out.println("Opening MRI Data : "+str);						
 				imgT1T2[i][j]=FolderOpener.open(str, "");
 				if(i==0 && j==0)detectSorgho(imgT1T2[i][j]);
 				if(i==0 && j==0)detectBouture(imgT1T2[i][j]);
 				int nbAverage=VitimageUtils.getAveraging(imgT1T2[i][j]);
-				IJ.run(imgT1T2[i][j],"32-bit","");
+				ic=new ImageConverter(imgT1T2[i][j]);
+				ic.convertToGray32();
+//				IJ.run(imgT1T2[i][j],"32-bit","");
 				if(nbAverage!=2)imgT1T2[i][j]=VitimageUtils.makeOperationOnOneImage(imgT1T2[i][j], 2, 2.0/nbAverage, false);
 			}
 		}
@@ -252,7 +254,6 @@ public class Custom_Format_Importer{
 
 		//Convert to hyperStack
 		double valMax=VitimageUtils.maxOfImage(VitimageUtils.maxOfImageArrayDouble(imgT1T2));
-		for(int i=0;i<tab.length;i++)VitimageUtils.printImageResume(tab[i],""+i);
 		ImagePlus newHyperImg=Concatenator.run(tab);
 		VitimageUtils.printImageResume(newHyperImg,"Hyper");
 		newHyperImg=HyperStackConverter.toHyperStack(newHyperImg, tab.length,Z,1,"xyztc","Grayscale");		
@@ -260,7 +261,10 @@ public class Custom_Format_Importer{
 		//Set display range and lut
 		for(int c=0;c<tab.length;c++) {
 			newHyperImg.setC(c+1);
-			IJ.run(newHyperImg,"Fire","");
+			WindowManager.setTempCurrentImage(newHyperImg);
+			new LutLoader().run("fire");
+			
+//			IJ.run(newHyperImg,"Fire","");
 			newHyperImg.setDisplayRange(0, valMax);
 		}
 		
@@ -294,10 +298,7 @@ public class Custom_Format_Importer{
 	 * @return true, if successful
 	 */
 	public boolean detectBouture(ImagePlus img) {
-		System.out.println("Investigating if is Bouture");
 		boolean ret=VitimageUtils.isBouture(img);
-		System.out.println(ret);
-		System.out.println();
 		if(!ret && this.nameObservation.contains("BOUT"))ret=true;
 		VitimageUtils.waitFor(2000);
 		makeBoutureTrick=ret;

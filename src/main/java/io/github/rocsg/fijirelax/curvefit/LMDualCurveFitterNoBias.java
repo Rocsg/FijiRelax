@@ -8,7 +8,7 @@ import io.github.rocsg.fijirelax.lma.LMA;
 
 /**
  *  Implements the MRLMA capabilities for fitting exponential curves to match observation points
- * 	Copyright (C) 2022  <io.github.rocsg>
+ * 	Copyright (C) 2022  io.github.rocsg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
