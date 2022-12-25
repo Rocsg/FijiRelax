@@ -1765,13 +1765,13 @@ public class HyperMap {
 		ImagePlus []imgT1T2Line=VitimageUtils.stacksFromHyperstackFastBis(hyperEchoes);
 		if(imgT1T2Line[0].getType()==ImagePlus.GRAY16) {
 			for(int c=0;c<imgT1T2Line.length;c++) {
-				IJ.run(imgT1T2Line[c],"32-bit","");
+				VitimageUtils.convertToFloat(imgT1T2Line[c]);
 			}
 		}
 
 		//Mask computation
 		double meanRice=getMeanRiceOfCentralSlicesOverEchoes(imgT1T2Line);
-		if(imgMaskUser!=null) {maskGiven=true;imgMask=imgMaskUser;IJ.run(imgMask,"32-bit","");}
+		if(imgMaskUser!=null) {maskGiven=true;imgMask=imgMaskUser;imgMask=VitimageUtils.convertToFloat(imgMask);}
 		else {
 			int index=0;
 			if(hasT2sequence) {
@@ -1787,12 +1787,12 @@ public class HyperMap {
 		ImagePlus[]imgT2s=hasT2sequence ? VitimageUtils.stacksFromHyperstackFastBis(getT2EchoesImage(0)) : null;
 		if(imgT1s!=null && imgT1s[0].getType()==ImagePlus.GRAY16) {
 			for(int c=0;c<imgT1s.length;c++) {
-				IJ.run(imgT1s[c],"32-bit","");
+				imgT1s[c]=VitimageUtils.convertToFloat(imgT1s[c]);
 			}
 		}
 		if(imgT2s!=null && imgT2s[0].getType()==ImagePlus.GRAY16) {
 			for(int c=0;c<imgT2s.length;c++) {
-				IJ.run(imgT2s[c],"32-bit","");
+				imgT2s[c]=VitimageUtils.convertToFloat(imgT2s[c]);
 			}
 		}
 

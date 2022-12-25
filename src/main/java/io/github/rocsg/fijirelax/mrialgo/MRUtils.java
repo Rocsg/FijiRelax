@@ -417,7 +417,7 @@ public class MRUtils  {
 			}
 			hyper.setC(c+1);
 			hyper.setDisplayRange(0, maxMag);
-			IJ.run(hyper,"Fire","");
+			//IJ.run(hyper,"Fire","");
 		}
 		for(int z=0;z<dimZ;z++) {
 			hyper.getStack().setSliceLabel("PDMAP_"+nameSimul,VitimageUtils.getCorrespondingSliceInHyperImage(hyper, 0, z, 0));
@@ -432,24 +432,24 @@ public class MRUtils  {
 
 		hyper.setC(1);
 		hyper.setDisplayRange(0, maxMag*MRUtils.maxDisplayedPDratio);
-		IJ.run(hyper,"Fire","");
+		//IJ.run(hyper,"Fire","");
 		if(hasT1T2) {
 			hyper.setC(2);
 			hyper.setDisplayRange(0, maxTe*MRUtils.maxDisplayedT2ratio);
-			IJ.run(hyper,"Fire","");		
+			//IJ.run(hyper,"Fire","");		
 			hyper.setC(3);
 			hyper.setDisplayRange(0, maxTr*MRUtils.maxDisplayedT1ratio);
-			IJ.run(hyper,"Fire","");		
+			//IJ.run(hyper,"Fire","");		
 		}
 		else if(hasT1) {
 			hyper.setC(2);
 			hyper.setDisplayRange(0, maxTr*MRUtils.maxDisplayedT1ratio);
-			IJ.run(hyper,"Fire","");		
+			//IJ.run(hyper,"Fire","");		
 		}
 		else if(hasT2) {
 			hyper.setC(2);
 			hyper.setDisplayRange(0, maxTe*MRUtils.maxDisplayedT2ratio);
-			IJ.run(hyper,"Fire","");		
+			//IJ.run(hyper,"Fire","");		
 		}
 		
 		hyper.setTitle("Hypermap_simulated_"+nameSimul);
@@ -476,7 +476,7 @@ public class MRUtils  {
 		int nVox=X*Y*Z;
 		int[][]listForThreads=VitimageUtils.listForThreads(nVox,nCores);
 		ImagePlus []imgs=new ImagePlus[nEc];
-		for(int i=0;i<nEc;i++) {imgs[i]=imgsTemp[i].duplicate();IJ.run(imgs[i],"32-bit","");}
+		for(int i=0;i<nEc;i++) {imgs[i]=imgsTemp[i].duplicate();imgs[i]=VitimageUtils.convertToFloat(imgs[i]);}
 
 		ImagePlus[]maps=new ImagePlus[4];
 		maps[0]=VitimageUtils.nullImage(imgsTemp[0]);
@@ -1701,7 +1701,7 @@ public class MRUtils  {
 		double distSq;
 		//Pour chaque Z
 		for(int im=0;im<tabRet.length;im++) {
-			IJ.run(tabRet[im],"32-bit","");
+			tabRet[im]=VitimageUtils.convertToFloat(tabRet[im]);
 			for(int z=0;z<Z;z++) {
 				float[]tabData=(float[])tabRet[im].getStack().getProcessor(z+1).getPixels();
 				double factorMultCap=globalMeanOverCap/meanOverCap[z];
