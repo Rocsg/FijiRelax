@@ -1,6 +1,6 @@
 /**
  * This package contains the data structure description (HyperMap), RiceEstimator functions, and utils for MR data handling
- * 	Copyright (C) 2022  <io.github.rocsg>
+ * 	Copyright (C) 2022  io.github.rocsg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *   along with this program.  If not, see https://www.gnu.org/licenses/
 */
 package io.github.rocsg.fijirelax.mrialgo;
 

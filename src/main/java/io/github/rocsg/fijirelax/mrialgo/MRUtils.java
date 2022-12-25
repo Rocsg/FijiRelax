@@ -21,7 +21,7 @@ import io.github.rocsg.fijirelax.curvefit.SimplexDualCurveFitterNoBias;
 
 /**
  * This class is a utility class to hold many helpers used for simulating MRI echoes, computing rice noise estimation, reading information into TIFF metadata.
- * 	Copyright (C) 2022  <io.github.rocsg>
+ * 	Copyright (C) 2022  io.github.rocsg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ import io.github.rocsg.fijirelax.curvefit.SimplexDualCurveFitterNoBias;
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *   along with this program.  If not, see https://www.gnu.org/licenses/
 */
 public class MRUtils  {
 	

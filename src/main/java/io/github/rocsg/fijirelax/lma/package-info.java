@@ -1,7 +1,7 @@
 /**
  * This package contains linear matrix algebra functions used for the curve fitting algorithms
  * Copyright (C) 2022  <io.github.rocsg> ((except MRLMA class, which is 
- *   @author Janne Holopainen (jaolho@utu.fi, tojotamies@gmail.com)
+ *   @author Janne Holopainen (jaolhoATutu.fi, tojotamiesATgmail.com)
  *   @version 1.2, 24.04.2007 , free for non-commercial use)
  * 
  *   This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *   GNU General Public License for more details.
 
  *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *   along with this program.  If not, see https://www.gnu.org/licenses/
  */
 package io.github.rocsg.fijirelax.lma;
 

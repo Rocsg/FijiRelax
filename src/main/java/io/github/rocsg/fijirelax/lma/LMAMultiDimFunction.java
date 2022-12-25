@@ -7,9 +7,9 @@ import java.util.Arrays;
 
 // TODO: Auto-generated Javadoc
 /**
- * Implement this <i>multidimensional</i> function y = (x[], a[]) for your fit purposes.
- * Used with <code>LMAMultiDim</code>. For simpler, one dimensional fit functions you can use
- * <code>LMAFunction</code> with <code>LMA</code>.
+ * Implement this multidimensional function y = (x[], a[]) for your fit purposes.
+ * Used with LMAMultiDim. For simpler, one dimensional fit functions you can use
+ * LMAFunction with LMA.
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation, either version 3 of the License, or
@@ -34,22 +34,22 @@ public abstract class LMAMultiDimFunction {
 	/**
 	 * Gets the y.
 	 *
-	 * @param x The <i>x</i>-values for which the <i>y</i>-value is calculated.
+	 * @param x The x-values for which the y-value is calculated.
 	 * @param a The fitting parameters.
-	 * @return The <i>y</i>-value of the function.
+	 * @return The y-value of the function.
 	 */
 	public abstract double getY(double x[], double[] a);
 	
 	/**
 	 *  
 	 * The method which gives the partial derivates used in the LMA fit.
-	 * If you can't calculate the derivate, use a small <code>a</code>-step (e.g., <i>da</i> = 1e-20)
-	 * and return <i>dy/da</i> at the given <i>x</i> for each fit parameter.
+	 * If you can't calculate the derivate, use a small a-step (e.g., da = 1e-20)
+	 * and return dy/da at the given x for each fit parameter.
 	 *
-	 * @param x The <i>x</i>-value for which the partial derivate is calculated.
+	 * @param x The x-value for which the partial derivate is calculated.
 	 * @param a The fitting parameters.
 	 * @param parameterIndex The parameter index for which the partial derivate is calculated.
-	 * @return The partial derivate of the function with respect to parameter <code>parameterIndex</code> at <i>x</i>.
+	 * @return The partial derivate of the function with respect to parameter parameterIndex at x.
 	 */
 	public abstract double getPartialDerivate(double x[], double[] a, int parameterIndex);
 	
@@ -57,9 +57,9 @@ public abstract class LMAMultiDimFunction {
 	 * A convenience method for the one dimensional case.
 	 * Not used by the fit algorithm.
 	 *
-	 * @param x The <i>x</i> value for which the <i>y</i>-value is calculated.
+	 * @param x The x value for which the y-value is calculated.
 	 * @param a The fitting parameters.
-	 * @return The <i>y</i>-value of the function.
+	 * @return The y-value of the function.
 	 */
 	public final double getY(double x, double a[]) {
 		temp[0] = x;

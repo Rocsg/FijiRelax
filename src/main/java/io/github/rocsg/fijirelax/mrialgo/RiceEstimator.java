@@ -6,10 +6,10 @@ import io.github.rocsg.fijiyama.common.VitimageUtils;
 
 /** This class provides utilities to estimate MRI relaxation parameters in presence of a Rice noise
  * Rice noise affects the signal in a way that make it complicated to invert : its moments depend on the value of the unaltered signal
- * For more information, refer to Fernandez et al. 2022 FijiRelax: Fast and noise-corrected estimation of MRI relaxation maps in 3D + t (in prep.)
+ * For more information, refer to Fernandez et al. 2023 FijiRelax: Fast and noise-corrected estimation of MRI relaxation maps in 3D + t (in prep.)
  * 
  * 
- * 	Copyright (C) 2022  <io.github.rocsg>
+ * 	Copyright (C) 2022  io.github.rocsg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ import io.github.rocsg.fijiyama.common.VitimageUtils;
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *   along with this program.  If not, see https://www.gnu.org/licenses/
 */
 public class RiceEstimator {
 

@@ -1,6 +1,3 @@
-/*
- * 
- */
 package io.github.rocsg.fijirelax.lma;//Initially joalho.data.lma, see  https://zenodo.org/record/4281064
 
 
@@ -11,27 +8,27 @@ import java.util.Arrays;
 
 
 /**
- * A class which implements the <i>Levenberg-Marquardt Algorithm</i>
+ * A class which implements the Levenberg-Marquardt Algorithm
  * (LMA) fit for non-linear, multidimensional parameter space
  * for any multidimensional fit function.
- * <p>
  * 
- * The algorithm is described in <i>Numerical Recipes in FORTRAN</i>,
+ * 
+ * The algorithm is described in Numerical Recipes in FORTRAN,
  * 2nd edition, p. 676-679, ISBN 0-521-43064X, 1992 and also
- * <a href="http://www.nrbook.com/b/bookfpdf/f15-5.pdf">here</a> as a pdf file.
- * <p>
+ * http://www.nrbook.com/b/bookfpdf/f15-5.pdf here as a pdf file.
  * 
- * The matrix (<code>LMAMatrix</code>) class used in the fit is an interface, so you can use your
- * favourite implementation. This package uses <code>Matrix</code> from JAMA-math libraries,
+ * 
+ * The matrix (LMAMatrix) class used in the fit is an interface, so you can use your
+ * favourite implementation. This package uses Matrix from JAMA-math libraries,
  * but feel free to use anything you want. Note that you have to implement
- * the actual model function and its partial derivates as <code>LMAFunction</code>
- * or <code>LMAMultiDimFunction</code> before making the fit.
- * <p>
+ * the actual model function and its partial derivates as LMAFunction
+ * or LMAMultiDimFunction before making the fit.
  * 
- * Note that there are <i>three</i> different ways to input the data points.
+ * 
+ * Note that there are three different ways to input the data points.
  * Read the documentation for each constructor carefully.
  * 
- * @author Janne Holopainen (jaolho@utu.fi, tojotamies@gmail.com)
+ * @author Janne Holopainen (jaolhoATutu.fi, tojotamiesATgmail.com)
  * @version 1.2, 24.04.2007
  * 
  * The algorithm is free for non-commercial use. 
@@ -42,7 +39,7 @@ public class LMA {
 	public boolean verbose = false;
 	/** 
 	 * The model function to be fitted, y = y(x[], a[]),
-	 * where <code>x[]</code> the array of x-values and <code>a</code>
+	 * where x[] the array of x-values and a
 	 * is the array of fit parameters.
 	 */
 	public LMAMultiDimFunction function;
@@ -108,15 +105,15 @@ public class LMA {
 	/**
 	 * One dimensional convenience constructor for LMAFunction.
 	 * You can also implement the same function using LMAMultiDimFunction.
-	 * <p>
+	 * 
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of data points, M is the number of fit parameters.
-	 * Call <code>fit()</code> to start the actual fitting.
+	 * Call fit() to start the actual fitting.
 	 * 
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
-	 * @param dataPoints The data points in an array, <code>double[0 = x, 1 = y][point index]</code>.
-	 * Size must be <code>double[2][N]</code>.
+	 * @param dataPoints The data points in an array, double[0 = x, 1 = y][point index].
+	 * Size must be double[2][N].
 	 */
 	public LMA(final LMAFunction function, double[] parameters, double[][] dataPoints) {
 		this(function, parameters, dataPoints, function.constructWeights(dataPoints));
@@ -125,15 +122,15 @@ public class LMA {
 	/**
 	 * One dimensional convenience constructor for LMAFunction.
 	 * You can also implement the same function using LMAMultiDimFunction.
-	 * <p>
+	 * 
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of data points, M is the number of fit parameters.
-	 * Call <code>fit()</code> to start the actual fitting.
+	 * Call fit() to start the actual fitting.
 	 *
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
-	 * @param dataPoints The data points in an array, <code>double[0 = x, 1 = y][point index]</code>.
-	 * Size must be <code>double[2][N]</code>.
+	 * @param dataPoints The data points in an array, double[0 = x, 1 = y][point index].
+	 * Size must be double[2][N].
 	 * @param weights the weights
 	 */
 	public LMA(final LMAFunction function, double[] parameters, double[][] dataPoints, double[] weights) {
@@ -161,15 +158,15 @@ public class LMA {
 	/**
 	 * One dimensional convenience constructor for LMAFunction.
 	 * You can also implement the same function using LMAMultiDimFunction.
-	 * <p>
+	 * 
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of data points, M is the number of fit parameters.
-	 * Call <code>fit()</code> to start the actual fitting.
+	 * Call fit() to start the actual fitting.
 	 * 
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
-	 * @param dataPoints The data points in an array, <code>float[0 = x, 1 = y][point index]</code>.
-	 * Size must be <code>float[2][N]</code>.
+	 * @param dataPoints The data points in an array, float[0 = x, 1 = y][point index].
+	 * Size must be float[2][N].
 	 */
 	public LMA(final LMAFunction function, float[] parameters, float[][] dataPoints) {
 		this(
@@ -182,16 +179,16 @@ public class LMA {
 	/**
 	 * One dimensional convenience constructor for LMAFunction.
 	 * You can also implement the same function using LMAMultiDimFunction.
-	 * <p>
+	 * 
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of data points, M is the number of fit parameters.
-	 * Call <code>fit()</code> to start the actual fitting.
+	 * Call fit() to start the actual fitting.
 	 * 
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
-	 * @param dataPoints The data points in an array, <code>float[0 = x, 1 = y][point index]</code>.
-	 * Size must be <code>float[2][N]</code>.
-	 * @param weights The weights, normally given as: <code>weights[i] = 1 / sigma_i^2</code>.
+	 * @param dataPoints The data points in an array, float[0 = x, 1 = y][point index].
+	 * Size must be float[2][N].
+	 * @param weights The weights, normally given as: weights[i] = 1 / sigma_i^2.
 	 * If you have a bad data point, set its weight to zero.
 	 * If the given array is null, a new array is created with all elements set to 1.
 	 */
@@ -207,17 +204,17 @@ public class LMA {
 	/**
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of y-data points, K is the dimension of the fit function and
-	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
+	 * M is the number of fit parameters. Call this.fit() to start the actual fitting.
 	 * 
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in two dimensional array where each array, dataPoints[i],
 	 * contains one y-value followed by the corresponding x-array values.
 	 * I.e., the arrays should look like this:
-	 * <p>
-	 * dataPoints[0] = y0 x00 x01 x02 ... x0[K-1]<br>
-	 * dataPoints[1] = y1 x10 x11 x12 ... x1[K-1]<br>
-	 * ...<br>
+	 * 
+	 * dataPoints[0] = y0 x00 x01 x02 ... x0[K-1]
+	 * dataPoints[1] = y1 x10 x11 x12 ... x1[K-1]
+	 * ...
 	 * dataPoints[N] = yN xN0 xN1 xN2 ... x[N-1][K-1]
 	 */
 	public LMA(LMAMultiDimFunction function, float[] parameters, float[][] dataPoints) {
@@ -233,17 +230,17 @@ public class LMA {
 	/**
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of y-data points, K is the dimension of the fit function and
-	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
+	 * M is the number of fit parameters. Call this.fit() to start the actual fitting.
 	 * 
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in two dimensional array where each array, dataPoints[i],
 	 * contains one y-value followed by the corresponding x-array values.
 	 * I.e., the arrays should look like this:
-	 * <p>
-	 * dataPoints[0] = y0 x00 x01 x02 ... x0[K-1]<br>
-	 * dataPoints[1] = y1 x10 x11 x12 ... x1[K-1]<br>
-	 * ...<br>
+	 * 
+	 * dataPoints[0] = y0 x00 x01 x02 ... x0[K-1]
+	 * dataPoints[1] = y1 x10 x11 x12 ... x1[K-1]
+	 * ...
 	 * dataPoints[N] = yN xN0 xN1 xN2 ... x[N-1][K-1]
 	 */
 	public LMA(LMAMultiDimFunction function, double[] parameters, double[][] dataPoints) {
@@ -259,7 +256,7 @@ public class LMA {
 	/**
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of y-data points, K is the dimension of the fit function and
-	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
+	 * M is the number of fit parameters. Call this.fit() to start the actual fitting.
 	 * 
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
@@ -280,7 +277,7 @@ public class LMA {
 	/**
 	 * Initiates the fit with function constructed weights and a JAMA matrix.
 	 * N is the number of y-data points, K is the dimension of the fit function and
-	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
+	 * M is the number of fit parameters. Call this.fit() to start the actual fitting.
 	 * 
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
@@ -300,20 +297,20 @@ public class LMA {
 	
 	/**
 	 * Initiates the fit. N is the number of y-data points, K is the dimension of the fit function and
-	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
+	 * M is the number of fit parameters. Call this.fit() to start the actual fitting.
 	 * 
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in two dimensional array where each array, dataPoints[i],
 	 * contains one y-value followed by the corresponding x-array values.
 	 * I.e., the arrays should look like this:
-	 * <p>
-	 * dataPoints[0] = y0 x00 x01 x02 ... x0[K-1]<br>
-	 * dataPoints[1] = y1 x10 x11 x12 ... x1[K-1]<br>
-	 * ...<br>
+	 * 
+	 * dataPoints[0] = y0 x00 x01 x02 ... x0[K-1]
+	 * dataPoints[1] = y1 x10 x11 x12 ... x1[K-1]
+	 * ...
 	 * dataPoints[N] = yN xN0 xN1 xN2 ... x[N-1][K-1]
-	 * <p>
-	 * @param weights The weights, normally given as: <code>weights[i] = 1 / sigma_i^2</code>.
+	 * 
+	 * @param weights The weights, normally given as: weights[i] = 1 / sigma_i^2.
 	 * If you have a bad data point, set its weight to zero.
 	 * If the given array is null, a new array is created with all elements set to 1.
 	 * @param alpha An LMAMatrix instance. Must be initiated to (M x M) size.
@@ -329,20 +326,20 @@ public class LMA {
 	
 	/**
 	 * Initiates the fit. N is the number of y-data points, K is the dimension of the fit function and
-	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
+	 * M is the number of fit parameters. Call this.fit() to start the actual fitting.
 	 * 
 	 * @param function The model function to be fitted. Input parameter sizes K and M.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param dataPoints The data points in two dimensional array where each array, dataPoints[i],
 	 * contains one y-value followed by the corresponding x-array values.
 	 * I.e., the arrays should look like this:
-	 * <p>
-	 * dataPoints[0] = y0 x00 x01 x02 ... x0[K-1]<br>
-	 * dataPoints[1] = y1 x10 x11 x12 ... x1[K-1]<br>
-	 * ...<br>
+	 * 
+	 * dataPoints[0] = y0 x00 x01 x02 ... x0[K-1]
+	 * dataPoints[1] = y1 x10 x11 x12 ... x1[K-1]
+	 * ...
 	 * dataPoints[N] = yN xN0 xN1 xN2 ... x[N-1][K-1]
-	 * <p>
-	 * @param weights The weights, normally given as: <code>weights[i] = 1 / sigma_i^2</code>.
+	 * 
+	 * @param weights The weights, normally given as: weights[i] = 1 / sigma_i^2.
 	 * If you have a bad data point, set its weight to zero.
 	 * If the given array is null, a new array is created with all elements set to 1.
 	 * @param alpha An LMAMatrix instance. Must be initiated to (M x M) size.
@@ -357,15 +354,15 @@ public class LMA {
 
 	/**
 	 * Initiates the fit. N is the number of y-data points, K is the dimension of the fit function and
-	 * M is the number of fit parameters. Call <code>this.fit()</code> to start the actual fitting.
+	 * M is the number of fit parameters. Call this.fit() to start the actual fitting.
 	 * 
 	 * @param function The model function to be fitted. Must be able to take M input parameters.
 	 * @param parameters The initial guess for the fit parameters, length M.
 	 * @param yDataPoints The y-data points in an array.
 	 * @param xDataPoints The x-data points for each y data point, double[y-index][x-index]
-	 * Size must be <code>double[N][K]</code>, where N is the number of measurements
+	 * Size must be double[N][K], where N is the number of measurements
 	 * and K is the dimension of the fit function.
-	 * @param weights The weights, normally given as: <code>weights[i] = 1 / sigma_i^2</code>.
+	 * @param weights The weights, normally given as: weights[i] = 1 / sigma_i^2.
 	 * If you have a bad data point, set its weight to zero. If the given array is null,
 	 * a new array is created with all elements set to 1.
 	 * @param alpha An LMAMatrix instance. Must be initiated to (M x M) size.
@@ -402,8 +399,8 @@ public class LMA {
 	/**
 	 *  
 	 * The default fit. If used after calling fit(lambda, minDeltaChi2, maxIterations),
-	 * uses those values. The stop condition is fetched from <code>this.stop()</code>.
-	 * Override <code>this.stop()</code> if you want to use another stop condition.
+	 * uses those values. The stop condition is fetched from this.stop().
+	 * Override this.stop() if you want to use another stop condition.
 	 *
 	 * @throws InvertException the invert exception
 	 */
@@ -462,8 +459,8 @@ public class LMA {
 	
 	/**
 	 *  
-	 * Initializes and starts the fit. The stop condition is fetched from <code>this.stop()</code>.
-	 * Override <code>this.stop()</code> if you want to use another stop condition.
+	 * Initializes and starts the fit. The stop condition is fetched from this.stop().
+	 * Override this.stop() if you want to use another stop condition.
 	 *
 	 * @param lambda the lambda
 	 * @param minDeltaChi2 the min delta chi 2
@@ -494,9 +491,9 @@ public class LMA {
 	}
 	
 	/**
-	 * Solves the increments array (<code>this.da</code>) using alpha and beta.
-	 * Then updates the <code>this.incrementedParameters</code> array.
-	 * NOTE: Inverts alpha. Call at least <code>updateAlpha()</code> before calling this.
+	 * Solves the increments array (this.da) using alpha and beta.
+	 * Then updates the this.incrementedParameters array.
+	 * NOTE: Inverts alpha. Call at least updateAlpha() before calling this.
 	 *
 	 * @throws InvertException the invert exception
 	 */
@@ -555,7 +552,7 @@ public class LMA {
 		return calculateChi2(incrementedParameters);
 	}
 	
-	/** Calculates all elements for <code>this.alpha</code>. */
+	/** Calculates all elements for this.alpha. */
 	protected void updateAlpha() {
 		for (int i = 0; i < parameters.length; i++) {
 			for (int j = 0; j < parameters.length; j++) {
@@ -585,7 +582,7 @@ public class LMA {
 		return result;
 	}
 	
-	/** Calculates all elements for <code>this.beta</code>. */
+	/** Calculates all elements for this.beta. */
 	protected void updateBeta() {
 		for (int i = 0; i < parameters.length; i++) {
 			beta[i] = calculateBetaElement(i);

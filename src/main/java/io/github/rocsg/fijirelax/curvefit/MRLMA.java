@@ -24,17 +24,17 @@ import io.github.rocsg.fijirelax.mrialgo.MRUtils;
  * http://www.nrbook.com/b/bookfpdf/f15-5.pdf as a pdf file.
  * 
  * 
- * The matrix (<code>LMAMatrix</code>) class used in the fit is an interface, so you can use your
- * favourite implementation. This package uses <code>Matrix</code> from JAMA-math libraries,
+ * The matrix (LMAMatrix) class used in the fit is an interface, so you can use your
+ * favourite implementation. This package uses Matrix from JAMA-math libraries,
  * but feel free to use anything you want. Note that you have to implement
- * the actual model function and its partial derivates as <code>LMAFunction</code>
- * or <code>LMAMultiDimFunction</code> before making the fit.
- * <p>
+ * the actual model function and its partial derivates as LMAFunction
+ * or LMAMultiDimFunction before making the fit.
  * 
- * Note that there are <i>three</i> different ways to input the data points.
+ * 
+ * Note that there are three different ways to input the data points.
  * Read the documentation for each constructor carefully.
  * 
- * @author Janne Holopainen (jaolho@utu.fi, tojotamies@gmail.com)
+ * @author Janne Holopainen (jaolhoATutu.fi, tojotamiesATgmail.com)
  * @version 1.2, 24.04.2007
  * 
  * The algorithm is free for non-commercial use. 

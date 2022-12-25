@@ -21,7 +21,7 @@ import io.github.rocsg.fijirelax.mrialgo.MRUtils;
  * The Custom_Format_Importer class is in charge of handling importation MRI data
  * from NIFTI, multiple NIFTI or BRUKER formats.
  *
- *  	Copyright (C) 2022  <io.github.rocsg>
+ *  	Copyright (C) 2022  io.github.rocsg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ import io.github.rocsg.fijirelax.mrialgo.MRUtils;
  *
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>
- * @author Romain Fernandez (romain.fernandez@cirad.fr)
+ * @author Romain Fernandez (romain.fernandezATcirad.fr)
  * @version 1.2, 15.04.2022
  */
 public class Custom_Format_Importer{

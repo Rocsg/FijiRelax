@@ -53,9 +53,9 @@ import io.github.rocsg.fijirelax.mrialgo.HyperMap;
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *   along with this program.  If not, see https://www.gnu.org/licenses/
  *
- * @author Romain Fernandez (romain.fernandez@cirad.fr)
+ * @author Romain Fernandez (romain.fernandezATcirad.fr)
  */
 public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 

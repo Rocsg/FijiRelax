@@ -62,7 +62,7 @@ import io.github.rocsg.fijirelax.mrialgo.RiceEstimator;
 
 /**
  * MRI_HyperCurvesExplorer is the PlugInFrame describing the curve explorer of FijiRelax, an user-friendly tool for exploration of T1 T2 relaxation curves coming from T1 and T2 sequence
- * 	Copyright (C) 2022  <io.github.rocsg>
+ * 	Copyright (C) 2022  io.github.rocsg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ import io.github.rocsg.fijirelax.mrialgo.RiceEstimator;
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *   along with this program.  If not, see https://www.gnu.org/licenses/
 */
 
 

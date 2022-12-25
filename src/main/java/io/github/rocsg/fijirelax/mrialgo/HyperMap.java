@@ -33,10 +33,9 @@ import io.github.rocsg.fijirelax.gui.Custom_Format_Importer;
 /**
  * HyperMap class is the data packager for the variety of possible data processed by FijiRelax.
  * A HyperMap can represent up to a 3D+modality+t MRI image series
- * <p>
  * 
- * @author Romain Fernandez (rocsg@github)
- * 	Copyright (C) 2022  <io.github.rocsg>
+ * @author Romain Fernandez (rocsgATgithub)
+ * 	Copyright (C) 2022  io.github.rocsg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -49,7 +48,7 @@ import io.github.rocsg.fijirelax.gui.Custom_Format_Importer;
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *   along with this program.  If not, see https://www.gnu.org/licenses/
 */
 public class HyperMap {
 	

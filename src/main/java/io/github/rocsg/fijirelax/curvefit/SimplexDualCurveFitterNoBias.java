@@ -1,6 +1,3 @@
-/*
- * 
- */
 package io.github.rocsg.fijirelax.curvefit;
 
 import java.util.ArrayList;
@@ -27,7 +24,7 @@ import io.github.rocsg.fijirelax.mrialgo.MRUtils;
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *   along with this program.  If not, see https://www.gnu.org/licenses/
 */
 public class SimplexDualCurveFitterNoBias{
 	

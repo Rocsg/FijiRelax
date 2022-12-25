@@ -5,7 +5,7 @@ package io.github.rocsg.fijirelax.lma;
 
 /**
  * The Class ArrayConverter.
- * 	Copyright (C) 2022  <io.github.rocsg>
+ * 	Copyright (C) 2022  io.github.rocsg
  *	//Initially joalho.data.lma, see  https://zenodo.org/record/4281064 , with licence (Open)
  *
  *   This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,7 @@ package io.github.rocsg.fijirelax.lma;
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *   along with this program.  If not, see https://www.gnu.org/licenses/
  */
 public class ArrayConverter {
 	

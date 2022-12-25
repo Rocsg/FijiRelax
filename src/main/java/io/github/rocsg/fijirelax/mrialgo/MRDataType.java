@@ -6,7 +6,7 @@ package io.github.rocsg.fijirelax.mrialgo;
 /** This enum define different common MRI imaging sequence. Their handling is done by HyperMap
  * 
  * @see io.github.rocsg.fijirelax.mrialgo.HyperMap
- * 	Copyright (C) 2022  <io.github.rocsg>
+ * 	Copyright (C) 2022  io.github.rocsg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ package io.github.rocsg.fijirelax.mrialgo;
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *   along with this program.  If not, see https://www.gnu.org/licenses/
 */
 public enum MRDataType {
 	

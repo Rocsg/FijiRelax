@@ -22,7 +22,7 @@ import Jama.Matrix;
  *
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>
- * @author Janne Holopainen (jaolho@utu.fi, tojotamies@gmail.com)
+ * @author Janne Holopainen (jaolhoATutu.fi, tojotamiesATgmail.com)
  * @version 1.0, 23.03.2007
  */
 public class JAMAMatrix extends Matrix implements LMAMatrix {

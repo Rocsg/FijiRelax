@@ -7,7 +7,7 @@ package io.github.rocsg.fijirelax.mrialgo;
 /** This enum define cases of noise management. NOTHING means no noise is estimated, OFFSET means noise is estimated as an additional BIAS, and RICE means full Rice Noise estimation 
  * See the paper Fernandez et al. 2022 (in prep) for more information
  *
- * 	Copyright (C) 2022  <io.github.rocsg>
+ * 	Copyright (C) 2022  io.github.rocsg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package io.github.rocsg.fijirelax.mrialgo;
  *   GNU General Public License for more details.
  *
  *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *   along with this program.  If not, see https://www.gnu.org/licenses/
 */
 public enum NoiseManagement {
 	
