@@ -546,7 +546,7 @@ public class MRLMA extends LMA{
 	 * Then updates the <code>this.incrementedParameters</code> array.
 	 * NOTE: Inverts alpha. Call at least <code>updateAlpha()</code> before calling this.
 	 *
-	 * @throws InvertException the invert exception
+	 * @throws LMAMatrix.InvertException the invert exception
 	 */
 	protected void solveIncrements() throws LMAMatrix.InvertException {
 		alpha.invert(); // throws InvertException if matrix is singular
@@ -736,7 +736,6 @@ public class MRLMA extends LMA{
 	 * Gets the covariance matrix of standard errors in parameters.
 	 *
 	 * @return The covariance matrix of the fit parameters.
-	 * @throws InvertException the invert exception
 	 * @throws LMAMatrix.InvertException if the inversion of alpha fails.
 	 * Note that even if the fit does NOT throw the invert exception,
 	 * this method can still do it, because here alpha is inverted with lambda = 0.
@@ -770,7 +769,6 @@ public class MRLMA extends LMA{
 	 * Gets the standard errors of parameters.
 	 *
 	 * @return The estimated standard errors of the fit parameters.
-	 * @throws InvertException the invert exception
 	 * @throws LMAMatrix.InvertException if the inversion of alpha fails.
 	 * Note that even if the fit does NOT throw the invert exception,
 	 * this method can still do it, because here alpha is inverted with lambda = 0.

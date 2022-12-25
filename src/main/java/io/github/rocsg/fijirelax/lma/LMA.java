@@ -402,7 +402,7 @@ public class LMA {
 	 * uses those values. The stop condition is fetched from this.stop().
 	 * Override this.stop() if you want to use another stop condition.
 	 *
-	 * @throws InvertException the invert exception
+	 * @throws LMAMatrix.InvertException if the inversion of alpha fails.
 	 */
 	public void fit() throws LMAMatrix.InvertException {
 		iterationCount = 0;
@@ -683,7 +683,6 @@ public class LMA {
 	 * Gets the covariance matrix of standard errors in parameters.
 	 *
 	 * @return The covariance matrix of the fit parameters.
-	 * @throws InvertException the invert exception
 	 * @throws LMAMatrix.InvertException if the inversion of alpha fails.
 	 * Note that even if the fit does NOT throw the invert exception,
 	 * this method can still do it, because here alpha is inverted with lambda = 0.
@@ -717,7 +716,6 @@ public class LMA {
 	 * Gets the standard errors of parameters.
 	 *
 	 * @return The estimated standard errors of the fit parameters.
-	 * @throws InvertException the invert exception
 	 * @throws LMAMatrix.InvertException if the inversion of alpha fails.
 	 * Note that even if the fit does NOT throw the invert exception,
 	 * this method can still do it, because here alpha is inverted with lambda = 0.

@@ -83,7 +83,7 @@ public class ArrayConverter {
 	/**
 	 * Separates data from dataPoints[N][K+1] to yDataPoints[N] and xDatapoints[N][K].
 	 * dataPoints[j] = yj xj0 xj1 xj2 ... xj[K-1]
-	 * =>
+	 * Gives
 	 * yDataPoints    = y0 y1 y2 ... yN
 	 * xDataPoints[i] = xi0 xi1 xi2 ... xi[K-1]
 	 *
@@ -108,7 +108,7 @@ public class ArrayConverter {
 	 * 
 	 * yDataPoints    = y0 y1 y2 ... yN
 	 * xDataPoints[i] = xi0 xi1 xi2 ... xi[K-1]
-	 * =>
+	 * Gives
 	 * result[j] = yj xj0 xj1 xj2 ... xj[K-1]
 	 *
 	 * @param yDataPoints the y data points
@@ -131,7 +131,7 @@ public class ArrayConverter {
 	 * 
 	 * yDataPoints    = y0 y1 y2 ... yN
 	 * xDataPoints[i] = xi0 xi1 xi2 ... xi[K-1]
-	 * =>
+	 * Gives
 	 * result[j] = yj xj0 xj1 xj2 ... xj[K-1]
 	 *
 	 * @param yDataPoints the y data points

@@ -1,6 +1,6 @@
 /**
  * This package contains linear matrix algebra functions used for the curve fitting algorithms
- * Copyright (C) 2022  <io.github.rocsg> ((except MRLMA class, which is 
+ * Copyright (C) 2022  io.github.rocsg ((except MRLMA class, which is 
  *   @author Janne Holopainen (jaolhoATutu.fi, tojotamiesATgmail.com)
  *   @version 1.2, 24.04.2007 , free for non-commercial use)
  * 

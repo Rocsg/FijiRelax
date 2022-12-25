@@ -65,6 +65,7 @@ public class RiceEstimator {
 	
 	/**
 	 * Test of the random Rice simulator
+	 * @return the meanDrift
 	 */
 	public static double[] testRandomRiceMeanDrift() {
 		int N=100000;
@@ -82,6 +83,7 @@ public class RiceEstimator {
 	
 	/**
 	 * Test of the random Rice simulator
+	 * @return the stats
 	 */
 	public static double[] testSimulateAndEstimateRiceSigma() {
 		double sigma=0.05;
@@ -94,6 +96,7 @@ public class RiceEstimator {
 	
 	/**
 	 * Test of the random Rice simulator and correction scheme
+	 * @return the results
 	 */
 	public static double []testCorruptAndRecoverSignal() {
 		//Build an estimator.
