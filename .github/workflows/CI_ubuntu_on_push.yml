@@ -19,5 +19,5 @@ jobs:
         run: sudo apt-get install xvfb
 
       - name: Build with Maven and xvfb
-        run: xvfb-run --autoservernum .github/bash/build.sh
+        run: xvfb-run --auto-servernum .github/bash/build.sh
 
