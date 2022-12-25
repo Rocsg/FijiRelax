@@ -465,7 +465,7 @@ public class LMA {
 	 * @param lambda the lambda
 	 * @param minDeltaChi2 the min delta chi 2
 	 * @param maxIterations the max iterations
-	 * @throws InvertException the invert exception
+	 * @throws LMAMatrix.InvertException the invert exception
 	 */
 	public void fit(double lambda, double minDeltaChi2, int maxIterations) throws LMAMatrix.InvertException {
 		this.lambda = lambda;
@@ -495,7 +495,7 @@ public class LMA {
 	 * Then updates the this.incrementedParameters array.
 	 * NOTE: Inverts alpha. Call at least updateAlpha() before calling this.
 	 *
-	 * @throws InvertException the invert exception
+	 * @throws LMAMatrix.InvertException the invert exception
 	 */
 	protected void solveIncrements() throws LMAMatrix.InvertException {
 		alpha.invert(); // throws InvertException if matrix is singular
