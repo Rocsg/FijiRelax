@@ -101,7 +101,7 @@ public class Test_FijiRelaxPackage {
 				for(boolean forg:tabForget) {
 					System.out.println("Test "+(i++)+"/12");
 					HyperMap hyperFantom3=HyperMap.hyperMapFactory(hyperFantom);
-					hyperFantom3.computeMapsAgainAndMask(alg,false,noi,forg,null,4);
+					hyperFantom3.computeMapsAgainAndMask(alg,false,noi,forg,null,4,false);
 				}
 			}
 		}
@@ -192,7 +192,6 @@ public class Test_FijiRelaxPackage {
 
 	@Test
 	public void test_07_Estimators() throws Exception{
-		if(true)return;
 		System.out.println("\n\n\nRUNNING TEST 07\n\n\n");
 		if(!completeTest)return;
 		ImagePlus imgMap=IJ.openImage(
@@ -209,7 +208,7 @@ public class Test_FijiRelaxPackage {
 		int incr=0;
 		for(int alg:algTypes)for(boolean separated:separateds)for(NoiseManagement noi: noises)for(boolean forget:forgets)for(double std:nbStds) {
 			IJ.log(""+(incr++)+" / 48");
-			map.computeMapsAgainAndMask(alg, separated, noi, forget, null, std);
+			map.computeMapsAgainAndMask(alg, separated, noi, forget, null, std,false);
 		}
 	}
 

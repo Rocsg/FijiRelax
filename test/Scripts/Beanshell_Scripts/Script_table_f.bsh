@@ -39,17 +39,17 @@ IJ.openImage(pathHyperMap).show();
 //Compute maps and measure performance for the results table
 Timer t=new Timer();
 t.print("\n\n-------------Before computing exp fit------------------");
-hyp.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.NOTHING,false,null,4);
+hyp.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.NOTHING,false,null,4,true);
 t.print("\n\n-------------After computing exp fit------------------");
 
 t=new Timer();
 t.print("\n\n-------------Before computing offset fit------------------");
-hyp.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.OFFSET,false,null,4);
+hyp.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.OFFSET,false,null,4,true);
 t.print("\n\n-------------After computing offset fit------------------");
 
 t=new Timer();
 t.print("\n\n-------------Before computing rice fit------------------");
-hyp.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,4);
+hyp.computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,4,true);
 t.print("A\n\n-------------After computing rice fit------------------");
 
 IJ.showMessage("Computation done ! See the textual console log window for the measured timing.");

@@ -1644,7 +1644,7 @@ public class HyperMap {
 	 * @return the updated HyperMap, as a TIFF ImagePlus
 	 */	
 	public ImagePlus computeMaps() {
-		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,4);
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,4,false);
 	}
 
 	/**
@@ -1654,7 +1654,7 @@ public class HyperMap {
 	 * @return the updated HyperMap, as a TIFF ImagePlus
 	 */
 	public ImagePlus computeMaps(NoiseManagement noise) {
-		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,noise,false,null,4);
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,noise,false,null,4,false);
 	}
 
 	/**
@@ -1663,7 +1663,7 @@ public class HyperMap {
 	 * @return the updated HyperMap, as a TIFF ImagePlus
 	 */	
 	public ImagePlus computeMapsNoJoint() {
-		return computeMapsAgainAndMask(MRUtils.SIMPLEX,true,NoiseManagement.RICE,false,null,4);
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,true,NoiseManagement.RICE,false,null,4,false);
 	}
 	
 	/**
@@ -1673,7 +1673,7 @@ public class HyperMap {
 	 * @return the updated HyperMap, as a TIFF ImagePlus
 	 */
 	public ImagePlus computeMapsNoJoint(NoiseManagement noi) {
-		return computeMapsAgainAndMask(MRUtils.SIMPLEX,true,noi,false,null,4);
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,true,noi,false,null,4,false);
 	}
 
 	/**
@@ -1683,7 +1683,7 @@ public class HyperMap {
 	 * @return the updated HyperMap, as a TIFF ImagePlus
 	 */
 	public ImagePlus computeMapsWithMask(ImagePlus mask) {
-		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,mask,4);
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,mask,4,false);
 	}
 	
 	/**
@@ -1693,7 +1693,7 @@ public class HyperMap {
 	 * @return the updated HyperMap, as a TIFF ImagePlus
 	 */
 	public ImagePlus computeMaps(double nStdDevForMask) {
-		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,nStdDevForMask);
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,nStdDevForMask,false);
 	}
 
 	/**
@@ -1711,7 +1711,7 @@ public class HyperMap {
 		if(paramsGUI[1]==0)noi=NoiseManagement.RICE;
 		else noi=(paramsGUI[1]==1 ? NoiseManagement.OFFSET : NoiseManagement.NOTHING);
 		double nbStd=paramsGUI[4];
-		return computeMapsAgainAndMask(algType,separated ,noi,forgetFistEcho,imgMask,nbStd);
+		return computeMapsAgainAndMask(algType,separated ,noi,forgetFistEcho,imgMask,nbStd,false);
 	}
 
 	/**
@@ -1725,16 +1725,17 @@ public class HyperMap {
 	 * @param forgetFirstEcho set to true to avoid fitting the first relaxation point (convention in some clinical setups)
 	 * @param imgMaskUser if non null, used as a mask for the computation. Points outside the mask (set to 0) are not used for fitting, nor estimating T1-T2 relaxation times
 	 * @param nbStdNoiseAroundMeanForSelection if no mask is provided, mask is computed by selecting the voxels which max value among the relax series is upper than mean rice noise + sigma noise * nbstdNoiseAroundMean)
+	 * @param silentMode boolean flag to activate the performance mode and make the measurement of optimal performance
 	 * @return the HyperImage, in the shape of a 4D or 5D image, including the echoes data in the last channels, and computed maps in the first channels
 	 */
-	public ImagePlus computeMapsAgainAndMask(int algType,boolean separated,NoiseManagement noise,boolean forgetFirstEcho,ImagePlus imgMaskUser,double nbStdNoiseAroundMeanForSelection) {
+	public ImagePlus computeMapsAgainAndMask(int algType,boolean separated,NoiseManagement noise,boolean forgetFirstEcho,ImagePlus imgMaskUser,double nbStdNoiseAroundMeanForSelection,boolean silentMode) {
 		if(T>1) {
 			
 			ImagePlus []imgTab=new ImagePlus[T];
 			for(int t=0;t<T;t++) {
 				ImagePlus imgTemp=new Duplicator().run(this.hyperImg,1,hasMaps ? Ctot : C,1,Z,t+1,t+1);
 				HyperMap hypTemp=new HyperMap(imgTemp);
-				imgTab[t]=hypTemp.computeMapsAgainAndMask(algType, separated, noise, forgetFirstEcho, imgMaskUser, nbStdNoiseAroundMeanForSelection);
+				imgTab[t]=hypTemp.computeMapsAgainAndMask(algType, separated, noise, forgetFirstEcho, imgMaskUser, nbStdNoiseAroundMeanForSelection,silentMode);
 			}
 			double[][]ranges=new double[Ctot][2];
 			for(int c=0;c<Ctot;c++) {
@@ -1802,20 +1803,20 @@ public class HyperMap {
 			//If only T1 compute PD T1 and stack it into hypermap
 			if(hasT1sequence) {
 				if(noise==NoiseManagement.OFFSET || noise==NoiseManagement.NOTHING) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1_MONO,algType,false,false);		
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1_MONO,algType,false,false,silentMode);		
 				}
-				else maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1_MONO_RICE,algType,false,false);	
+				else maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1_MONO_RICE,algType,false,false,silentMode);	
 			}
 			//if only T2 compute PD T1 and stack it into hypermap
 			if(hasT2sequence) {
 				if(noise==NoiseManagement.NOTHING) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T2_MONO,algType,false,false);		
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T2_MONO,algType,false,false,silentMode);		
 				}
 				else if(noise==NoiseManagement.OFFSET) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T2_MONO_BIAS,algType,false,false);		
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T2_MONO_BIAS,algType,false,false,silentMode);		
 				}
 				else if(noise==NoiseManagement.RICE) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T2_MONO_RICE,algType,false,false);		
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T2_MONO_RICE,algType,false,false,silentMode);		
 				}
 				//typeMaps=new MRDataType[] {MRDataType.PDMAP,MRDataType.T2MAP};
 			}
@@ -1825,29 +1826,29 @@ public class HyperMap {
 			if(separated) {
 				ImagePlus [][]mapsTemp=new ImagePlus[2][];
 				if(noise==NoiseManagement.NOTHING) {
-					mapsTemp[0]=MRUtils.computeT1T2MapMultiThreadSlices(imgT1s, imgMask,sigmaInUse,MRUtils.T1_MONO,algType,false,false);		
-					mapsTemp[1]=MRUtils.computeT1T2MapMultiThreadSlices(imgT2s, imgMask,sigmaInUse,MRUtils.T2_MONO,algType,false,false);		
+					mapsTemp[0]=MRUtils.computeT1T2MapMultiThreadSlices(imgT1s, imgMask,sigmaInUse,MRUtils.T1_MONO,algType,false,false,silentMode);		
+					mapsTemp[1]=MRUtils.computeT1T2MapMultiThreadSlices(imgT2s, imgMask,sigmaInUse,MRUtils.T2_MONO,algType,false,false,silentMode);		
 				}
 				else if(noise==NoiseManagement.OFFSET) {
-					mapsTemp[0]=MRUtils.computeT1T2MapMultiThreadSlices(imgT1s, imgMask,sigmaInUse,MRUtils.T1_MONO,algType,false,false);		
-					mapsTemp[1]=MRUtils.computeT1T2MapMultiThreadSlices(imgT2s, imgMask,sigmaInUse,MRUtils.T2_MONO_BIAS,algType,false,false);		
+					mapsTemp[0]=MRUtils.computeT1T2MapMultiThreadSlices(imgT1s, imgMask,sigmaInUse,MRUtils.T1_MONO,algType,false,false,silentMode);		
+					mapsTemp[1]=MRUtils.computeT1T2MapMultiThreadSlices(imgT2s, imgMask,sigmaInUse,MRUtils.T2_MONO_BIAS,algType,false,false,silentMode);		
 				}
 				else if(noise==NoiseManagement.RICE) {
-					mapsTemp[0]=MRUtils.computeT1T2MapMultiThreadSlices(imgT1s, imgMask,sigmaInUse,MRUtils.T1_MONO_RICE,algType,false,false);		
-					mapsTemp[1]=MRUtils.computeT1T2MapMultiThreadSlices(imgT2s, imgMask,sigmaInUse,MRUtils.T2_MONO_RICE,algType,false,false);		
+					mapsTemp[0]=MRUtils.computeT1T2MapMultiThreadSlices(imgT1s, imgMask,sigmaInUse,MRUtils.T1_MONO_RICE,algType,false,false,silentMode);		
+					mapsTemp[1]=MRUtils.computeT1T2MapMultiThreadSlices(imgT2s, imgMask,sigmaInUse,MRUtils.T2_MONO_RICE,algType,false,false,silentMode);		
 				}
 				maps=new ImagePlus[] {mapsTemp[1][0],mapsTemp[0][1],mapsTemp[1][1]};
 
 			}
 			else {
 				if(noise==NoiseManagement.NOTHING) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1T2_MONO,algType,false,false);	
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1T2_MONO,algType,false,false,silentMode);	
 				}
 				else if(noise==NoiseManagement.OFFSET) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1T2_MONO_BIAS,algType,false,false);	
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1T2_MONO_BIAS,algType,false,false,silentMode);	
 				}
 				else if(noise==NoiseManagement.RICE) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1T2_MONO_RICE,algType,false,false);	
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1T2_MONO_RICE,algType,false,false,silentMode);	
 				}
 			}
 		}

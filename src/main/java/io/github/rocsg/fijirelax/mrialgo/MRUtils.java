@@ -466,9 +466,10 @@ public class MRUtils  {
 	 * @param algType the alg type (exemple: MRUtils.LM)
 	 * @param debug a flag for displaying info about how the thread are going
 	 * @param forgetFirstT2 boolean flag to define whether or not the first echo should be taken in consideration
+	 * @param silentMode boolean flag to activate the performance mode and make the measurement of optimal performance
 	 * @return the tab of computed maps
 	 */
-	public static ImagePlus[] computeT1T2MapMultiThreadSlices(final ImagePlus[]imgsTemp,ImagePlus mask,double sigmaSmoothing,int fitType,int algType, boolean debug,boolean forgetFirstT2) {
+	public static ImagePlus[] computeT1T2MapMultiThreadSlices(final ImagePlus[]imgsTemp,ImagePlus mask,double sigmaSmoothing,int fitType,int algType, boolean debug,boolean forgetFirstT2,boolean silentMode) {
 		int[]dims=VitimageUtils.getDimensions(imgsTemp[0]);		final int X=dims[0];		final int Y=dims[1];		final int Z=dims[2];  final int YZ=Y*Z;
 		int nEc=imgsTemp.length;
 
@@ -572,7 +573,7 @@ public class MRUtils  {
 				for(int w=0;w<nWork;w++) {
 					
 					int incrTot=incrTotalFit.getAndIncrement();
-					if(incrTot%onePercent==0) {
+					if(incrTot%onePercent==0 && (!silentMode)) {
 						IJ.log("Maps computation : "+(VitimageUtils.dou(incrTot*100.0/XYZ)+" %"));
 						IJ.showProgress(incrTot*1.0/XYZ);
 					}
