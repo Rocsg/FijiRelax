@@ -42,6 +42,8 @@ public class Test_FijiRelaxPackage {
 		if(!completeTest)return;
 		try {ItkTransform tr=new ItkTransform();}
 		catch (UnsatisfiedLinkError error) {
+			System.out.println("\n\n\nNo test for registration cause dependance is missing\n\n\n");
+			VitimageUtils.waitFor(5000);
 			return;
 		}
 		
