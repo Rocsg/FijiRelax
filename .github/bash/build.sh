@@ -1,2 +1,2 @@
-mvn -e --batch-mode --update-snapshots package
+mvn -e --batch-mode --update-snapshots package -Djava.library.path=lib
 
