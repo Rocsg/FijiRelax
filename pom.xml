@@ -194,9 +194,11 @@
   	
 	 <build>
 	  <plugins>
-	      
 	      <plugin>
 	          <artifactId>maven-surefire-plugin</artifactId>
+              <configuration>
+                  <argLine>-Djava.library.path=/home/runner/work/FijiRelax/FijiRelax/lib/</argLine>
+              </configuration>
 	        </plugin>
           <plugin>
               <artifactId>maven-failsafe-plugin</artifactId>
