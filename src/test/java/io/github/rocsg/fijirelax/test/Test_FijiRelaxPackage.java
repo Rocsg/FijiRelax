@@ -39,6 +39,7 @@ public class Test_FijiRelaxPackage {
 	// Test main computation features of the plugin
 	@Test
 	public void test_03_RegisterAndComputeMapsCircle()throws Exception{
+		System.out.println("\n\n\nRUNNING TEST 03\n\n\n");
 		if(!completeTest)return;
 		try {ItkTransform tr=new ItkTransform();}
 		catch (UnsatisfiedLinkError error) {
@@ -105,6 +106,7 @@ public class Test_FijiRelaxPackage {
 	// Test main computation features of the plugin
 	@Test
 	public void test_04_all_fits() {
+		System.out.println("\n\n\nRUNNING TEST 04\n\n\n");
 		if(!completeTest)return;
 		ImagePlus t1map=IJ.createImage("T1MAP", 100, 100, 1, 32);
 		VitimageUtils.set32bitToValue(t1map, 1600, 0);
@@ -146,6 +148,7 @@ public class Test_FijiRelaxPackage {
 
 	@Test
 	public void test_06_Importers() throws Exception{
+		System.out.println("\n\n\nRUNNING TEST 06\n\n\n");
 		if(!completeTest)return;
 		String path=new File(getClass().getClassLoader().getResource("data/test_2/").getFile()).getAbsolutePath();
 		ImagePlus imgMap=IJ.openImage(
@@ -184,6 +187,7 @@ public class Test_FijiRelaxPackage {
 
 	@Test
 	public void test_07_Estimators() throws Exception{
+		System.out.println("\n\n\nRUNNING TEST 07\n\n\n");
 		if(!completeTest)return;
 		ImagePlus imgMap=IJ.openImage(
 				new File(getClass().getClassLoader().getResource("data/test_2/TestDataHyperMap/smallSorghoSerieRaw.tif").getFile()).getAbsolutePath());
@@ -205,6 +209,7 @@ public class Test_FijiRelaxPackage {
 
 	@Test
 	public void test_08_Outliers() throws Exception{
+		System.out.println("\n\n\nRUNNING TEST 08\n\n\n");
 		if(!completeTest)return;
 		ImagePlus imgMap=IJ.openImage(
 				new File(getClass().getClassLoader().getResource("data/test_2/TestDataHyperMap/smallSorghoSerieRaw.tif").getFile()).getAbsolutePath());
