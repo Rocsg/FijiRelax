@@ -10,11 +10,18 @@ jobs:
         uses: s4u/maven-settings-action@v2.8.0
         with:
           mirrors: '[{"id": "imagej.public", "name": "imagej.public", "mirrorOf": "external:http:*", "url": "http://maven.imagej.net/content/groups/public", "blocked": "false"}]'
-      - name: Set up JDK 11
+      - name: install curl
+        run: |
+          apt-get update
+          apt-get install curl -y
+      - name: grab SimpleITK
+        run: curl -L https://sites.imagej.net/ImageJ-ITK/lib/linux64/libSimpleITKJava.so-20150910103835
+              - name: Set up JDK 11
         uses: actions/setup-java@v3
         with:
           java-version: '11'
           distribution: 'adopt'
+          cache: maven
       - name: Install xvfb
         run: sudo apt-get install xvfb
 
