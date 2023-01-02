@@ -43,6 +43,7 @@ public class Test_FijiRelaxPackage {
 		if(!completeTest)return;
 		try {ItkTransform tr=new ItkTransform();}
 		catch (UnsatisfiedLinkError error) {
+			System.out.println(error.getMessage());
 			System.out.println("\n\n\nNo test for registration cause dependance is missing\n\n\n");
 			System.out.println("LD PATH="+System.getProperty("java.library.path"));
 			System.out.println("Content of lib path=");
