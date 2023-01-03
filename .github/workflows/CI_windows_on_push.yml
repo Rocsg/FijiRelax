@@ -19,5 +19,5 @@ jobs:
           distribution: 'adopt'
           cache: maven
       - name: Build with Maven
-        run: mvn -e --batch-mode --update-snapshots package -Djava.library.path="/home/runner/work/FijiRelax/FijiRelax/lib"
+        run: mvn -e --batch-mode --update-snapshots -Djava.library.path="D:\a\FijiRelax\FijiRelax\lib" package 
 
