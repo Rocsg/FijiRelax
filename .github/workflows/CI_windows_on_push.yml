@@ -21,5 +21,5 @@ jobs:
       - name: Build with Maven
         shell: bash
         run: |
-          exec mvn -e --batch-mode --update-snapshots package -Djava.library.path="D:\a\FijiRelax\FijiRelax\lib" -Djava.awt.headless=true
+          exec mvn -e --batch-mode --update-snapshots package -Djava.library.path="D:\a\FijiRelax\FijiRelax\lib\" -Djava.awt.headless=true
 

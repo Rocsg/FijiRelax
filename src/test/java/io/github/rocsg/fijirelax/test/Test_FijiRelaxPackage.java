@@ -125,6 +125,7 @@ public class Test_FijiRelaxPackage {
 		ImagePlus testEchoes;
 		
 		testMaps=VitimageUtils.hyperStackingChannels(new ImagePlus[] {pdmap,t1map,maskmap});
+		try {
 		testEchoes=MRUtils.simulateEchoesT1Relax(
 				testMaps, new double[] {600,1200,2400,4000}, 11, 12,MRDataType.T1SEQ,100,"TestT1" 
 		);
@@ -138,6 +139,7 @@ public class Test_FijiRelaxPackage {
 		testEchoes=MRUtils.simulateEchoesT1T2Relax(
 				testMaps, new double[] {600,1200,2400,4000,4000,4000,4000,4000,4000,4000},  new double[] {11,11,11,11,22,33,44,55,66,77}, 12,new MRDataType[] {MRDataType.T1SEQ,MRDataType.T2SEQ,MRDataType.T1T2SEQ},100,"TestT1T2" 
 		);
+		}catch(java.awt.HeadlessException he) {System.out.println("A Headless exception occured. Test early break");return;}
 	}
 
 	
@@ -185,7 +187,6 @@ public class Test_FijiRelaxPackage {
 		//IJ.saveAsTiff(diff, "/home/rfernandez/Bureau/testDiff2.tif");
 		lowerBound=VitimageUtils.minOfImage(diff);
 		upperBound=VitimageUtils.maxOfImage(diff);		
-		ImageJ ij=new ImageJ();
 		assertEquals(lowerBound, 0,VitimageUtils.EPSILON);
 		assertEquals(upperBound, 0,VitimageUtils.EPSILON);
 	}
