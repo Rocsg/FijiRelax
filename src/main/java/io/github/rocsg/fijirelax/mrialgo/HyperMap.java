@@ -1984,6 +1984,7 @@ public class HyperMap {
 			this.setDisplayRange();
 		}
 		adjustContrast();
+		
 	}
 		
 	/**
