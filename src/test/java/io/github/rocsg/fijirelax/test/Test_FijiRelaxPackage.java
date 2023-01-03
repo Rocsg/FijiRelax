@@ -67,7 +67,7 @@ public class Test_FijiRelaxPackage {
 		
 
 
-
+ 
 		//Run of the registration routine
 		try{hyperFantom.registerEchoes();}catch(java.awt.HeadlessException he) {he.printStackTrace();return;}
 
