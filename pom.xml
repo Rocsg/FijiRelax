@@ -197,7 +197,7 @@
 	      <plugin>
 	          <artifactId>maven-surefire-plugin</artifactId>
               <configuration>
-                  <argLine>-Djava.library.path=${java.library.path};/home/runner/work/FijiRelax/FijiRelax/lib/</argLine>
+                  <argLine>-Djava.library.path=${java.library.path};D:/a/FijiRelax/FijiRelax/lib/;/home/runner/work/FijiRelax/FijiRelax/lib/</argLine>
               </configuration>
 	        </plugin>
           <plugin>

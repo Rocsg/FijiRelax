@@ -47,7 +47,8 @@ public class Test_FijiRelaxPackage {
 			System.out.println("\n\n\nNo test for registration cause dependance is missing\n\n\n");
 			System.out.println("LD PATH="+System.getProperty("java.library.path"));
 			System.out.println("Content of lib path=");
-			for(String s: new File(System.getProperty("java.library.path")).list() )System.out.println(s);
+			File f=new File(System.getProperty("java.library.path"));
+			if(f!=null)for(String s: f.list() )System.out.println(s);
 			System.out.println("PROP="+System.getProperties().toString());
 			VitimageUtils.waitFor(5000);
 			return;
