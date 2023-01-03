@@ -48,7 +48,10 @@ public class Test_FijiRelaxPackage {
 			System.out.println("LD PATH="+System.getProperty("java.library.path"));
 			System.out.println("Content of lib path=");
 			File f=new File(System.getProperty("java.library.path"));
-			if(f!=null)for(String s: f.list() )System.out.println(s);
+			if(f!=null) {
+				String[]ss=f.list();
+				if(ss!=null)for(String s: f.list() )System.out.println(s);
+			}
 			System.out.println("PROP="+System.getProperties().toString());
 			VitimageUtils.waitFor(5000);
 			return;
