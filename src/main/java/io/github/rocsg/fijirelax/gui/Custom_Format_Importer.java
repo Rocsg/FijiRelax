@@ -232,7 +232,6 @@ public class Custom_Format_Importer{
 				int nbAverage=VitimageUtils.getAveraging(imgT1T2[i][j]);
 				ic=new ImageConverter(imgT1T2[i][j]);
 				ic.convertToGray32();
-//				IJ.run(imgT1T2[i][j],"32-bit","");
 				if(nbAverage!=2)imgT1T2[i][j]=VitimageUtils.makeOperationOnOneImage(imgT1T2[i][j], 2, 2.0/nbAverage, false);
 			}
 		}

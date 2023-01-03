@@ -56,6 +56,7 @@ import ij.gui.Roi;
 import ij.io.Opener;
 import ij.plugin.frame.PlugInFrame;
 import ij.plugin.frame.RoiManager;
+import ij.process.StackConverter;
 import io.github.rocsg.fijirelax.mrialgo.HyperMap;
 import io.github.rocsg.fijirelax.mrialgo.MRUtils;
 import io.github.rocsg.fijirelax.mrialgo.RiceEstimator;
@@ -1034,7 +1035,7 @@ public class MRI_HyperCurvesExplorer extends PlugInFrame implements ActionListen
 	 * @param fullHyp the ImagePlus
 	 */
 	public void runExplorerFromImage(ImagePlus fullHyp) {
-		if(!(fullHyp.getType()==ImagePlus.GRAY32))IJ.run(fullHyp,"32-bit","");
+		if(!(fullHyp.getType()==ImagePlus.GRAY32))new StackConverter(fullHyp).convertToGray32();
 		if(VitimageUtils.isBouture(fullHyp))this.deltaT2=25;
 		IJ.log("Opening hyperimage "+VitimageUtils.imageResume(fullHyp));
 		hyperMap=new HyperMap(fullHyp);
