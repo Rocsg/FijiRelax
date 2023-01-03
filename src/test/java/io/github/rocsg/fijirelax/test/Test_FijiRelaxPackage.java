@@ -69,7 +69,7 @@ public class Test_FijiRelaxPackage {
 
 
 		//Run of the registration routine
-		try{hyperFantom.registerEchoes();}catch(java.awt.HeadlessException he) {he.printStackTrace();}
+		try{hyperFantom.registerEchoes();}catch(java.awt.HeadlessException he) {he.printStackTrace();return;}
 
 		//Run copy constructor
 		HyperMap hyperFantom2=HyperMap.hyperMapFactory(hyperFantom);
