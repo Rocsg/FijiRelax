@@ -20,5 +20,4 @@ jobs:
           cache: maven
       - name: Build with Maven
         run: mvn -e --batch-mode --update-snapshots package 
-          options: -Djava.awt.headless=true
 
