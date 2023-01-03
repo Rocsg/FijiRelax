@@ -116,7 +116,6 @@ public class Test_FijiRelaxPackage {
 	// Test main computation features of the plugin
 	@Test
 	public void test_04_all_fits() {
-		if(true)return;
 		System.out.println("\n\n\nRUNNING TEST 04\n\n\n");
 		if(!completeTest)return;
 		ImagePlus t1map=IJ.createImage("T1MAP", 100, 100, 1, 32);
@@ -161,7 +160,6 @@ public class Test_FijiRelaxPackage {
 
 	@Test
 	public void test_06_Importers() throws Exception{
-		if(true)return;
 		System.out.println("\n\n\nRUNNING TEST 06\n\n\n");
 		if(!completeTest)return;
 		String path=new File(getClass().getClassLoader().getResource("data/test_2/").getFile()).getAbsolutePath();
@@ -200,7 +198,6 @@ public class Test_FijiRelaxPackage {
 
 	@Test
 	public void test_07_Estimators() throws Exception{
-		if(true)return;
 		System.out.println("\n\n\nRUNNING TEST 07\n\n\n");
 		if(!completeTest)return;
 		ImagePlus imgMap=IJ.openImage(
@@ -223,7 +220,6 @@ public class Test_FijiRelaxPackage {
 
 	@Test
 	public void test_08_Outliers() throws Exception{
-		if(true)return;
 		System.out.println("\n\n\nRUNNING TEST 08\n\n\n");
 		if(!completeTest)return;
 		ImagePlus imgMap=IJ.openImage(
