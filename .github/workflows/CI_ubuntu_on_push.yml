@@ -1,5 +1,5 @@
 name: Java CI LINUX
-on: [rebase]
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
