@@ -129,7 +129,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	private Font mySurvivalFontForLittleDisplays=null;
 
 	/** The version name. */
-	public String versionName="Handsome honeysuckle v4.0.8 patch 2022-12-22 13h38";
+	public String versionName="Handsome honeysuckle v4.0.9-SNAPSHOT patch 2023-01-02 18h09";
 	
 	/** The time version flag. */
 	public String timeVersionFlag="";
