@@ -1,5 +1,5 @@
 name: Java CI LINUX
-on: [tag]
+on: [rebase]
 jobs:
   build:
     runs-on: ubuntu-latest
