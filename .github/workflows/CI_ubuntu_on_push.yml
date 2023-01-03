@@ -1,5 +1,5 @@
-name: Java CI
-on: [push]
+name: Java CI LINUX
+on: [tag]
 jobs:
   build:
     runs-on: ubuntu-latest
