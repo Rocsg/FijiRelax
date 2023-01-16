@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - paper.md
+      - README.md
 
 jobs:
   paper:
