@@ -40,7 +40,7 @@
   	
   	<groupId>io.github.rocsg</groupId>
   	<artifactId>fijirelax</artifactId>
-	<version>4.0.9-SNAPSHOT</version>
+	<version>4.0.10</version>
   	<packaging>jar</packaging>
   	<url>https://imagej.net/plugins/fijirelax/</url>
 	<organization>	
