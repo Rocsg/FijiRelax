@@ -243,7 +243,9 @@ public class Custom_Format_Importer{
 		int incr=0;
 		for(int i=0;i<imgT1T2.length;i++) {			
 			String type="";
-			if(i==(imgT1T2.length-1) && (imgT1T2[i].length>1))type="T2SEQ_";
+			System.out.println("imgT1T2[i].length="+imgT1T2[i].length);
+			if((imgT1T2[i].length>1))type="T2SEQ_";
+//			else if((imgT1T2[i].length>1))type="T1T2SEQ_";
 			else type="T1SEQ_";
 			for(int j=0;j<imgT1T2[i].length;j++) {
 				MRUtils.computeTeTrAndRiceSigmaOfEachSliceAndWriteItInTheLabels(imgT1T2[i][j],false,type+nameObservation,makeBoutureTrick);

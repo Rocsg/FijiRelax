@@ -6,3 +6,5 @@
 /.project
 /bin/com/vitimage/mrutils/
 
+/.apt_generated/
+/.apt_generated_tests/

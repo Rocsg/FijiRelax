@@ -567,7 +567,14 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
    		ImagePlus imgMask=(ImagePlus) dialogPrm[1];
 		final ExecutorService exec = Executors.newFixedThreadPool(1);
 		exec.submit(new Runnable() {
-			public void run()  {lock();tmp.computeMaps(params,imgMask);	  		step++; 	hypermapList.add(tmp);	   		currentHypermap=tmp;		updateView();unlock();}
+			public void run()  {
+				lock();
+				tmp.computeMaps(params,imgMask);
+				step++;
+				hypermapList.add(tmp);
+				currentHypermap=tmp;
+				updateView();
+				unlock();}
 		});
 	}
 	
@@ -605,7 +612,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		exec.submit(new Runnable() {
 			public void run()  {	
 				lock();
-				tmp.replaceMapsOutliersSlicePerSlice(params[0]<1.5 ? 1 : 2 ,params[1],(int)Math.round(params[2]),true);
+				tmp.replaceMapsOutliersSlicePerSlice(params[0]<1.5 ? 1 : 2 ,params[1],(int)Math.round(params[2]),new double[]{params[3],params[4]},new double[]{params[5],params[6]},new double[]{params[7],params[8]},true);
 		   		hypermapList.add(tmp);		
 		   		currentHypermap=tmp;
 		   		step++;
@@ -812,7 +819,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	 * @return the double[]
 	 */
 	public double[] openOutliersDialog() {
-		double[]params=new double[3];
+		double[]params=new double[9];
 		//Parameters for automatic registration
 		String message="Successive subsampling factors used, from max to min."+"These parameters have the most dramatic effect\non computation time and results accuracy :\n"+
 				"- The max level is the first level being processed, making comparisons between subsampled versions of images."+"\n"+
@@ -827,6 +834,12 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		gd.addChoice("Removal detection algorithm",schemes, schemes[HyperMap.defaultOutlierAlgorithm-1]);
         gd.addNumericField("Nb standard-dev", HyperMap.defaultOutlierStdDev, 0, 3, "sigma");
         gd.addNumericField("Neighbourhood radius", HyperMap.defaultOutlierNeighbourXY, 0, 3, "pixels");
+        gd.addNumericField("min T1", 20, 0, 3, "ms");
+        gd.addNumericField("max T1", 5000, 0, 3, "ms");
+        gd.addNumericField("min T2", 2, 0, 3, "ms");
+        gd.addNumericField("max T2", 1000, 0, 3, "ms");
+        gd.addNumericField("min PD", 100, 0, 3, "ms");
+        gd.addNumericField("max PD", 1000000, 0, 3, "ms");
         if(this.isSurvivorVncTunnelLittleDisplay)gd.setFont(mySurvivalFontForLittleDisplays);
         gd.showDialog();
 
@@ -834,6 +847,12 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
         params[0]=gd.getNextChoiceIndex()+1;
         params[1]=gd.getNextNumber();
         params[2]=gd.getNextNumber();
+        params[3]=gd.getNextNumber();
+        params[4]=gd.getNextNumber();
+        params[5]=gd.getNextNumber();
+        params[6]=gd.getNextNumber();
+        params[7]=gd.getNextNumber();
+        params[8]=gd.getNextNumber();
         if(params[1]<0)params[1]=HyperMap.defaultOutlierStdDev;
         if(params[2]<0)params[2]=HyperMap.defaultOutlierNeighbourXY;
        	return params;
@@ -846,7 +865,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 	 */
 	public Object[] openComputeDialog() {
 		ImagePlus imgMask=null;
-		double[]params=new double[6];
+		double[]params=new double[7];
 		boolean fitChoice=(this.currentHypermap.hasT1sequence && this.currentHypermap.hasT2sequence);
 		//Parameters for automatic registration
 		GenericDialog gd= new GenericDialog("Settings for maps computation");
@@ -862,8 +881,9 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
 		gd.addChoice("First echo handling",first, first[HyperMap.defaultFirstChoice]);
 		gd.addChoice("Who provides the mask ?",mask, mask[HyperMap.defaultMaskChoice]);
         gd.addNumericField("For automatic mask : Nb stddev for threshold", HyperMap.defaultStdDevMask, 0, 3, "sigma");
-		if(fitChoice) gd.addChoice("Combination of T1w and T2w data ?",scheme, scheme[HyperMap.defaultJointSchemeChoice]);
-        if(this.isSurvivorVncTunnelLittleDisplay)gd.setFont(mySurvivalFontForLittleDisplays);
+		gd.addNumericField("DeltaTe for T2 (or let 0) ?",0,0,3,"ms");
+        if(fitChoice) gd.addChoice("Combination of T1w and T2w data ?",scheme, scheme[HyperMap.defaultJointSchemeChoice]);
+		if(this.isSurvivorVncTunnelLittleDisplay)gd.setFont(mySurvivalFontForLittleDisplays);
 
         gd.showDialog();
         if (gd.wasCanceled()) return new Object[] {null,null};	        
@@ -872,6 +892,7 @@ public class FijiRelax_Gui extends PlugInFrame  implements ActionListener {
         params[2]=gd.getNextChoiceIndex();//first
         params[3]=gd.getNextChoiceIndex();//mask
         params[4]=gd.getNextNumber();//sigma
+        params[6]=gd.getNextNumber();//deltaTe
         if(fitChoice) params[5]=gd.getNextChoiceIndex();//joint
         if(params[4]<0)params[4]=HyperMap.defaultStdDevMask;
         if(params[3]>0) {

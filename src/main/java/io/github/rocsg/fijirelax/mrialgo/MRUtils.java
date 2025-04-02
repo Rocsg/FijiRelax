@@ -469,21 +469,20 @@ public class MRUtils  {
 	 * @param silentMode boolean flag to activate the performance mode and make the measurement of optimal performance
 	 * @return the tab of computed maps
 	 */
-	public static ImagePlus[] computeT1T2MapMultiThreadSlices(final ImagePlus[]imgsTemp,ImagePlus mask,double sigmaSmoothing,int fitType,int algType, boolean debug,boolean forgetFirstT2,boolean silentMode) {
+	public static ImagePlus[] computeT1T2MapMultiThreadSlices(final ImagePlus[]imgsTemp,ImagePlus mask,double sigmaSmoothing,int fitType,int algType, boolean debug,boolean forgetFirstT2,boolean silentMode,int[][]indexT1s,int[][]indexT2s,float deltaT2) {
 		int[]dims=VitimageUtils.getDimensions(imgsTemp[0]);		final int X=dims[0];		final int Y=dims[1];		final int Z=dims[2];  final int YZ=Y*Z;
 		int nEc=imgsTemp.length;
-
 		int nCores=VitimageUtils.getNbCores();
 		int nVox=X*Y*Z;
 		int[][]listForThreads=VitimageUtils.listForThreads(nVox,nCores);
 		ImagePlus []imgs=new ImagePlus[nEc];
 		for(int i=0;i<nEc;i++) {imgs[i]=imgsTemp[i].duplicate();imgs[i]=VitimageUtils.convertToFloat(imgs[i]);}
-
+		
 		ImagePlus[]maps=new ImagePlus[4];
-		maps[0]=VitimageUtils.nullImage(imgsTemp[0]);
-		maps[1]=VitimageUtils.nullImage(imgsTemp[0]);
-		maps[2]=VitimageUtils.nullImage(imgsTemp[0]);
-		maps[3]=VitimageUtils.nullImage(imgsTemp[0]);
+		maps[0]=VitimageUtils.nullImage(imgs[0]);
+		maps[1]=VitimageUtils.nullImage(imgs[0]);
+		maps[2]=VitimageUtils.nullImage(imgs[0]);
+		maps[3]=VitimageUtils.nullImage(imgs[0]);
 		final double [][]listTrForThreads=new double[nCores][];  
 		final double [][]listTeForThreads=new double[nCores][];
 		final double [][]listSigmaForThreads=new double[nCores][];
@@ -493,12 +492,18 @@ public class MRUtils  {
 		final double [][][]results=new double[nCores][][];
 		final int []fitTypeTab;
 		final int[]algTypeTab;
+
 		int []tab1=new int[nCores];
 		int[]tab2=new int[nCores];
 		boolean[]tab3=new boolean[nCores];
 		for(int nC=0;nC<nCores;nC++) {
 			listTrForThreads[nC]=getTrFrom3DRelaxationImageTab(imgsTemp);
 			listTeForThreads[nC]=getTeFrom3DRelaxationImageTab(imgsTemp)[0];
+			if(fitType==T1T2_MONO || fitType==T1T2_MONO_BIAS || fitType==T1T2_MONO_RICE){
+				for(int i=0;i<listTeForThreads[nC].length;i++){
+					listTeForThreads[nC][i]+=deltaT2;
+				}
+			}
 			listSigmaForThreads[nC]=getSigmaFrom3DRelaxationImageTab(imgsTemp);
 			listIndex[nC]=copyTab(listForThreads[nC]);
 			listData[nC]=new double[listForThreads[nC].length][];
@@ -512,7 +517,7 @@ public class MRUtils  {
 		final boolean []forgetFirstT2Tab=copyTab(tab3);
 		final double [][]listTrForThreadsForget=forgetFirstT2 ? forgetLastT2( listTrForThreads ):null; 
 		final double [][]listTeForThreadsForget=forgetFirstT2 ? forgetLastT2( listTeForThreads ):null; 
-		
+
 		//Construire le fetch list
 		int [][]fetch=new int[X*Y*Z][5];
 		for(int i=0;i<nCores;i++) {
@@ -529,6 +534,7 @@ public class MRUtils  {
 		float[][][]imgData=new float[nEc][Z][];
 		float[][][]mapData=new float[4][Z][];
 		float[][]maskData=new float[Z][];
+		
 		//Ouvrir les voxels des images mask et all
 		for(int z=0;z<Z;z++) {
 			for(int n=0;n<nEc;n++) {
@@ -560,7 +566,7 @@ public class MRUtils  {
 		final AtomicInteger incrTotalFit = new AtomicInteger(0);
 		final AtomicInteger incrProc = new AtomicInteger(0);
 		final AtomicInteger nEarlyBreaks = new AtomicInteger(0);
-		final int onePercent=1+(X*YZ)/10;
+		final int onePercent=1+(X*YZ)/100;
 		final int XYZ=X*YZ;
 		IJ.log((  ("Multi-threaded with ("+Z+" threads)"))+" T1 and/or T2 map computation.\n Start fit on "+(X*Y*Z)+" voxels with sigma="+listSigmaForThreads[0][0]);
 		final Thread[] threads = VitimageUtils.newThreadArray(nCores);    
@@ -577,18 +583,25 @@ public class MRUtils  {
 						IJ.log("Maps computation : "+(VitimageUtils.dou(incrTot*100.0/XYZ)+" %"));
 						IJ.showProgress(incrTot*1.0/XYZ);
 					}
-					
+//					System.out.println(incrTot);					
 					if(listMask[numProc][w][0]<=0) {
 						results[numProc][w]=new double[] {0,0,0,0,0,0,0};
 						continue;
 					}
-
+					boolean deb=false;
+					if(deb)System.out.println(incrTot+"OK\n");
 					Object []obj=null;
 					if(forgetFirstT2Tab[numProc]) {
 						obj=MRUtils.makeFit(listTrForThreadsForget[numProc], listTeForThreadsForget[numProc],  listDataForget[numProc][w],   fitTypeTab[numProc],  algTypeTab[numProc],  400 , listSigmaForThreads[numProc][0],false);						
 					}
 					else {
-						obj=MRUtils.makeFit(listTrForThreads[numProc], listTeForThreads[numProc],  listData[numProc][w],   fitTypeTab[numProc],  algTypeTab[numProc],  400 , listSigmaForThreads[numProc][0],false);
+						if(deb){
+							IJ.log(TransformUtils.stringVectorDou(listTrForThreads[numProc], "ListTR"));
+							IJ.log(TransformUtils.stringVectorDou(listTeForThreads[numProc], "ListTE"));
+							IJ.log(TransformUtils.stringVectorDou(listData[numProc][w], "ListData"));
+							IJ.log(listSigmaForThreads[numProc][0]+"Sigma");
+						}
+						obj=MRUtils.makeFit(listTrForThreads[numProc], listTeForThreads[numProc],  listData[numProc][w],   fitTypeTab[numProc],  algTypeTab[numProc],  400 , listSigmaForThreads[numProc][0],false||deb);
 					}
 					double []estimatedParams=((double[])(obj[0]));
 					if(( (boolean) obj[1]) )nEarlyBreaks.getAndIncrement();
@@ -599,6 +612,7 @@ public class MRUtils  {
 		VitimageUtils.startAndJoin(threads);  
 
 		System.out.println("End of fit. Early breaks = "+nEarlyBreaks.get()+" / "+(Z*X*Y));
+		double vals=0;
 		for(int ind=0;ind<fetch.length;ind++) {
 			int proc=fetch[ind][0];
 			int indexProc=fetch[ind][1];
@@ -630,7 +644,7 @@ public class MRUtils  {
 //			if(indexProc==246)System.out.println("Going to make the stuff "+proc+"-"+indexProc+" . And results is "+TransformUtils.stringVectorN(results[proc][indexProc], "")+" and setting in mapData"+MRUtils.getNparams(fitType%10)+" have leng"+mapData.length);
 			mapData[MRUtils.getNparams(fitType%10)][z][y*X+x]=(float) results[proc][indexProc][MRUtils.getNparams(fitType)];
 		}
-		
+
 		maps[0].setDisplayRange(0, maxDisplayedBionanoM0);
 		maps[1].setDisplayRange(0, maxDisplayedBionanoT1);
 		maps[2].setDisplayRange(0, maxDisplayedBionanoT2);
@@ -651,6 +665,7 @@ public class MRUtils  {
 			case T1T2_MONO_RICE : tabRet=new ImagePlus[] {maps[0],maps[1],maps[2],maps[3]};break;
 			default : break;
 		}
+
 		return tabRet;
 	}
 	
@@ -911,6 +926,7 @@ public class MRUtils  {
 		for(int i=0;i<imgTr.length;i++) {
 			for(int z=0;z<imgTr[0].getNSlices();z++) {
 				tab[z][i]=readValueOfSigmaTrTeInSliceLabel(imgTr[i],PARAM_TE,0,z,0);
+				//TODO : add deltaT2
 			}
 		}
 		return tab;

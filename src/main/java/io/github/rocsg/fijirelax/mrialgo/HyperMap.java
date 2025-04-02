@@ -388,16 +388,27 @@ public class HyperMap {
 	 * @return the resulting tab
 	 */
 	public static ImagePlus[]stackToSlicesTframes(ImagePlus img){
-		int X=img.getWidth();int Y=img.getHeight();int Z=img.getNFrames();
-		ImagePlus []ret=new ImagePlus[Z];
-		for(int z=0;z<Z;z++) {
-			ret[z]=new Duplicator().run(img, 1, 1, 1, 1, z+1, z+1);
-			VitimageUtils.adjustImageCalibration(ret[z],img);
-			ret[z].getStack().setSliceLabel(img.getStack().getSliceLabel(z+1),1);
+		if(img.getNSlices()>1)return stackToSlices3DTframes(img);
+		int X=img.getWidth();int Y=img.getHeight();int F=img.getNFrames();
+		ImagePlus []ret=new ImagePlus[F];
+		for(int f=0;f<F;f++) {
+			ret[f]=new Duplicator().run(img, 1, 1, 1, 1, f+1, f+1);
+			VitimageUtils.adjustImageCalibration(ret[f],img);
+			ret[f].getStack().setSliceLabel(img.getStack().getSliceLabel(f+1),1);
 		}
 		return ret;
 	}	
 
+	public static ImagePlus[]stackToSlices3DTframes(ImagePlus img){
+		int X=img.getWidth();int Y=img.getHeight();int F=img.getNFrames();	int Z=img.getNSlices();
+		ImagePlus []ret=new ImagePlus[F];
+		for(int f=0;f<F;f++) {
+			ret[f]=new Duplicator().run(img, 1, 1, 1, Z, f+1, f+1);
+			VitimageUtils.adjustImageCalibration(ret[f],img);
+			for(int z=0;z<Z;z++)ret[f].getStack().setSliceLabel(img.getStack().getSliceLabel(f+1),z+1);
+		}
+		return ret;
+	}	
 
 	//TODO : use more features of nifti metadata (radiologic convention for example) in more handsome functions, in a specific class NiftiImporter
 	/**
@@ -524,6 +535,7 @@ public class HyperMap {
 				img.getStack().setSliceLabel(chain,VitimageUtils.getCorrespondingSliceInHyperImage(img,c, z, 0) );
 			}		
 		}
+		img=VitimageUtils.convertToFloat(img);
 		
 		HyperMap hyper=new HyperMap(img);
 		hyper.adjustContrast();
@@ -577,6 +589,7 @@ public class HyperMap {
 			}		
 		}
 		
+		img=VitimageUtils.convertToFloat(img);
 		HyperMap hyper=new HyperMap(img);
 		hyper.adjustContrast();
 		return hyper;
@@ -595,12 +608,13 @@ public class HyperMap {
 		IJ.log("Deb 1");
 		IJ.log("Opening image from "+path);
 		IJ.log("Exists ? "+new File(path).exists());
-		IJ.log(VitimageUtils.imageResume(img2));
+		IJ.log("After Fiji Nifti import "+VitimageUtils.imageResume(img2));
 		IJ.run(img2, "Flip Vertically", "stack");
 		IJ.log("Readen Nifti");
 		ImagePlus[]tab=stackToSlicesTframes(img2);
 		IJ.log("Deb 2");
 		ImagePlus img=VitimageUtils.hyperStackingChannels(tab);
+		IJ.log("After FijiRelax restacking : "+VitimageUtils.imageResume(img2));
 
 		IJ.log("GetNiftinInfos");
 		Object[] objs=getNiftiInfos(img.getNChannels());
@@ -726,7 +740,7 @@ public class HyperMap {
 		int oneForTukeyFenceTwoForMADe=2;
 		double nStdDev=5;
 		int blockHalfSize=4;
-		ImagePlus result=hypTest.replaceMapsOutliersSlicePerSlice(oneForTukeyFenceTwoForMADe ,nStdDev,blockHalfSize,true);
+		ImagePlus result=hypTest.replaceMapsOutliersSlicePerSlice(oneForTukeyFenceTwoForMADe ,nStdDev,blockHalfSize,new double[]{10,10000},new double[]{2,1000},new double[]{100,1000000},true);
 		result.show();
 		if(true)return;
 		
@@ -1264,9 +1278,7 @@ public class HyperMap {
 		for(int t=0;t<this.T;t++)for(int z=0;z<dims[2];z++) {
 			ret[t][z]=new double[init[t][z].length];
 			for(int c=0;c<init[t][z].length;c++) {
-//				System.out.println("DEB "+init[t][z][c][0]);
 				ret[t][z][c]=init[t][z][c][0];
-				
 			}
 		}
 		return ret;
@@ -1644,7 +1656,7 @@ public class HyperMap {
 	 * @return the updated HyperMap, as a TIFF ImagePlus
 	 */	
 	public ImagePlus computeMaps() {
-		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,4,false);
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,4,false,0);
 	}
 
 	/**
@@ -1654,7 +1666,7 @@ public class HyperMap {
 	 * @return the updated HyperMap, as a TIFF ImagePlus
 	 */
 	public ImagePlus computeMaps(NoiseManagement noise) {
-		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,noise,false,null,4,false);
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,noise,false,null,4,false,0);
 	}
 
 	/**
@@ -1663,7 +1675,7 @@ public class HyperMap {
 	 * @return the updated HyperMap, as a TIFF ImagePlus
 	 */	
 	public ImagePlus computeMapsNoJoint() {
-		return computeMapsAgainAndMask(MRUtils.SIMPLEX,true,NoiseManagement.RICE,false,null,4,false);
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,true,NoiseManagement.RICE,false,null,4,false,0);
 	}
 	
 	/**
@@ -1673,7 +1685,7 @@ public class HyperMap {
 	 * @return the updated HyperMap, as a TIFF ImagePlus
 	 */
 	public ImagePlus computeMapsNoJoint(NoiseManagement noi) {
-		return computeMapsAgainAndMask(MRUtils.SIMPLEX,true,noi,false,null,4,false);
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,true,noi,false,null,4,false,0);
 	}
 
 	/**
@@ -1683,7 +1695,7 @@ public class HyperMap {
 	 * @return the updated HyperMap, as a TIFF ImagePlus
 	 */
 	public ImagePlus computeMapsWithMask(ImagePlus mask) {
-		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,mask,4,false);
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,mask,4,false,0);
 	}
 	
 	/**
@@ -1693,7 +1705,7 @@ public class HyperMap {
 	 * @return the updated HyperMap, as a TIFF ImagePlus
 	 */
 	public ImagePlus computeMaps(double nStdDevForMask) {
-		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,nStdDevForMask,false);
+		return computeMapsAgainAndMask(MRUtils.SIMPLEX,false,NoiseManagement.RICE,false,null,nStdDevForMask,false,0);
 	}
 
 	/**
@@ -1711,7 +1723,7 @@ public class HyperMap {
 		if(paramsGUI[1]==0)noi=NoiseManagement.RICE;
 		else noi=(paramsGUI[1]==1 ? NoiseManagement.OFFSET : NoiseManagement.NOTHING);
 		double nbStd=paramsGUI[4];
-		return computeMapsAgainAndMask(algType,separated ,noi,forgetFistEcho,imgMask,nbStd,false);
+		return computeMapsAgainAndMask(algType,separated ,noi,forgetFistEcho,imgMask,nbStd,false,(float)paramsGUI[6]);
 	}
 
 	/**
@@ -1728,14 +1740,13 @@ public class HyperMap {
 	 * @param silentMode boolean flag to activate the performance mode and make the measurement of optimal performance
 	 * @return the HyperImage, in the shape of a 4D or 5D image, including the echoes data in the last channels, and computed maps in the first channels
 	 */
-	public ImagePlus computeMapsAgainAndMask(int algType,boolean separated,NoiseManagement noise,boolean forgetFirstEcho,ImagePlus imgMaskUser,double nbStdNoiseAroundMeanForSelection,boolean silentMode) {
+	public ImagePlus computeMapsAgainAndMask(int algType,boolean separated,NoiseManagement noise,boolean forgetFirstEcho,ImagePlus imgMaskUser,double nbStdNoiseAroundMeanForSelection,boolean silentMode,float deltaT2) {
 		if(T>1) {
-			
 			ImagePlus []imgTab=new ImagePlus[T];
 			for(int t=0;t<T;t++) {
 				ImagePlus imgTemp=new Duplicator().run(this.hyperImg,1,hasMaps ? Ctot : C,1,Z,t+1,t+1);
 				HyperMap hypTemp=new HyperMap(imgTemp);
-				imgTab[t]=hypTemp.computeMapsAgainAndMask(algType, separated, noise, forgetFirstEcho, imgMaskUser, nbStdNoiseAroundMeanForSelection,silentMode);
+				imgTab[t]=hypTemp.computeMapsAgainAndMask(algType, separated, noise, forgetFirstEcho, imgMaskUser, nbStdNoiseAroundMeanForSelection,silentMode,deltaT2);
 			}
 			double[][]ranges=new double[Ctot][2];
 			for(int c=0;c<Ctot;c++) {
@@ -1784,7 +1795,9 @@ public class HyperMap {
 
 		//Extract sequences
 		ImagePlus[]imgT1s=hasT1sequence ? VitimageUtils.stacksFromHyperstackFastBis(getT1EchoesImage(0)) : null;
+		int[][]indexT1s=getT1Indices();
 		ImagePlus[]imgT2s=hasT2sequence ? VitimageUtils.stacksFromHyperstackFastBis(getT2EchoesImage(0)) : null;
+		int[][]indexT2s=getT2Indices();
 		if(imgT1s!=null && imgT1s[0].getType()==ImagePlus.GRAY16) {
 			for(int c=0;c<imgT1s.length;c++) {
 				imgT1s[c]=VitimageUtils.convertToFloat(imgT1s[c]);
@@ -1801,22 +1814,23 @@ public class HyperMap {
 		t=new Timer();
 		if(!hasT1T2sequence) {
 			//If only T1 compute PD T1 and stack it into hypermap
+
 			if(hasT1sequence) {
 				if(noise==NoiseManagement.OFFSET || noise==NoiseManagement.NOTHING) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1_MONO,algType,false,false,silentMode);		
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1_MONO,algType,false,false,silentMode,indexT1s,indexT2s,0);		
 				}
-				else maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1_MONO_RICE,algType,false,false,silentMode);	
+				else maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1_MONO_RICE,algType,false,false,silentMode,indexT1s,indexT2s,0);	
 			}
 			//if only T2 compute PD T1 and stack it into hypermap
 			if(hasT2sequence) {
 				if(noise==NoiseManagement.NOTHING) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T2_MONO,algType,false,false,silentMode);		
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T2_MONO,algType,false,false,silentMode,indexT1s,indexT2s,0);		
 				}
 				else if(noise==NoiseManagement.OFFSET) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T2_MONO_BIAS,algType,false,false,silentMode);		
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T2_MONO_BIAS,algType,false,false,silentMode,indexT1s,indexT2s,0);		
 				}
 				else if(noise==NoiseManagement.RICE) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T2_MONO_RICE,algType,false,false,silentMode);		
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T2_MONO_RICE,algType,false,false,silentMode,indexT1s,indexT2s,0);		
 				}
 				//typeMaps=new MRDataType[] {MRDataType.PDMAP,MRDataType.T2MAP};
 			}
@@ -1826,35 +1840,35 @@ public class HyperMap {
 			if(separated) {
 				ImagePlus [][]mapsTemp=new ImagePlus[2][];
 				if(noise==NoiseManagement.NOTHING) {
-					mapsTemp[0]=MRUtils.computeT1T2MapMultiThreadSlices(imgT1s, imgMask,sigmaInUse,MRUtils.T1_MONO,algType,false,false,silentMode);		
-					mapsTemp[1]=MRUtils.computeT1T2MapMultiThreadSlices(imgT2s, imgMask,sigmaInUse,MRUtils.T2_MONO,algType,false,false,silentMode);		
+					mapsTemp[0]=MRUtils.computeT1T2MapMultiThreadSlices(imgT1s, imgMask,sigmaInUse,MRUtils.T1_MONO,algType,false,false,silentMode,indexT1s,indexT2s,0);		
+					mapsTemp[1]=MRUtils.computeT1T2MapMultiThreadSlices(imgT2s, imgMask,sigmaInUse,MRUtils.T2_MONO,algType,false,false,silentMode,indexT1s,indexT2s,0);		
 				}
 				else if(noise==NoiseManagement.OFFSET) {
-					mapsTemp[0]=MRUtils.computeT1T2MapMultiThreadSlices(imgT1s, imgMask,sigmaInUse,MRUtils.T1_MONO,algType,false,false,silentMode);		
-					mapsTemp[1]=MRUtils.computeT1T2MapMultiThreadSlices(imgT2s, imgMask,sigmaInUse,MRUtils.T2_MONO_BIAS,algType,false,false,silentMode);		
+					mapsTemp[0]=MRUtils.computeT1T2MapMultiThreadSlices(imgT1s, imgMask,sigmaInUse,MRUtils.T1_MONO,algType,false,false,silentMode,indexT1s,indexT2s,0);		
+					mapsTemp[1]=MRUtils.computeT1T2MapMultiThreadSlices(imgT2s, imgMask,sigmaInUse,MRUtils.T2_MONO_BIAS,algType,false,false,silentMode,indexT1s,indexT2s,0);		
 				}
 				else if(noise==NoiseManagement.RICE) {
-					mapsTemp[0]=MRUtils.computeT1T2MapMultiThreadSlices(imgT1s, imgMask,sigmaInUse,MRUtils.T1_MONO_RICE,algType,false,false,silentMode);		
-					mapsTemp[1]=MRUtils.computeT1T2MapMultiThreadSlices(imgT2s, imgMask,sigmaInUse,MRUtils.T2_MONO_RICE,algType,false,false,silentMode);		
+					mapsTemp[0]=MRUtils.computeT1T2MapMultiThreadSlices(imgT1s, imgMask,sigmaInUse,MRUtils.T1_MONO_RICE,algType,false,false,silentMode,indexT1s,indexT2s,0);		
+					mapsTemp[1]=MRUtils.computeT1T2MapMultiThreadSlices(imgT2s, imgMask,sigmaInUse,MRUtils.T2_MONO_RICE,algType,false,false,silentMode,indexT1s,indexT2s,0);		
 				}
 				maps=new ImagePlus[] {mapsTemp[1][0],mapsTemp[0][1],mapsTemp[1][1]};
 
 			}
 			else {
 				if(noise==NoiseManagement.NOTHING) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1T2_MONO,algType,false,false,silentMode);	
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1T2_MONO,algType,false,false,silentMode,indexT1s,indexT2s,deltaT2);	
 				}
 				else if(noise==NoiseManagement.OFFSET) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1T2_MONO_BIAS,algType,false,false,silentMode);	
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1T2_MONO_BIAS,algType,false,false,silentMode,indexT1s,indexT2s,deltaT2);	
 				}
 				else if(noise==NoiseManagement.RICE) {
-					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1T2_MONO_RICE,algType,false,false,silentMode);	
+					maps=MRUtils.computeT1T2MapMultiThreadSlices(imgT1T2Line, imgMask,sigmaInUse,MRUtils.T1T2_MONO_RICE,algType,false,false,silentMode,indexT1s,indexT2s,deltaT2);	
 				}
 			}
 		}
 		t.print("End fitting, time per voxel = "+(VitimageUtils.dou(t.getTime()*1000.0/nVox)));
 		VitimageUtils.waitFor(20);
-		
+
 		//Handle image range for viewing
 		double maxPD=VitimageUtils.maxOfImage(VitimageUtils.maxOfImageArray(imgT1T2Line))*MRUtils.maxDisplayedPDratio;
 		double maxT1=VitimageUtils.max(getT1TrTimes()[0][0])*MRUtils.maxDisplayedT1ratio;
@@ -1903,6 +1917,7 @@ public class HyperMap {
 		}
 		hasMaps=true;
 		adjustContrast();
+
 		return hyperImg;
 	}
 	
@@ -2240,7 +2255,7 @@ public class HyperMap {
      * @param informUser a boolean flag
      * @return the result, as an ImagePlus
      */
-    public ImagePlus replaceMapsOutliersSlicePerSlice(int oneForTukeyFenceTwoForMADe,double nStdDev,int blockHalfSize,boolean informUser) {
+    public ImagePlus replaceMapsOutliersSlicePerSlice(int oneForTukeyFenceTwoForMADe,double nStdDev,int blockHalfSize,double[]minmaxT1,double[]minmaxT2,double[]minmaxPD,boolean informUser) {
 	   if(oneForTukeyFenceTwoForMADe<1 || oneForTukeyFenceTwoForMADe>2)return VitimageUtils.nullImage(this.getMask());
 	   if(nStdDev<0) {IJ.showMessage("Please choose a positive value for outliers threshold");return VitimageUtils.nullImage(this.getMask());}
    
@@ -2252,6 +2267,7 @@ public class HyperMap {
 		   return VitimageUtils.nullImage(this.getMask());
 	   }
 	   
+	   double[][]minmaxTab=new double[][]{minmaxPD,minmaxT1,minmaxT2};
 	   Object[][]objs=new Object[nMaps-1][];
 	   double[]vals=new double[nMaps-1];
 	   double[][]tabs=new double[nMaps-1][];
@@ -2289,8 +2305,10 @@ public class HyperMap {
 	    			   boolean isOutlier=false;
 	    			   boolean []isOutlierTab=new boolean[nMaps-1];
 	    			   for(int map=0;map<nMaps-1;map++) {
-	    				   isOutlierTab[map]=(boolean) objs[map][0];
-	    				   if( isOutlierTab[map]) {
+							double val=valMaps[map][X*y+x];
+							isOutlierTab[map]=(boolean) objs[map][0];
+						    if(val<minmaxTab[map][0] || val>minmaxTab[map][1])isOutlierTab[map]=true;
+	    				    if( isOutlierTab[map]) {
 	    					   counts[map]++;
 	    					   isOutlier=true;
 	    				   }
@@ -2364,7 +2382,7 @@ public class HyperMap {
 			   IJ.showProgress(progress);
 
 			   HyperMap hypTmp=HyperMap.hyperMapFactory(hypShort);
-			   ImagePlus maskChange=hypTmp.replaceMapsOutliersSlicePerSlice(configOutlier[conf], nStdDev[st], neighXY[nei],false);
+			   ImagePlus maskChange=hypTmp.replaceMapsOutliersSlicePerSlice(configOutlier[conf], nStdDev[st], neighXY[nei],new double[]{10,10000},new double[]{2,1000},new double[]{100,1000000},false);
 			   ImagePlus newMap=hypTmp.getAsImagePlus();
 			   String text="Result "+textConfigOutlier[conf]+" - "+textStdDev[st]+" - "+textneighXY[nei];
 			   for(int m=0;m<this.nMaps-1;m++) {
